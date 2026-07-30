@@ -18,6 +18,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+// 초대 이메일 링크가 최종적으로 돌아올 배포 주소. Supabase 대시보드의 Redirect URLs 허용 목록에도
+// `${SITE_URL}/auth/callback`이 등록돼 있어야 한다(프로젝트 설정 > Authentication > URL Configuration).
+const SITE_URL = Deno.env.get('SITE_URL') || 'https://pet-nutrition-calculator-virid.vercel.app';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -67,8 +70,10 @@ Deno.serve(async (req) => {
   }
   if (!email) return json({ error: '이메일을 입력하세요.' }, 400);
 
-  // 4) 초대 발송
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email);
+  // 4) 초대 발송 — 링크 클릭 시 /auth/callback으로 돌아오도록 명시적으로 지정한다.
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${SITE_URL}/auth/callback`,
+  });
   if (error) return json({ error: error.message }, 400);
 
   return json({ ok: true, user: { id: data.user?.id, email: data.user?.email } });
