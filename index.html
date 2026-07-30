@@ -919,7 +919,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">경고 패널</div>
     <div class="nav-item" data-tab="std" onclick="showTab('std', this)">기준 DB</div>
     <div class="nav-item" data-tab="ing" onclick="showTab('ing', this)">원료 DB</div>
-    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">🛡 관리자</div>
+    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this); loadAdminUsers();" style="display:none">🛡 관리자</div>
   </div>
   <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)" style="margin-top:auto">⚙ 설정</div>
   <div id="sidebar-foot">© 2026 Hyunsu Choi<br>All Rights Reserved.</div>
@@ -1757,9 +1757,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="dash-section">
           <h3>사용자 관리</h3>
           <p style="font-size:11px;color:var(--sub);line-height:1.6">
-            현재 로그인 계정은 <b>super_admin</b> 권한입니다. 계정은 회원가입이 아닌 초대로만 생성되며,
-            사용자 초대/역할 변경 기능은 이후 여기에 추가될 예정입니다
-            (Supabase service_role 키가 필요한 관리자 API 호출은 반드시 서버 사이드에서만 수행합니다).
+            계정은 회원가입이 아닌 초대로만 생성됩니다. 사용자 초대/역할 변경 기능은 이후 여기에
+            추가될 예정입니다(Supabase service_role 키가 필요한 관리자 API 호출은 반드시 서버
+            사이드에서만 수행합니다).
           </p>
           <div id="admin-user-list" style="margin-top:12px"></div>
         </div>
@@ -5826,6 +5826,88 @@ function applyRoleUI() {
   });
   // 관리자 페이지를 보던 중 권한이 바뀐 경우(드묾) 대시보드로 되돌린다.
   if (!allowed && document.getElementById('tab-admin')?.classList.contains('active')) goTab('dash');
+}
+
+// ── 사용자 관리(관리자 페이지) — profiles 테이블의 사용자 목록을 조회해 표시한다.
+// super_admin만 select 가능하도록 RLS에서도 막혀 있지만(001_profiles_role.sql의
+// "profiles: super_admin select all" 정책), UI 쪽에서도 한 번 더 방어적으로 확인한다.
+// 향후 역할 변경·초대 등 관리 기능을 추가할 때도 이 테이블 렌더링 방식을 그대로 확장하면 된다.
+async function loadAdminUsers() {
+  const box = document.getElementById('admin-user-list');
+  if (!box || !supabaseClient) return;
+  if (!isSuperAdmin()) return;
+
+  box.innerHTML = '';
+  const loading = document.createElement('div');
+  loading.style.cssText = 'font-size:11px;color:var(--sub)';
+  loading.textContent = '사용자 목록을 불러오는 중...';
+  box.appendChild(loading);
+
+  const { data, error } = await supabaseClient
+    .from('profiles')
+    .select('email, role, created_at')
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    box.innerHTML = '';
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'font-size:11px;color:#B03A2E';
+    errEl.textContent = '사용자 목록을 불러오지 못했습니다: ' + error.message;
+    box.appendChild(errEl);
+    return;
+  }
+  renderAdminUserTable(box, data || []);
+}
+
+function renderAdminUserTable(box, rows) {
+  box.innerHTML = '';
+  if (rows.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:11px;color:var(--sub)';
+    empty.textContent = '등록된 사용자가 없습니다.';
+    box.appendChild(empty);
+    return;
+  }
+
+  const table = document.createElement('table');
+  table.style.width = 'auto';
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  ['이메일', 'Role', '생성일'].forEach(text => {
+    const th = document.createElement('th');
+    th.textContent = text;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+
+    const tdEmail = document.createElement('td');
+    tdEmail.className = 'left';
+    tdEmail.textContent = row.email || '─';
+
+    const tdRole = document.createElement('td');
+    tdRole.className = 'center';
+    tdRole.textContent = row.role || 'user';
+    if (row.role === 'super_admin') tdRole.classList.add('info');
+
+    const tdCreated = document.createElement('td');
+    tdCreated.className = 'center';
+    tdCreated.textContent = row.created_at
+      ? new Date(row.created_at).toLocaleString('ko-KR')
+      : '─';
+
+    tr.appendChild(tdEmail);
+    tr.appendChild(tdRole);
+    tr.appendChild(tdCreated);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  box.appendChild(table);
 }
 
 async function enterApp(session) {
