@@ -1755,13 +1755,23 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="dash-panel">
         <div style="display:flex;flex-direction:column;gap:16px;max-width:640px">
         <div class="dash-section">
-          <h3>사용자 관리</h3>
-          <p style="font-size:11px;color:var(--sub);line-height:1.6">
-            계정은 회원가입이 아닌 초대로만 생성됩니다. 사용자 초대/역할 변경 기능은 이후 여기에
-            추가될 예정입니다(Supabase service_role 키가 필요한 관리자 API 호출은 반드시 서버
-            사이드에서만 수행합니다).
+          <h3>사용자 초대</h3>
+          <p style="font-size:11px;color:var(--sub);line-height:1.6;margin-bottom:10px">
+            계정은 회원가입이 아닌 초대로만 생성됩니다. 초대된 계정은 profiles 테이블에
+            자동으로 user 권한으로 등록됩니다.
           </p>
-          <div id="admin-user-list" style="margin-top:12px"></div>
+          <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+            <div class="sf-item" style="flex:1;min-width:220px;margin-bottom:0">
+              <label for="invite-email">이메일</label>
+              <input type="email" id="invite-email" placeholder="invitee@example.com">
+            </div>
+            <button class="settings-opt-btn" id="invite-btn" onclick="inviteUser()">초대 보내기</button>
+          </div>
+          <div id="invite-msg" style="font-size:10.5px;margin-top:8px;min-height:14px"></div>
+        </div>
+        <div class="dash-section">
+          <h3>사용자 목록</h3>
+          <div id="admin-user-list" style="margin-top:4px"></div>
         </div>
         </div>
         </div>
@@ -5828,10 +5838,43 @@ function applyRoleUI() {
   if (!allowed && document.getElementById('tab-admin')?.classList.contains('active')) goTab('dash');
 }
 
+// 사용자 초대 — auth.admin.inviteUserByEmail()은 service_role 키가 필요해 브라우저에서
+// 직접 호출할 수 없으므로, Supabase Edge Function(supabase/functions/invite-user)을 통해서만
+// 수행한다. 그 함수가 호출자의 super_admin 권한을 서버 사이드에서 다시 검증하므로, 여기
+// isSuperAdmin() 체크는 UX상 즉시 피드백을 주기 위한 1차 방어일 뿐이다.
+// 초대된 사용자는 DB 트리거(on_auth_user_created)가 profiles 행을 자동 생성한다(role='user').
+async function inviteUser() {
+  const emailInput = document.getElementById('invite-email');
+  const btn = document.getElementById('invite-btn');
+  const msg = document.getElementById('invite-msg');
+  const email = emailInput.value.trim();
+
+  msg.style.color = '#B03A2E';
+  if (!isSuperAdmin()) { msg.textContent = 'super_admin 권한이 필요합니다.'; return; }
+  if (!email) { msg.textContent = '이메일을 입력하세요.'; return; }
+  if (!supabaseClient) { msg.textContent = friendlyAuthError(); return; }
+
+  btn.disabled = true; btn.textContent = '초대 중...'; msg.textContent = '';
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('invite-user', { body: { email } });
+    if (error || data?.error) {
+      msg.style.color = '#B03A2E';
+      msg.textContent = (data && data.error) || error.message || '초대 중 오류가 발생했습니다.';
+      return;
+    }
+    msg.style.color = 'var(--pass-t)';
+    msg.textContent = `${email} 주소로 초대를 보냈습니다.`;
+    emailInput.value = '';
+    loadAdminUsers();
+  } finally {
+    btn.disabled = false; btn.textContent = '초대 보내기';
+  }
+}
+
 // ── 사용자 관리(관리자 페이지) — profiles 테이블의 사용자 목록을 조회해 표시한다.
 // super_admin만 select 가능하도록 RLS에서도 막혀 있지만(001_profiles_role.sql의
 // "profiles: super_admin select all" 정책), UI 쪽에서도 한 번 더 방어적으로 확인한다.
-// 향후 역할 변경·초대 등 관리 기능을 추가할 때도 이 테이블 렌더링 방식을 그대로 확장하면 된다.
+// 향후 역할 변경 등 관리 기능을 추가할 때도 이 테이블 렌더링 방식을 그대로 확장하면 된다.
 async function loadAdminUsers() {
   const box = document.getElementById('admin-user-list');
   if (!box || !supabaseClient) return;
