@@ -134,6 +134,23 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-recipe-save-btn:hover { filter: brightness(1.08); }
 #top-recipe-save-btn:active { transform: scale(0.97); }
 
+/* ── 프로필(우측 상단) ── */
+#profile-menu-wrap { position: relative; flex-shrink: 0; }
+#profile-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--acc);
+               color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; display: flex;
+               align-items: center; justify-content: center; font-family: inherit; padding: 0;
+               transition: filter .2s ease; }
+#profile-btn:hover { filter: brightness(1.1); }
+.profile-dropdown { display: none; position: absolute; top: 40px; right: 0; min-width: 180px;
+                     background: var(--panel-grad); border: 1px solid var(--panel-border);
+                     border-radius: 10px; box-shadow: var(--sh-md); z-index: 500; overflow: hidden; }
+.profile-dropdown.open { display: block; }
+#profile-dropdown-email { padding: 10px 14px; font-size: 11px; color: var(--sub);
+                           border-bottom: 1px solid var(--border); word-break: break-all; }
+.profile-dropdown-item { padding: 10px 14px; font-size: 12px; font-weight: 600; color: var(--text);
+                          cursor: pointer; transition: background-color .2s ease; }
+.profile-dropdown-item:hover { background: var(--side2); }
+
 /* ── 레이아웃 ── */
 #app { display: flex; flex: 1; overflow: hidden; }
 #sidebar { display: flex; flex-direction: column; width: 220px; flex-shrink: 0; box-sizing: border-box;
@@ -168,14 +185,65 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 /* ── 대시보드 설정 폼 ── */
 .settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
                  gap: 8px; margin-bottom: 10px; }
+.settings-grid .full-width { grid-column: 1 / -1; }
 .accent-card { background: none; border: none; padding: 0; }
 .sf-item label { display: block; font-size: 9px; color: var(--sub);
                  font-weight: 600; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
 .sf-item input, .sf-item select {
   width: 100%; font-size: 11px; padding: 6px 9px;
   border: 1px solid var(--border); border-radius: 5px;
-  background: var(--side2); color: var(--text); font-family: inherit; outline: none; }
-.sf-item input:focus, .sf-item select:focus { border-color: var(--acc); }
+  background: var(--side2); color: var(--text); font-family: inherit; outline: none;
+  transition: border-color .25s ease, box-shadow .25s ease; }
+.sf-item input:focus, .sf-item select:focus {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent); }
+
+/* ── 2지선다 세그먼트 컨트롤(동물종류/성별/중성화) — 실제 값은 숨겨진 select가 그대로 보유,
+   기존 코드는 그 select의 .value만 읽으므로 다른 로직을 손대지 않고도 UI만 교체할 수 있다 ── */
+.seg-hidden { display: none !important; }
+.seg-control { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.seg-btn { flex: 1; padding: 7px 10px; font-size: 11px; font-weight: 600; font-family: inherit;
+           border: none; background: var(--inp); color: var(--sub); cursor: pointer;
+           transition: background-color .2s ease, color .2s ease; }
+.seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+.seg-btn:hover { background: var(--gray-l); }
+.seg-btn.active { background: var(--acc); color: #fff; }
+
+/* ── BCS(신체지수) 컬러 게이지 바 — 값은 숨겨진 select(#pet-bcs)가 그대로 보유 ── */
+.bcs-gauge { position: relative; padding-top: 20px; }
+.bcs-chip { position: absolute; top: 0; left: 12.5%; transform: translateX(-50%);
+            font-size: 9px; font-weight: 700; color: #fff; background: var(--acc);
+            padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+            transition: left .25s ease; pointer-events: none; }
+.bcs-bar { display: flex; gap: 2px; border-radius: 6px; overflow: hidden; }
+.bcs-seg { flex: 1; height: 22px; border: none; cursor: pointer; padding: 0;
+           font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.9);
+           display: flex; align-items: center; justify-content: center;
+           opacity: .5; transition: opacity .2s ease, transform .15s ease; }
+.bcs-seg:hover { opacity: .8; }
+.bcs-seg.active { opacity: 1; box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px rgba(0,0,0,.3); transform: scaleY(1.08); }
+.bcs-seg[data-value="1"], .bcs-seg[data-value="2"], .bcs-seg[data-value="3"] { background: #3B82F6; }
+.bcs-seg[data-value="4"], .bcs-seg[data-value="5"] { background: #10B981; }
+.bcs-seg[data-value="6"], .bcs-seg[data-value="7"] { background: #F59E0B; }
+.bcs-seg[data-value="8"], .bcs-seg[data-value="9"] { background: #EF4444; }
+.bcs-axis { display: flex; margin-top: 4px; font-size: 8.5px; color: var(--sub); font-weight: 600; text-align: center; }
+
+/* ── 알레르기 — select로 추가하면 옆 상자에 세로로 쌓이고, 값은 숨겨진
+   input(#pet-allergy)이 콤마 구분 문자열로 그대로 보유(기존 저장/불러오기 로직 재사용) ── */
+.allergy-control { display: flex; gap: 6px; align-items: flex-start; }
+.allergy-control select { flex: 1 1 40%; min-width: 0; height: 37px; }
+.allergy-list { flex: 1 1 60%; min-width: 0; height: 75px; overflow-y: auto;
+                border: 1px solid var(--border); border-radius: 5px; background: var(--side2);
+                padding: 3px; display: flex; flex-direction: column; gap: 3px; }
+.allergy-list-empty { display: flex; align-items: center; justify-content: center;
+                       height: 100%; font-size: 9.5px; color: var(--sub); }
+.allergy-item { display: flex; align-items: center; justify-content: space-between;
+                gap: 6px; padding: 3px 6px; border-radius: 4px; background: var(--inp);
+                font-size: 10.5px; color: var(--text); flex-shrink: 0; }
+.allergy-item .rm-btn { border: none; background: none; cursor: pointer; padding: 0;
+                         font-size: 11px; line-height: 1; color: var(--sub); flex-shrink: 0;
+                         transition: color .15s ease; }
+.allergy-item .rm-btn:hover { color: #C0392B; }
 .settings-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
 .settings-actions button { padding: 7px 16px; font-size: 11px; font-weight: 600;
                             font-family: inherit; border-radius: 999px; cursor: pointer;
@@ -767,27 +835,85 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #login-box { background: var(--panel-grad); border: 1px solid var(--panel-border); border-radius: 16px;
              box-shadow: var(--sh-md); padding: 32px 36px; width: 280px; text-align: center; }
 #login-title { font-size: 16px; font-weight: 800; color: var(--hdr); margin-bottom: 6px; }
-#login-sub { font-size: 11px; color: var(--sub); margin-bottom: 18px; }
-#login-pw { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px;
+.auth-view { display: none; }
+.auth-view.show { display: block; }
+.auth-sub { font-size: 11px; color: var(--sub); margin-bottom: 18px; }
+.auth-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px;
             font-size: 12px; font-family: inherit; outline: none; text-align: center;
-            margin-bottom: 10px; background: var(--side2); color: var(--text); }
-#login-pw:focus { border-color: var(--acc); }
-#login-btn { width: 100%; padding: 8px; border: none; border-radius: 999px; background: var(--acc);
+            margin-bottom: 10px; background: var(--side2); color: var(--text); box-sizing: border-box; }
+.auth-input:focus { border-color: var(--acc); }
+.auth-btn { width: 100%; padding: 8px; border: none; border-radius: 999px; background: var(--acc);
              color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
              transition: filter .35s ease, transform .18s ease; }
-#login-btn:hover { filter: brightness(1.1); }
-#login-btn:active { transform: scale(0.97); }
-#login-err { font-size: 10px; color: #B03A2E; margin-top: 10px; min-height: 14px; }
+.auth-btn:hover { filter: brightness(1.1); }
+.auth-btn:active { transform: scale(0.97); }
+.auth-btn:disabled { opacity: .6; cursor: default; }
+.auth-err { font-size: 10px; color: #B03A2E; margin-top: 10px; min-height: 14px; }
+.auth-err.auth-msg-ok { color: var(--pass-t); }
+.auth-links { margin-top: 14px; font-size: 10.5px; display: flex; justify-content: space-between; gap: 8px; }
+.auth-links.auth-links-center { justify-content: center; }
+.auth-link { color: var(--acc); cursor: pointer; text-decoration: underline; }
+.auth-link:hover { filter: brightness(1.2); }
+.auth-check-row { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--sub);
+                   margin-bottom: 8px; text-align: left; }
+.auth-check-row input[type=checkbox] { margin: 0; cursor: pointer; accent-color: var(--acc); }
+.auth-check-row label { cursor: pointer; }
 </style>
 </head>
 <body>
 <div id="login-overlay">
   <div id="login-box">
     <div id="login-title">Nutrition Calculator</div>
-    <div id="login-sub">비밀번호를 입력하세요</div>
-    <input type="password" id="login-pw" placeholder="비밀번호" autocomplete="off">
-    <button id="login-btn" onclick="tryLogin()">입장</button>
-    <div id="login-err"></div>
+
+    <div id="auth-view-login" class="auth-view show">
+      <div class="auth-sub">이메일과 비밀번호를 입력하세요</div>
+      <input type="email" id="login-email" class="auth-input" placeholder="이메일" autocomplete="username">
+      <input type="password" id="login-pw" class="auth-input" placeholder="비밀번호" autocomplete="current-password">
+      <div class="auth-check-row">
+        <input type="checkbox" id="login-remember-id">
+        <label for="login-remember-id">아이디 저장</label>
+      </div>
+      <div class="auth-check-row">
+        <input type="checkbox" id="login-keep" checked>
+        <label for="login-keep">로그인 유지하기</label>
+      </div>
+      <button id="login-btn" class="auth-btn" onclick="tryLogin()">로그인</button>
+      <div id="login-err" class="auth-err"></div>
+      <div class="auth-links">
+        <span class="auth-link" onclick="showAuthView('signup')">회원가입</span>
+        <span class="auth-link" onclick="showAuthView('forgot')">비밀번호를 잊으셨나요?</span>
+      </div>
+    </div>
+
+    <div id="auth-view-signup" class="auth-view">
+      <div class="auth-sub">이메일과 비밀번호로 가입하세요</div>
+      <input type="email" id="signup-email" class="auth-input" placeholder="이메일" autocomplete="username">
+      <input type="password" id="signup-pw" class="auth-input" placeholder="비밀번호 (6자 이상)" autocomplete="new-password">
+      <input type="password" id="signup-pw2" class="auth-input" placeholder="비밀번호 확인" autocomplete="new-password">
+      <button id="signup-btn" class="auth-btn" onclick="trySignup()">가입하기</button>
+      <div id="signup-err" class="auth-err"></div>
+      <div class="auth-links auth-links-center">
+        <span class="auth-link" onclick="showAuthView('login')">← 로그인으로 돌아가기</span>
+      </div>
+    </div>
+
+    <div id="auth-view-forgot" class="auth-view">
+      <div class="auth-sub">가입한 이메일로 재설정 링크를 보내드립니다</div>
+      <input type="email" id="forgot-email" class="auth-input" placeholder="이메일" autocomplete="username">
+      <button id="forgot-btn" class="auth-btn" onclick="trySendResetEmail()">재설정 링크 보내기</button>
+      <div id="forgot-err" class="auth-err"></div>
+      <div class="auth-links auth-links-center">
+        <span class="auth-link" onclick="showAuthView('login')">← 로그인으로 돌아가기</span>
+      </div>
+    </div>
+
+    <div id="auth-view-reset" class="auth-view">
+      <div class="auth-sub">새로운 비밀번호를 설정하세요</div>
+      <input type="password" id="reset-pw" class="auth-input" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password">
+      <input type="password" id="reset-pw2" class="auth-input" placeholder="새 비밀번호 확인" autocomplete="new-password">
+      <button id="reset-btn" class="auth-btn" onclick="trySetNewPassword()">비밀번호 설정</button>
+      <div id="reset-err" class="auth-err"></div>
+    </div>
   </div>
 </div>
 <div id="app">
@@ -800,6 +926,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="nav-item active" data-tab="dash" onclick="showTab('dash', this)">대시보드</div>
     <div class="nav-item" data-tab="product" onclick="showTab('product', this)">제품 / 정보</div>
     <div class="nav-item" data-tab="mix" onclick="showTab('mix', this)">배합 설계</div>
+    <div class="nav-item" data-tab="analysis" onclick="showTab('analysis', this)">분석 현황</div>
     <div class="nav-item" data-tab="ana" onclick="showTab('ana', this)">영양 분석</div>
     <div class="nav-item" data-tab="amino" onclick="showTab('amino', this)">아미노산</div>
     <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">경고 패널</div>
@@ -816,11 +943,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="top-row1">
       <div id="top-view-title">대시보드</div>
       <div id="top-right">
-        <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 연결된 폴더에 저장">💾 저장</button>
+        <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 연결된 폴더에 저장">저장</button>
         <select id="top-recipe-select" onchange="onTopRecipeChange(this.value)" title="같은 폴더에 저장된 레시피 목록">
           <option value="__none__">레시피 없음</option>
         </select>
         <button id="top-recipe-folder-btn" onclick="chooseRecipeFolder()" title="레시피 폴더 선택/변경">📂</button>
+        <div id="profile-menu-wrap">
+          <button id="profile-btn" onclick="toggleProfileMenu(event)" title="계정">
+            <span id="profile-initial">?</span>
+          </button>
+          <div id="profile-dropdown" class="profile-dropdown">
+            <div id="profile-dropdown-email">─</div>
+            <div class="profile-dropdown-item" onclick="closeProfileMenu(); goTab('settings')">⚙ 설정</div>
+            <div class="profile-dropdown-item" onclick="closeProfileMenu(); logout()">로그아웃</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -874,6 +1011,296 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         </div>
+        <div class="dash-grid" style="margin-top:16px">
+        <div class="dash-section">
+          <h3>🐾 기본 정보</h3>
+          <div class="accent-card">
+            <div class="settings-grid">
+              <div class="sf-item">
+                <label>이름</label>
+                <input id="pet-name" type="text" placeholder="반려동물 이름" onchange="saveToStorage()">
+              </div>
+              <div class="sf-item">
+                <label>동물 종류</label>
+                <div class="seg-control" data-for="sb-species">
+                  <button type="button" class="seg-btn" data-value="개">강아지</button>
+                  <button type="button" class="seg-btn" data-value="고양이">고양이</button>
+                </div>
+                <select id="sb-species" class="seg-hidden" onchange="onSpeciesChange()">
+                  <option value="개">강아지</option><option value="고양이">고양이</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>품종</label>
+                <input id="pet-breed" type="text" placeholder="품종 입력" onchange="saveToStorage()">
+              </div>
+              <div class="sf-item">
+                <label>성별</label>
+                <div class="seg-control" data-for="pet-sex">
+                  <button type="button" class="seg-btn" data-value="암컷">암컷</button>
+                  <button type="button" class="seg-btn" data-value="수컷">수컷</button>
+                </div>
+                <select id="pet-sex" class="seg-hidden" onchange="saveToStorage()">
+                  <option value="암컷">암컷</option><option value="수컷">수컷</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>중성화 여부</label>
+                <div class="seg-control" data-for="pet-neuter">
+                  <button type="button" class="seg-btn" data-value="완료">완료</button>
+                  <button type="button" class="seg-btn" data-value="미완료">미완료</button>
+                </div>
+                <select id="pet-neuter" class="seg-hidden" onchange="saveToStorage()">
+                  <option value="완료">완료</option><option value="미완료">미완료</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>생년월일 / 나이</label>
+                <input id="pet-age" type="text" placeholder="예: 2022-05-01 또는 3세" onchange="saveToStorage()">
+              </div>
+              <div class="sf-item">
+                <label>현재 체중 (kg)</label>
+                <input id="sb-bw" type="number" value="15" min="1" max="80" step="0.5" onchange="calculate()">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3>🩺 생활 및 건강 정보</h3>
+          <div class="accent-card">
+            <div class="settings-grid">
+              <div class="sf-item">
+                <label>활동량</label>
+                <select id="pet-activity" onchange="calculate()">
+                  <option value="저활동">저활동</option>
+                  <option value="보통" selected>보통</option>
+                  <option value="고활동">고활동</option>
+                </select>
+              </div>
+              <div class="sf-item full-width">
+                <label>BCS (신체지수)</label>
+                <div class="bcs-gauge" data-for="pet-bcs">
+                  <div class="bcs-chip">5단계 (이상적 체형)</div>
+                  <div class="bcs-bar">
+                    <button type="button" class="bcs-seg" data-value="1">1</button>
+                    <button type="button" class="bcs-seg" data-value="2">2</button>
+                    <button type="button" class="bcs-seg" data-value="3">3</button>
+                    <button type="button" class="bcs-seg" data-value="4">4</button>
+                    <button type="button" class="bcs-seg" data-value="5">5</button>
+                    <button type="button" class="bcs-seg" data-value="6">6</button>
+                    <button type="button" class="bcs-seg" data-value="7">7</button>
+                    <button type="button" class="bcs-seg" data-value="8">8</button>
+                    <button type="button" class="bcs-seg" data-value="9">9</button>
+                  </div>
+                  <div class="bcs-axis">
+                    <span style="flex:3">Low</span><span style="flex:2">Ideal</span><span style="flex:2">Overweight</span><span style="flex:2">Obese</span>
+                  </div>
+                </div>
+                <select id="pet-bcs" class="seg-hidden" onchange="calculate()">
+                  <option value="1">1단계 (매우 마름)</option>
+                  <option value="2">2단계</option>
+                  <option value="3">3단계</option>
+                  <option value="4">4단계</option>
+                  <option value="5" selected>5단계 (이상적 체형)</option>
+                  <option value="6">6단계</option>
+                  <option value="7">7단계</option>
+                  <option value="8">8단계</option>
+                  <option value="9">9단계 (고도비만)</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>현재 건강 상태</label>
+                <input id="pet-health" type="text" placeholder="예: 양호, 신장질환 관리중" onchange="saveToStorage()">
+              </div>
+              <div class="sf-item full-width">
+                <label>알레르기</label>
+                <div class="allergy-control" data-for="pet-allergy">
+                  <select id="allergy-select">
+                    <option value="">원료 선택…</option>
+                  </select>
+                  <div class="allergy-list" id="allergy-list"></div>
+                </div>
+                <input id="pet-allergy" type="hidden" onchange="saveToStorage()">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3>⚖️ 영양 계산 설정</h3>
+          <div class="accent-card">
+            <div class="settings-grid">
+              <div class="sf-item">
+                <label>생애 단계</label>
+                <select id="sb-target" onchange="calculate()">
+                  <option>성견(성체유지)</option><option>성장견</option><option>임신·수유견</option><option>노령견</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>목표 체중 (kg)</label>
+                <input id="pet-target-bw" type="number" value="15" min="1" max="80" step="0.5" onchange="calculate()">
+              </div>
+              <div class="sf-item">
+                <label>목표 체중 조절</label>
+                <select id="pet-weight-goal" onchange="calculate()">
+                  <option value="유지" selected>유지</option>
+                  <option value="감량">감량</option>
+                  <option value="증량">증량</option>
+                </select>
+              </div>
+            </div>
+            <div style="font-size:9.5px;color:var(--sub);margin-top:8px">
+              감량/증량으로 설정하거나 BCS가 6단계 이상(과체중) 또는 4단계 이하(저체중)이면, 칼로리 계산 기준이 위 목표 체중으로 자동 전환됩니다. <span id="pet-weight-basis-note"></span>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin-top:16px;padding-bottom:120px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: 제품 ── -->
+    <div class="tab-pane" id="tab-product">
+      <div class="hdr-bar">제품 / 정보 — 제품 정보 및 설정</div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel">
+        <div class="dash-grid">
+        <div class="dash-section">
+          <h3>제품 정보</h3>
+          <div class="product-info-grid">
+            <div class="product-info-box"><div class="pi-label">제품명</div><div class="pi-val" id="dp-name">─</div></div>
+            <div class="product-info-box"><div class="pi-label">제조사</div><div class="pi-val" id="dp-maker">─</div></div>
+            <div class="product-info-box"><div class="pi-label">유형</div><div class="pi-val" id="dp-ptype">─</div></div>
+            <div class="product-info-box"><div class="pi-label">종류</div><div class="pi-val" id="dp-species">─</div></div>
+            <div class="product-info-box"><div class="pi-label">생애주기</div><div class="pi-val" id="dp-target">─</div></div>
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('mix')">영양·급여 정보</span></h3>
+          <div class="dash-kpi-grid">
+            <div class="dash-kpi">
+              <div class="kpi-label">ME (as-is)</div>
+              <div class="kpi-val" id="dp-me-asis">─</div>
+              <div class="kpi-unit">kcal/kg</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="kpi-label">ME (건물기준)</div>
+              <div class="kpi-val" id="dp-me-dmb">─</div>
+              <div class="kpi-unit">kcal/kg</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="kpi-label">기초대사량 (RER)</div>
+              <div class="kpi-val" id="dp-rer">─</div>
+              <div class="kpi-unit">kcal/일</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="kpi-label">유지에너지요구량 (MER)</div>
+              <div class="kpi-val" id="dp-mer">─</div>
+              <div class="kpi-unit">kcal/일</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="kpi-label">일일 급여량</div>
+              <div class="kpi-val" id="dp-daily-g">─</div>
+              <div class="kpi-unit">g/일 (as-is)</div>
+            </div>
+            <div class="dash-kpi">
+              <div class="kpi-label">1회 급여량 (2회 기준)</div>
+              <div class="kpi-val" id="dp-meal-g">─</div>
+              <div class="kpi-unit">g/회</div>
+            </div>
+          </div>
+          <div style="font-size:9.5px;color:var(--sub);margin-top:6px">
+            기준체중 <span id="dp-bw-note">─</span>kg 기준 · RER = 70 × 체중(kg)<sup>0.75</sup> · MER = RER × 활동계수
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3>제품 설정</h3>
+          <div class="accent-card">
+            <div class="settings-grid">
+              <div class="sf-item">
+                <label>제품명</label>
+                <input id="sb-name" type="text" placeholder="제품명 입력">
+              </div>
+              <div class="sf-item">
+                <label>제조사</label>
+                <input id="sb-maker" type="text" placeholder="제조사 입력">
+              </div>
+              <div class="sf-item">
+                <label>제품유형</label>
+                <select id="sb-ptype" onchange="calculate()">
+                  <option>건식</option><option>습식</option><option>간식</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>수분함량 (%) <span style="font-weight:400;color:var(--sub)">— 배합 원료 기준 자동 계산</span></label>
+                <input id="sb-moist" type="number" value="10" readonly tabindex="-1" style="background:var(--gray-l);cursor:not-allowed" title="배합 설계 탭의 원료·배합비를 기준으로 자동 계산됩니다">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3>내보내기</h3>
+          <div class="accent-card">
+            <div class="settings-actions">
+              <button class="btn-green" onclick="exportExcel()">Excel</button>
+            </div>
+            <div id="recipe-name">저장된 파일 없음</div>
+          </div>
+        </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB 1: 배합 설계 ── -->
+    <div class="tab-pane" id="tab-mix">
+      <div class="hdr-bar">
+        <span style="flex:1;text-align:center">배합 설계 — 원료 선택 후 배합비(%) 입력</span>
+        <div class="hdr-btns">
+          <button style="background:var(--acc2)" onclick="addMixRow()">행 추가</button>
+          <button style="background:#B03A2E" onclick="deleteSelectedMix()">선택 삭제</button>
+        </div>
+      </div>
+      <div class="mix-unit-bar">
+        <div class="mix-unit-item">
+          <label>입력 단위</label>
+          <select id="unit-select" onchange="onUnitChange()">
+            <option value="pct">배합 (%)</option>
+            <option value="g">중량 (g)</option>
+            <option value="kg">중량 (kg)</option>
+          </select>
+        </div>
+        <div class="mix-unit-item">
+          <label>총 배치량</label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" id="mix-total-g" value="1000" min="1" step="10" onchange="onTotalGChange()">
+            <span style="font-size:11px;color:var(--sub)">g</span>
+          </div>
+        </div>
+        <div class="mix-unit-hint" id="unit-hint">100% = 1000g = 1kg 기준</div>
+      </div>
+      <div class="mix-table-wrap">
+        <div id="mix-hdr">
+          <span style="width:28px;display:flex;align-items:center;justify-content:center">
+            <input type="checkbox" id="mix-select-all" onchange="toggleAllMixChk(this)">
+          </span>
+          <span style="width:32px">#</span>
+          <span style="width:200px">원료명</span>
+          <span id="mix-hdr-ratio" style="width:100px">배합비(%)</span>
+        </div>
+        <div id="mix-body"></div>
+      </div>
+      <div id="tot-bar">
+        <span id="tot-ratio">배합비 합계: 0.0%</span>
+        <span id="tot-me"></span>
+      </div>
+    </div>
+
+    <!-- ── TAB: 분석 현황 ── -->
+    <div class="tab-pane" id="tab-analysis">
+      <div class="hdr-bar">분석 현황 — 영양 설계 상세 지표</div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel">
         <div class="dash-grid">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 충족 현황 (AAFCO 대비 %)</span></h3>
@@ -1007,159 +1434,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         </div>
-
-        <div style="border-top:1px solid var(--border);margin-top:16px;padding-bottom:120px"></div>
+        <div style="padding-bottom:24px"></div>
         </div>
-      </div>
-    </div>
-
-    <!-- ── TAB: 제품 ── -->
-    <div class="tab-pane" id="tab-product">
-      <div class="hdr-bar">제품 / 정보 — 제품 정보 및 설정</div>
-      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel">
-        <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="dash-section">
-          <h3>제품 정보</h3>
-          <div class="product-info-grid">
-            <div class="product-info-box"><div class="pi-label">제품명</div><div class="pi-val" id="dp-name">─</div></div>
-            <div class="product-info-box"><div class="pi-label">제조사</div><div class="pi-val" id="dp-maker">─</div></div>
-            <div class="product-info-box"><div class="pi-label">유형</div><div class="pi-val" id="dp-ptype">─</div></div>
-            <div class="product-info-box"><div class="pi-label">종류</div><div class="pi-val" id="dp-species">─</div></div>
-            <div class="product-info-box"><div class="pi-label">생애주기</div><div class="pi-val" id="dp-target">─</div></div>
-          </div>
-        </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('mix')">영양·급여 정보</span></h3>
-          <div class="dash-kpi-grid">
-            <div class="dash-kpi">
-              <div class="kpi-label">ME (as-is)</div>
-              <div class="kpi-val" id="dp-me-asis">─</div>
-              <div class="kpi-unit">kcal/kg</div>
-            </div>
-            <div class="dash-kpi">
-              <div class="kpi-label">ME (건물기준)</div>
-              <div class="kpi-val" id="dp-me-dmb">─</div>
-              <div class="kpi-unit">kcal/kg</div>
-            </div>
-            <div class="dash-kpi">
-              <div class="kpi-label">기초대사량 (RER)</div>
-              <div class="kpi-val" id="dp-rer">─</div>
-              <div class="kpi-unit">kcal/일</div>
-            </div>
-            <div class="dash-kpi">
-              <div class="kpi-label">유지에너지요구량 (MER)</div>
-              <div class="kpi-val" id="dp-mer">─</div>
-              <div class="kpi-unit">kcal/일</div>
-            </div>
-            <div class="dash-kpi">
-              <div class="kpi-label">일일 급여량</div>
-              <div class="kpi-val" id="dp-daily-g">─</div>
-              <div class="kpi-unit">g/일 (as-is)</div>
-            </div>
-            <div class="dash-kpi">
-              <div class="kpi-label">1회 급여량 (2회 기준)</div>
-              <div class="kpi-val" id="dp-meal-g">─</div>
-              <div class="kpi-unit">g/회</div>
-            </div>
-          </div>
-          <div style="font-size:9.5px;color:var(--sub);margin-top:6px">
-            기준체중 <span id="dp-bw-note">─</span>kg 기준 · RER = 70 × 체중(kg)<sup>0.75</sup> · MER = RER × 활동계수
-          </div>
-        </div>
-        <div class="dash-section">
-          <h3>제품 설정</h3>
-          <div class="accent-card">
-            <div class="settings-grid">
-              <div class="sf-item">
-                <label>제품명</label>
-                <input id="sb-name" type="text" placeholder="제품명 입력">
-              </div>
-              <div class="sf-item">
-                <label>제조사</label>
-                <input id="sb-maker" type="text" placeholder="제조사 입력">
-              </div>
-              <div class="sf-item">
-                <label>제품유형</label>
-                <select id="sb-ptype" onchange="calculate()">
-                  <option>건식</option><option>습식</option><option>간식</option>
-                </select>
-              </div>
-              <div class="sf-item">
-                <label>종류</label>
-                <select id="sb-species" onchange="onSpeciesChange()">
-                  <option>개</option><option>고양이</option>
-                </select>
-              </div>
-              <div class="sf-item">
-                <label>생애주기</label>
-                <select id="sb-target" onchange="calculate()">
-                  <option>성견(성체유지)</option><option>성장견</option><option>임신·수유견</option><option>노령견</option>
-                </select>
-              </div>
-              <div class="sf-item">
-                <label>수분함량 (%) <span style="font-weight:400;color:var(--sub)">— 배합 원료 기준 자동 계산</span></label>
-                <input id="sb-moist" type="number" value="10" readonly tabindex="-1" style="background:var(--gray-l);cursor:not-allowed" title="배합 설계 탭의 원료·배합비를 기준으로 자동 계산됩니다">
-              </div>
-              <div class="sf-item">
-                <label>기준체중 (kg)</label>
-                <input id="sb-bw" type="number" value="15" min="1" max="80" step="0.5" onchange="calculate()">
-              </div>
-            </div>
-            <div class="settings-actions">
-              <button onclick="saveRecipe()">저장</button>
-              <button onclick="loadRecipe()">불러오기</button>
-              <button class="btn-green" onclick="exportExcel()">Excel</button>
-            </div>
-            <div id="recipe-name">저장된 파일 없음</div>
-          </div>
-        </div>
-        </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── TAB 1: 배합 설계 ── -->
-    <div class="tab-pane" id="tab-mix">
-      <div class="hdr-bar">
-        <span style="flex:1;text-align:center">배합 설계 — 원료 선택 후 배합비(%) 입력</span>
-        <div class="hdr-btns">
-          <button style="background:var(--acc2)" onclick="addMixRow()">행 추가</button>
-          <button style="background:#B03A2E" onclick="deleteSelectedMix()">선택 삭제</button>
-        </div>
-      </div>
-      <div class="mix-unit-bar">
-        <div class="mix-unit-item">
-          <label>입력 단위</label>
-          <select id="unit-select" onchange="onUnitChange()">
-            <option value="pct">배합 (%)</option>
-            <option value="g">중량 (g)</option>
-            <option value="kg">중량 (kg)</option>
-          </select>
-        </div>
-        <div class="mix-unit-item">
-          <label>총 배치량</label>
-          <div style="display:flex;align-items:center;gap:4px">
-            <input type="number" id="mix-total-g" value="1000" min="1" step="10" onchange="onTotalGChange()">
-            <span style="font-size:11px;color:var(--sub)">g</span>
-          </div>
-        </div>
-        <div class="mix-unit-hint" id="unit-hint">100% = 1000g = 1kg 기준</div>
-      </div>
-      <div class="mix-table-wrap">
-        <div id="mix-hdr">
-          <span style="width:28px;display:flex;align-items:center;justify-content:center">
-            <input type="checkbox" id="mix-select-all" onchange="toggleAllMixChk(this)">
-          </span>
-          <span style="width:32px">#</span>
-          <span style="width:200px">원료명</span>
-          <span id="mix-hdr-ratio" style="width:100px">배합비(%)</span>
-        </div>
-        <div id="mix-body"></div>
-      </div>
-      <div id="tot-bar">
-        <span id="tot-ratio">배합비 합계: 0.0%</span>
-        <span id="tot-me"></span>
       </div>
     </div>
 
@@ -1454,8 +1730,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div style="display:flex;flex-direction:column;gap:16px;max-width:480px">
         <div class="dash-section">
           <h3>계정</h3>
+          <div class="settings-opt-row" style="margin-bottom:8px">
+            <span id="account-email" style="font-size:11px;color:var(--sub)"></span>
+          </div>
           <div class="settings-opt-row">
             <button class="settings-opt-btn" onclick="openPwChangeModal()">비밀번호 변경</button>
+            <button class="settings-opt-btn" onclick="logout()">로그아웃</button>
           </div>
         </div>
         <div class="dash-section">
@@ -1557,6 +1837,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // ════════════════════════════════════════════════════════════════════════════
 // 데이터 DB
@@ -4244,6 +4525,7 @@ function onSpeciesChange() {
   document.querySelectorAll('#fab .fab-item[data-species]').forEach(b => {
     b.classList.toggle('active', b.dataset.species === species);
   });
+  syncSegmentedControls();
   updateAnaTableHeaders();
   buildAminoGrid();
   buildStdTable();
@@ -4287,19 +4569,52 @@ function syncThemeButtons() {
   });
 }
 
+// 활동량에 따른 DER 가감 배율(생애단계 기본 계수 위에 곱해서 적용) — '보통'을 1.0 기준으로 함
+const ACTIVITY_MULT = { '저활동': 0.9, '보통': 1.0, '고활동': 1.2 };
+
+// BCS(Body Condition Score, 1~9단계)에 따른 DER 가감 배율 — 5단계(이상적 체형)를 1.0 기준으로,
+// 저체중(1~4)은 체중 증량을 돕기 위해 가산, 과체중(6~9)은 감량을 돕기 위해 감산한다.
+// (수의영양학의 일반적인 체중 관리 가이드라인을 참고한 근사치이며, 실제 급여량은 수의사와 상의해 조정 필요)
+const BCS_MULT = { 1: 1.30, 2: 1.20, 3: 1.12, 4: 1.05, 5: 1.00, 6: 0.93, 7: 0.85, 8: 0.75, 9: 0.65 };
+
+// 목표 체중을 기준으로 계산해야 하는 상황인지 판정: 감량/증량을 명시했거나, BCS가 과체중(≥6)/저체중(≤4) 범위인 경우.
+// 이 경우 실제 급여 열량은 "지금 체중"이 아니라 "도달하고자 하는 목표 체중"에 맞춰 계산해야
+// 체중 감량·증량이 실제로 반영된다(RER이 체중^0.75에 비례하므로, 기준 체중 자체를 바꾸는 것이 핵심).
+function shouldUseTargetWeight(weightGoal, bcs) {
+  return weightGoal !== '유지' || bcs >= 6 || bcs <= 4;
+}
+
 function computeFeedingPlan(result) {
-  const bw     = parseFloat(document.getElementById('sb-bw').value) || 0;
-  const target = document.getElementById('sb-target').value;
-  const factor = FEEDING_FACTOR[target] || 1.6;
+  const bwCurrent = parseFloat(document.getElementById('sb-bw')?.value) || 0;
+  const bwTarget  = parseFloat(document.getElementById('pet-target-bw')?.value) || bwCurrent;
+  const target    = document.getElementById('sb-target')?.value;
+  const bcs       = parseInt(document.getElementById('pet-bcs')?.value, 10) || 5;
+  const activity  = document.getElementById('pet-activity')?.value || '보통';
+  const weightGoal= document.getElementById('pet-weight-goal')?.value || '유지';
+
+  const useTargetWeight = shouldUseTargetWeight(weightGoal, bcs);
+  const bw = (useTargetWeight && bwTarget > 0) ? bwTarget : bwCurrent;
+
+  const baseFactor   = FEEDING_FACTOR[target] || 1.6;
+  const activityMult = ACTIVITY_MULT[activity] ?? 1.0;
+  const bcsMult      = BCS_MULT[bcs] ?? 1.0;
+  const factor = baseFactor * activityMult * bcsMult;
+
+  const noteEl = document.getElementById('pet-weight-basis-note');
+  if (noteEl) {
+    noteEl.textContent = useTargetWeight
+      ? `현재 목표 체중(${bwTarget || '─'}kg) 기준으로 계산 중입니다.`
+      : '';
+  }
 
   if (!bw || bw <= 0 || !result.meAsis) {
-    return { rer: 0, mer: 0, dailyG: 0, mealG: 0 };
+    return { rer: 0, mer: 0, dailyG: 0, mealG: 0, factor: 0, bwUsed: 0, usedTargetWeight: false };
   }
   const rer    = 70 * Math.pow(bw, 0.75);
   const mer    = rer * factor;
   const dailyG = (mer / result.meAsis) * 1000;
   const mealG  = dailyG / 2;
-  return { rer, mer, dailyG, mealG };
+  return { rer, mer, dailyG, mealG, factor, bwUsed: bw, usedTargetWeight: useTargetWeight };
 }
 
 function updateDashboard(result, pc) {
@@ -4308,6 +4623,8 @@ function updateDashboard(result, pc) {
   const isCat = (document.getElementById('sb-species')?.value || '개') === '고양이';
   const policy = getEvaluationPolicy(pc);
   document.getElementById('dk-quick-species').textContent = isCat ? '성묘' : '성견';
+  syncSegmentedControls();
+  syncBcsGauge();
   renderProductTypeCard(pc);
 
   document.getElementById('dp-name').textContent   = document.getElementById('sb-name').value  || '─';
@@ -4315,7 +4632,6 @@ function updateDashboard(result, pc) {
   document.getElementById('dp-ptype').textContent  = document.getElementById('sb-ptype').value;
   document.getElementById('dp-species').textContent = document.getElementById('sb-species')?.value || '개';
   document.getElementById('dp-target').textContent = document.getElementById('sb-target').value;
-  document.getElementById('dp-bw-note').textContent = document.getElementById('sb-bw')?.value || '─';
 
   document.getElementById('dp-me-asis').textContent = result.meAsis.toLocaleString('ko',{maximumFractionDigits:0});
   document.getElementById('dp-me-dmb').textContent  = result.meDmb.toLocaleString('ko',{maximumFractionDigits:0});
@@ -4328,6 +4644,7 @@ function updateDashboard(result, pc) {
   document.getElementById('dk-fat').textContent     = dmb.fat.toFixed(1);
 
   const feed = computeFeedingPlan(result);
+  document.getElementById('dp-bw-note').textContent = feed.bwUsed ? feed.bwUsed : (document.getElementById('sb-bw')?.value || '─');
   document.getElementById('dk-rer').textContent      = feed.rer    ? feed.rer.toFixed(0)    : '─';
   document.getElementById('dk-mer').textContent      = feed.mer    ? feed.mer.toFixed(0)    : '─';
   document.getElementById('dk-daily-g').textContent  = feed.dailyG ? feed.dailyG.toFixed(0) : '─';
@@ -4642,7 +4959,7 @@ function renderDashWarnSummary() {
 // ════════════════════════════════════════════════════════════════════════════
 // 탭 전환
 // ════════════════════════════════════════════════════════════════════════════
-const TAB_LABELS = {dash:'대시보드', product:'제품 / 정보', mix:'배합 설계', ana:'영양 분석', amino:'아미노산', warn:'경고 패널', std:'기준 DB', ing:'원료 DB', settings:'설정'};
+const TAB_LABELS = {dash:'대시보드', product:'제품 / 정보', mix:'배합 설계', analysis:'분석 현황', ana:'영양 분석', amino:'아미노산', warn:'경고 패널', std:'기준 DB', ing:'원료 DB', settings:'설정'};
 function showTab(id, el) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -4675,6 +4992,187 @@ document.addEventListener('click', (e) => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
+// 반려동물 프로필 — 요소ID ↔ 저장용 키 매핑을 한 곳에 정의해 로컬 저장(saveToStorage)과
+// 레시피 파일 저장(saveRecipe) 양쪽에서 재사용한다(필드 추가 시 중복 작성 방지).
+// ════════════════════════════════════════════════════════════════════════════
+const PET_PROFILE_FIELDS = [
+  ['pet-name',        'petName'],
+  ['pet-breed',       'petBreed'],
+  ['pet-sex',         'petSex'],
+  ['pet-neuter',      'petNeuter'],
+  ['pet-age',         'petAge'],
+  ['pet-activity',    'petActivity'],
+  ['pet-bcs',         'petBcs'],
+  ['pet-health',      'petHealth'],
+  ['pet-allergy',     'petAllergy'],
+  ['pet-target-bw',   'petTargetBw'],
+  ['pet-weight-goal', 'petWeightGoal'],
+];
+function collectPetProfileData() {
+  const out = {};
+  PET_PROFILE_FIELDS.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el) out[key] = el.value;
+  });
+  return out;
+}
+function applyPetProfileData(data) {
+  if (!data) return;
+  PET_PROFILE_FIELDS.forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el && data[key] != null && data[key] !== '') el.value = data[key];
+  });
+  syncSegmentedControls();
+  syncBcsGauge();
+  syncAllergyControl();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 세그먼트 컨트롤(동물종류/성별/중성화) & BCS 컬러 게이지 바
+// 실제 값은 숨겨진 <select>가 그대로 보유하고, 여기 있는 함수들은 그 select와 커스텀 UI를
+// 서로 동기화만 시켜준다 — onSpeciesChange()/calculate() 등 기존 로직은 전혀 건드리지 않는다.
+// ════════════════════════════════════════════════════════════════════════════
+function syncSegmentedControls() {
+  document.querySelectorAll('.seg-control[data-for]').forEach(seg => {
+    const target = document.getElementById(seg.dataset.for);
+    if (!target) return;
+    seg.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === target.value);
+    });
+  });
+}
+function initSegmentedControls() {
+  document.querySelectorAll('.seg-control[data-for]').forEach(seg => {
+    const target = document.getElementById(seg.dataset.for);
+    if (!target) return;
+    seg.querySelectorAll('.seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (target.value === btn.dataset.value) return;
+        target.value = btn.dataset.value;
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+        syncSegmentedControls();
+      });
+    });
+  });
+  syncSegmentedControls();
+}
+
+const BCS_LABELS = {
+  1: '1단계 (매우 마름)', 2: '2단계', 3: '3단계', 4: '4단계',
+  5: '5단계 (이상적 체형)', 6: '6단계', 7: '7단계', 8: '8단계', 9: '9단계 (고도비만)',
+};
+function syncBcsGauge() {
+  const target = document.getElementById('pet-bcs');
+  const gauge  = document.querySelector('.bcs-gauge[data-for="pet-bcs"]');
+  if (!target || !gauge) return;
+  const val = parseInt(target.value, 10) || 5;
+  gauge.querySelectorAll('.bcs-seg').forEach(seg => {
+    seg.classList.toggle('active', parseInt(seg.dataset.value, 10) === val);
+  });
+  const chip = gauge.querySelector('.bcs-chip');
+  if (chip) {
+    chip.textContent = BCS_LABELS[val] || `${val}단계`;
+    chip.style.left = `${(val - 0.5) / 9 * 100}%`;
+  }
+}
+function initBcsGauge() {
+  const target = document.getElementById('pet-bcs');
+  const gauge  = document.querySelector('.bcs-gauge[data-for="pet-bcs"]');
+  if (!target || !gauge) return;
+  gauge.querySelectorAll('.bcs-seg').forEach(seg => {
+    seg.addEventListener('click', () => {
+      if (target.value === seg.dataset.value) return;
+      target.value = seg.dataset.value;
+      target.dispatchEvent(new Event('change', { bubbles: true }));
+      syncBcsGauge();
+    });
+  });
+  syncBcsGauge();
+}
+
+// ── 알레르기/제외 원료 — select로 고르면 옆 목록 상자에 추가, ✕ 클릭 시 제거.
+// 실제 값은 숨겨진 input(#pet-allergy)에 콤마 구분 문자열로 그대로 저장되어
+// 기존 저장/불러오기(PET_PROFILE_FIELDS) 로직을 그대로 재사용한다.
+function getAllergyList() {
+  const target = document.getElementById('pet-allergy');
+  if (!target || !target.value) return [];
+  return target.value.split(',').map(s => s.trim()).filter(Boolean);
+}
+function setAllergyList(list) {
+  const target = document.getElementById('pet-allergy');
+  if (!target) return;
+  target.value = list.join(', ');
+  target.dispatchEvent(new Event('change', { bubbles: true }));
+  syncAllergyControl();
+}
+function addAllergyItem(name) {
+  if (!name) return;
+  const list = getAllergyList();
+  if (!list.includes(name)) {
+    list.push(name);
+    setAllergyList(list);
+  }
+}
+function removeAllergyItem(name) {
+  setAllergyList(getAllergyList().filter(n => n !== name));
+}
+function syncAllergyControl() {
+  const box = document.getElementById('allergy-list');
+  if (!box) return;
+  const list = getAllergyList();
+  box.innerHTML = '';
+  if (list.length === 0) {
+    box.innerHTML = '<div class="allergy-list-empty">선택된 원료가 없습니다</div>';
+    return;
+  }
+  list.forEach(name => {
+    const row = document.createElement('div');
+    row.className = 'allergy-item';
+    const label = document.createElement('span');
+    label.textContent = name;
+    const rmBtn = document.createElement('button');
+    rmBtn.type = 'button';
+    rmBtn.className = 'rm-btn';
+    rmBtn.textContent = '✕';
+    rmBtn.onclick = () => removeAllergyItem(name);
+    row.appendChild(label);
+    row.appendChild(rmBtn);
+    box.appendChild(row);
+  });
+}
+// 원료 DB(ING_DB + customIngs)와 동기화해 옵션 목록을 채운다. DB는 원료 DB 탭에서
+// 얼마든지 추가/삭제될 수 있으므로, select가 열리기 직전(focus)마다 다시 채운다.
+function populateAllergySelect() {
+  const select = document.getElementById('allergy-select');
+  if (!select) return;
+  const current = select.value;
+  const names = [...new Set(allIngs().map(ing => ing[0]))].sort((a, b) => a.localeCompare(b, 'ko'));
+  select.innerHTML = '';
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '원료 선택…';
+  select.appendChild(placeholder);
+  names.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+  select.value = names.includes(current) ? current : '';
+}
+function initAllergyControl() {
+  const select = document.getElementById('allergy-select');
+  if (!select) return;
+  populateAllergySelect();
+  select.addEventListener('focus', populateAllergySelect);
+  select.addEventListener('change', () => {
+    addAllergyItem(select.value);
+    select.value = '';
+  });
+  syncAllergyControl();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // 레시피 저장 / 불러오기
 // ════════════════════════════════════════════════════════════════════════════
 async function saveRecipe() {
@@ -4692,6 +5190,7 @@ async function saveRecipe() {
       vitk:    document.getElementById('vitk-inp').value,
       amino:   getAminoManual(),
       customIngs: customIngs,
+      pet:     collectPetProfileData(),
     };
     const filename = (data.name||'레시피') + '.json';
 
@@ -4741,6 +5240,12 @@ function applyRecipeData(data, displayName) {
   document.getElementById('sb-bw').value     = data.bw||15;
   document.getElementById('mix-total-g').value = data.totalG||1000;
   document.getElementById('vitk-inp').value  = data.vitk||0;
+
+  applyPetProfileData(data.pet);
+  // 옛 레시피 파일처럼 목표 체중 정보가 없으면 현재 체중을 기본값으로 채운다.
+  if (!data.pet || !data.pet.petTargetBw) {
+    document.getElementById('pet-target-bw').value = data.bw||15;
+  }
 
   if (data.customIngs) {
     customIngs = data.customIngs;
@@ -5022,6 +5527,7 @@ function saveToStorage() {
     amino:      getAminoManual(),
     customIngs: customIngs,
     ingDB: ING_DB,
+    pet:        collectPetProfileData(),
   };
   localStorage.setItem('feedcalc_v4', JSON.stringify(data));
   localStorage.setItem('feedcalc_v4_ingdb', JSON.stringify(ING_DB));
@@ -5045,6 +5551,11 @@ function loadFromStorage() {
     if (data.bw)       document.getElementById('sb-bw').value      = data.bw;
     if (data.totalG)   document.getElementById('mix-total-g').value = data.totalG;
     if (data.vitk)     document.getElementById('vitk-inp').value   = data.vitk;
+
+    applyPetProfileData(data.pet);
+    if (!data.pet || !data.pet.petTargetBw) {
+      document.getElementById('pet-target-bw').value = data.bw || 15;
+    }
 
     if (data.customIngs && data.customIngs.length > 0) {
       customIngs = data.customIngs;
@@ -5084,22 +5595,177 @@ function loadFromStorage() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// 로그인
+// 로그인 (Supabase Auth — 이메일/비밀번호)
+// 회원가입 기능은 없음 — 계정은 Supabase 관리자 콘솔에서 직접 생성해서 사용한다.
+// ⚠ 여기에는 Project URL과 Publishable(anon) key만 넣는다 — Database Password나
+//   Secret(service_role) key는 브라우저에 노출되는 코드에 절대 넣지 않는다.
 // ════════════════════════════════════════════════════════════════════════════
-let APP_PASSWORD = localStorage.getItem('feedcalc_v4_pw') || '1234';
+const SUPABASE_URL = 'https://kvxlpuagwmfbylgzpvuo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_JoBouB63T2DPWnsWc_y9ag_fSB0LX87';   // Publishable(anon) key
 
-function tryLogin() {
-  const input = document.getElementById('login-pw');
-  const err = document.getElementById('login-err');
-  if (input.value === APP_PASSWORD) {
-    sessionStorage.setItem('feedcalc_v4_auth', 'ok');
-    document.getElementById('login-overlay').classList.add('hidden');
-    err.textContent = '';
-  } else {
-    err.textContent = '비밀번호가 올바르지 않습니다.';
-    input.value = '';
-    input.focus();
+// "로그인 유지하기" 체크박스 상태 저장용 키(순수 로컬 설정값 — Supabase 세션 자체와는 별개)
+const KEEP_LOGIN_KEY = 'feedcalc_v4_keep_login';
+const REMEMBER_EMAIL_KEY = 'feedcalc_v4_remember_email';
+function isKeepLoginOn() { return localStorage.getItem(KEEP_LOGIN_KEY) !== 'false'; } // 기본값: 유지함
+
+// Supabase 세션 저장소를 "로그인 유지하기" 체크 여부에 따라 localStorage(브라우저를 꺼도 유지)
+// 또는 sessionStorage(현재 탭을 닫으면 삭제)로 분기하는 커스텀 스토리지 어댑터.
+// setItem이 호출되는 시점(로그인 성공 시)마다 그때그때의 체크 상태를 반영한다.
+const authStorage = {
+  getItem: (key) => localStorage.getItem(key) ?? sessionStorage.getItem(key),
+  setItem: (key, value) => {
+    if (isKeepLoginOn()) { localStorage.setItem(key, value); sessionStorage.removeItem(key); }
+    else { sessionStorage.setItem(key, value); localStorage.removeItem(key); }
+  },
+  removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); },
+};
+
+const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storage: authStorage } })
+  : null;
+
+let currentUser = null;   // 로그인된 Supabase 사용자 — 로그아웃 상태면 null
+let appStarted  = false;  // init()이 이미 실행됐는지(세션 확인·로그인 이벤트가 겹쳐도 init()은 1회만 실행)
+
+// Supabase가 반환하는 원본(영문) 에러 메시지를 이해하기 쉬운 한국어 메시지로 변환
+function friendlyAuthError(err) {
+  if (!supabaseClient) return 'Supabase 연결 정보(Project URL/Publishable key)가 설정되지 않았습니다.';
+  const msg = (err && err.message) || '';
+  if (/Invalid login credentials/i.test(msg)) return '이메일 또는 비밀번호가 올바르지 않습니다.';
+  if (/Email not confirmed/i.test(msg))       return '이메일 인증이 완료되지 않은 계정입니다. 메일함을 확인해주세요.';
+  if (/User already registered|already registered/i.test(msg)) return '이미 가입된 이메일입니다.';
+  if (/Unable to validate email address|invalid format|Invalid email/i.test(msg)) return '올바른 이메일 형식이 아닙니다.';
+  if (/Password should be at least|Password.*characters/i.test(msg)) return '비밀번호가 너무 짧습니다(6자 이상 입력해주세요).';
+  if (/Signup is disabled|Signups not allowed|signups_disabled/i.test(msg)) return '현재 회원가입이 비활성화되어 있습니다. 관리자에게 문의하세요.';
+  if (/rate limit/i.test(msg))                return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
+  if (/Failed to fetch|NetworkError/i.test(msg)) return '네트워크 연결을 확인해주세요.';
+  return msg || '처리 중 오류가 발생했습니다.';
+}
+
+async function tryLogin() {
+  const emailInput  = document.getElementById('login-email');
+  const pwInput     = document.getElementById('login-pw');
+  const rememberEl  = document.getElementById('login-remember-id');
+  const keepLoginEl = document.getElementById('login-keep');
+  const btn         = document.getElementById('login-btn');
+  const err         = document.getElementById('login-err');
+  const email = emailInput.value.trim();
+  const password = pwInput.value;
+
+  if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
+  if (!email || !password) { err.textContent = '이메일과 비밀번호를 모두 입력하세요.'; return; }
+
+  // "로그인 유지하기" 체크 상태를 세션 발급 전에 먼저 저장해야, authStorage가 이번 로그인 결과를
+  // 올바른 저장소(localStorage/sessionStorage)에 기록한다.
+  localStorage.setItem(KEEP_LOGIN_KEY, keepLoginEl.checked ? 'true' : 'false');
+
+  btn.disabled = true; btn.textContent = '로그인 중...'; err.textContent = '';
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  btn.disabled = false; btn.textContent = '로그인';
+
+  if (error) {
+    err.textContent = friendlyAuthError(error);
+    pwInput.value = '';
+    pwInput.focus();
+    return;
   }
+
+  if (rememberEl.checked) localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+  else localStorage.removeItem(REMEMBER_EMAIL_KEY);
+
+  enterApp(data.session);
+}
+
+// 로그인 화면 내 뷰 전환(로그인 / 회원가입 / 비밀번호 찾기 / 새 비밀번호 설정)
+function showAuthView(view) {
+  ['login','signup','forgot','reset'].forEach(v => {
+    document.getElementById('auth-view-' + v).classList.toggle('show', v === view);
+  });
+}
+
+async function trySignup() {
+  const emailInput = document.getElementById('signup-email');
+  const pwInput    = document.getElementById('signup-pw');
+  const pw2Input   = document.getElementById('signup-pw2');
+  const btn        = document.getElementById('signup-btn');
+  const err        = document.getElementById('signup-err');
+  const email = emailInput.value.trim();
+  const password = pwInput.value;
+  const password2 = pw2Input.value;
+
+  err.className = 'auth-err';
+  if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
+  if (!email || !password) { err.textContent = '이메일과 비밀번호를 모두 입력하세요.'; return; }
+  if (password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (password !== password2) { err.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+
+  btn.disabled = true; btn.textContent = '가입 처리 중...'; err.textContent = '';
+  const { data, error } = await supabaseClient.auth.signUp({ email, password });
+  btn.disabled = false; btn.textContent = '가입하기';
+
+  if (error) { err.textContent = friendlyAuthError(error); return; }
+
+  if (data.session) {
+    // 프로젝트에서 이메일 인증(Confirm email)을 꺼둔 경우 가입과 동시에 세션이 발급되어 바로 입장한다.
+    enterApp(data.session);
+    return;
+  }
+  err.className = 'auth-err auth-msg-ok';
+  err.textContent = '가입이 완료되었습니다. 이메일로 전송된 인증 링크를 확인한 뒤 로그인해주세요.';
+  pwInput.value = ''; pw2Input.value = '';
+}
+
+async function trySendResetEmail() {
+  const emailInput = document.getElementById('forgot-email');
+  const btn = document.getElementById('forgot-btn');
+  const err = document.getElementById('forgot-err');
+  const email = emailInput.value.trim();
+
+  err.className = 'auth-err';
+  if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
+  if (!email) { err.textContent = '이메일을 입력하세요.'; return; }
+
+  btn.disabled = true; btn.textContent = '전송 중...'; err.textContent = '';
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+  btn.disabled = false; btn.textContent = '재설정 링크 보내기';
+
+  if (error) { err.textContent = friendlyAuthError(error); return; }
+  err.className = 'auth-err auth-msg-ok';
+  err.textContent = '재설정 링크를 이메일로 보냈습니다. 메일함을 확인해주세요.';
+}
+
+// 이메일의 재설정 링크를 타고 들어오면 Supabase가 PASSWORD_RECOVERY 이벤트를 발생시키고
+// 임시 세션을 발급한다(initAuthGate 참고) — 그 임시 세션 상태에서 새 비밀번호를 설정한다.
+async function trySetNewPassword() {
+  const pwInput  = document.getElementById('reset-pw');
+  const pw2Input = document.getElementById('reset-pw2');
+  const btn      = document.getElementById('reset-btn');
+  const err      = document.getElementById('reset-err');
+  const password  = pwInput.value;
+  const password2 = pw2Input.value;
+
+  err.className = 'auth-err';
+  if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
+  if (!password) { err.textContent = '새 비밀번호를 입력하세요.'; return; }
+  if (password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (password !== password2) { err.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+
+  btn.disabled = true; btn.textContent = '설정 중...'; err.textContent = '';
+  const { error } = await supabaseClient.auth.updateUser({ password });
+  btn.disabled = false; btn.textContent = '비밀번호 설정';
+
+  if (error) { err.textContent = friendlyAuthError(error); return; }
+  err.className = 'auth-err auth-msg-ok';
+  err.textContent = '비밀번호가 변경되었습니다. 계산기로 이동합니다...';
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  setTimeout(() => enterApp(session), 1000);
+}
+
+async function logout() {
+  if (supabaseClient) await supabaseClient.auth.signOut();
+  location.reload(); // 계산기 상태(배합행·리스너 등)를 안전하게 초기화하기 위해 새로고침
 }
 
 function openPwChangeModal() {
@@ -5110,36 +5776,110 @@ function openPwChangeModal() {
   document.getElementById('pw-change-modal').classList.add('open');
 }
 
-function savePasswordChange() {
+// 현재 비밀번호는 재로그인 시도로 검증한 뒤, Supabase 계정 비밀번호를 실제로 변경한다.
+async function savePasswordChange() {
   const cur = document.getElementById('pw-current').value;
   const nw  = document.getElementById('pw-new').value;
   const nw2 = document.getElementById('pw-new2').value;
   const err = document.getElementById('pw-change-err');
 
-  if (cur !== APP_PASSWORD) { err.textContent = '현재 비밀번호가 올바르지 않습니다.'; return; }
-  if (!nw)          { err.textContent = '새 비밀번호를 입력하세요.'; return; }
-  if (nw !== nw2)   { err.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
+  if (!supabaseClient || !currentUser) { err.textContent = '로그인 상태가 아닙니다.'; return; }
+  if (!cur) { err.textContent = '현재 비밀번호를 입력하세요.'; return; }
+  if (!nw)  { err.textContent = '새 비밀번호를 입력하세요.'; return; }
+  if (nw.length < 6) { err.textContent = '새 비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (nw !== nw2) { err.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
 
-  APP_PASSWORD = nw;
-  localStorage.setItem('feedcalc_v4_pw', nw);
+  const { error: verifyErr } = await supabaseClient.auth.signInWithPassword({ email: currentUser.email, password: cur });
+  if (verifyErr) { err.textContent = '현재 비밀번호가 올바르지 않습니다.'; return; }
+
+  const { error: updateErr } = await supabaseClient.auth.updateUser({ password: nw });
+  if (updateErr) { err.textContent = friendlyAuthError(updateErr); return; }
+
   closeModal('pw-change-modal');
-  alert('비밀번호가 변경되었습니다. 다음 로그인부터 새 비밀번호를 사용하세요.');
+  alert('비밀번호가 변경되었습니다.');
 }
 
-function initLogin() {
-  if (sessionStorage.getItem('feedcalc_v4_auth') === 'ok') {
-    document.getElementById('login-overlay').classList.add('hidden');
-  } else {
-    document.getElementById('login-pw').focus();
+// 로그인 성공(또는 페이지 로드시 기존 세션 복원) 시 로그인 화면을 닫고 계산기 본체를 연다.
+// init()은 여기서만(그리고 딱 1회만) 실행돼, 비로그인 상태에서는 계산기 로직 자체가 시작되지 않는다.
+function enterApp(session) {
+  currentUser = session ? session.user : null;
+  document.getElementById('login-overlay').classList.add('hidden');
+  document.getElementById('login-err').textContent = '';
+  const emailEl = document.getElementById('account-email');
+  if (emailEl) emailEl.textContent = currentUser ? `로그인 계정: ${currentUser.email}` : '';
+  const initialEl = document.getElementById('profile-initial');
+  if (initialEl) initialEl.textContent = currentUser ? currentUser.email.charAt(0).toUpperCase() : '?';
+  const dropdownEmailEl = document.getElementById('profile-dropdown-email');
+  if (dropdownEmailEl) dropdownEmailEl.textContent = currentUser ? currentUser.email : '';
+  if (!appStarted) { appStarted = true; init(); }
+}
+
+// 우측 상단 프로필 원형 아이콘 — 드롭다운(이메일/설정/로그아웃) 토글
+function toggleProfileMenu(e) {
+  e.stopPropagation();
+  document.getElementById('profile-dropdown').classList.toggle('open');
+}
+function closeProfileMenu() {
+  document.getElementById('profile-dropdown').classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('profile-menu-wrap');
+  if (wrap && !wrap.contains(e.target)) closeProfileMenu();
+});
+
+async function initAuthGate() {
+  // 저장된 "아이디 저장"/"로그인 유지하기" 설정을 로그인 화면에 반영
+  const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+  if (savedEmail) {
+    document.getElementById('login-email').value = savedEmail;
+    document.getElementById('login-remember-id').checked = true;
   }
-  document.getElementById('login-pw').addEventListener('keydown', e => {
-    if (e.key === 'Enter') tryLogin();
+  document.getElementById('login-keep').checked = isKeepLoginOn();
+
+  document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  document.getElementById('signup-pw2').addEventListener('keydown', e => { if (e.key === 'Enter') trySignup(); });
+  document.getElementById('forgot-email').addEventListener('keydown', e => { if (e.key === 'Enter') trySendResetEmail(); });
+  document.getElementById('reset-pw2').addEventListener('keydown', e => { if (e.key === 'Enter') trySetNewPassword(); });
+
+  if (!supabaseClient) {
+    document.getElementById('login-err').textContent = friendlyAuthError();
+    return;
+  }
+
+  // 비밀번호 재설정 이메일의 링크를 타고 들어온 경우 URL에 type=recovery가 포함된다 —
+  // 이 경우는 세션이 있어도(임시 세션) 계산기로 바로 들여보내지 않고 새 비밀번호 설정 화면을 보여준다.
+  const isRecoveryLink = /type=recovery/.test(window.location.hash) || /type=recovery/.test(window.location.search);
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      document.getElementById('login-overlay').classList.remove('hidden');
+      showAuthView('reset');
+    } else if (event === 'SIGNED_OUT') {
+      // 다른 탭에서 로그아웃된 경우까지 포함해 항상 안전하게 새로고침으로 초기 상태로 되돌림
+      if (appStarted) location.reload();
+      else document.getElementById('login-overlay').classList.remove('hidden');
+    }
   });
+
+  // Supabase JS SDK가 세션(리프레시 토큰)을 자체적으로 localStorage에 저장·복원하므로,
+  // 새로고침해도 로그인 상태가 유지된다(요구사항 9).
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (isRecoveryLink) {
+    document.getElementById('login-overlay').classList.remove('hidden');
+    showAuthView('reset');
+  } else if (session) {
+    enterApp(session);
+  } else {
+    document.getElementById('login-email').focus();
+  }
 }
 
 function init() {
   syncThemeButtons();
-  initLogin();
+  initSegmentedControls();
+  initBcsGauge();
+  initAllergyControl();
   buildMixHdr();
   buildAminoGrid();
   buildStdTable();
@@ -5167,9 +5907,13 @@ function init() {
   document.getElementById('sb-moist').addEventListener('change', saveToStorage);
   document.getElementById('sb-bw').addEventListener('change', saveToStorage);
   document.getElementById('vitk-inp')?.addEventListener('change', saveToStorage);
+  document.getElementById('pet-target-bw')?.addEventListener('change', saveToStorage);
+  document.getElementById('pet-weight-goal')?.addEventListener('change', saveToStorage);
+  document.getElementById('pet-bcs')?.addEventListener('change', saveToStorage);
+  document.getElementById('pet-activity')?.addEventListener('change', saveToStorage);
 }
 
-init();
+initAuthGate();
 </script>
 </body>
 </html>
