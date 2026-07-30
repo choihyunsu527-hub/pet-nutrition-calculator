@@ -919,7 +919,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">경고 패널</div>
     <div class="nav-item" data-tab="std" onclick="showTab('std', this)">기준 DB</div>
     <div class="nav-item" data-tab="ing" onclick="showTab('ing', this)">원료 DB</div>
-    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this); loadAdminUsers();" style="display:none">🛡 관리자</div>
+    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">🛡 관리자</div>
   </div>
   <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)" style="margin-top:auto">⚙ 설정</div>
   <div id="sidebar-foot">© 2026 Hyunsu Choi<br>All Rights Reserved.</div>
@@ -4992,6 +4992,9 @@ function showTab(id, el) {
   if (vt) vt.textContent = TAB_LABELS[id] || '';
   sessionStorage.setItem('feedcalc_v4_tab', id);
   if (lastResult) syncPanelWidths();
+  // 관리자 탭은 클릭으로 진입하든(사이드바) 새로고침 후 마지막 탭 복원으로 진입하든
+  // (goTab(savedTab)) 항상 최신 목록을 불러오도록 여기서 한 번만 트리거한다.
+  if (id === 'admin') loadAdminUsers();
 }
 
 function goTab(id) {
