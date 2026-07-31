@@ -3,8 +3,10 @@
 -- Supabase 대시보드 → SQL Editor 에서 1회 실행하세요.
 --
 -- role은 두 가지만 사용합니다: 'super_admin' | 'user' (기본값 'user')
--- 계정은 회원가입이 아닌 초대(Authentication → Users → Invite user)로만 생기므로,
--- 신규 유저가 auth.users에 추가될 때마다 트리거로 profiles 행을 자동 생성합니다.
+-- 계정은 회원가입이 아닌 관리자 페이지의 "사용자 추가"(Edge Function create-user, service_role
+-- 키로 auth.admin.createUser() 호출)로만 생기므로, 신규 유저가 auth.users에 추가될 때마다
+-- 트리거로 profiles 행을 자동 생성합니다(role='user'로 생성된 뒤 create-user가 필요 시 role을
+-- 덮어씁니다).
 -- ════════════════════════════════════════════════════════════════════════════
 
 -- 1) profiles 테이블 (없으면 생성)
@@ -24,7 +26,7 @@ alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles
   add constraint profiles_role_check check (role in ('super_admin', 'user'));
 
--- 2) 신규(초대) 유저 가입 시 profiles 행을 자동 생성(기본 role='user')
+-- 2) 신규(관리자 생성) 유저 가입 시 profiles 행을 자동 생성(기본 role='user')
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -44,7 +46,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- 3) 기존에 이미 초대되어 있던 계정들도 profiles 행 채워주기(1회성, 이미 있으면 무시)
+-- 3) 기존에 이미 생성되어 있던 계정들도 profiles 행 채워주기(1회성, 이미 있으면 무시)
 insert into public.profiles (id, email, role)
 select id, email, 'user' from auth.users
 on conflict (id) do nothing;

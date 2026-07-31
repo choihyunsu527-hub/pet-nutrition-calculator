@@ -1755,19 +1755,29 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="dash-panel">
         <div style="display:flex;flex-direction:column;gap:16px;max-width:640px">
         <div class="dash-section">
-          <h3>사용자 초대</h3>
+          <h3>사용자 추가</h3>
           <p style="font-size:11px;color:var(--sub);line-height:1.6;margin-bottom:10px">
-            계정은 회원가입이 아닌 초대로만 생성됩니다. 초대된 계정은 profiles 테이블에
-            자동으로 user 권한으로 등록됩니다.
+            이메일과 초기 비밀번호를 입력하면 계정이 즉시 생성되며, 해당 정보로 바로 로그인할 수 있습니다.
           </p>
           <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
-            <div class="sf-item" style="flex:1;min-width:220px;margin-bottom:0">
-              <label for="invite-email">이메일</label>
-              <input type="email" id="invite-email" placeholder="invitee@example.com">
+            <div class="sf-item" style="flex:1;min-width:200px;margin-bottom:0">
+              <label for="create-user-email">이메일</label>
+              <input type="email" id="create-user-email" placeholder="user@example.com">
             </div>
-            <button class="settings-opt-btn" id="invite-btn" onclick="inviteUser()">초대 보내기</button>
+            <div class="sf-item" style="flex:1;min-width:200px;margin-bottom:0">
+              <label for="create-user-password">초기 비밀번호</label>
+              <input type="text" id="create-user-password" placeholder="6자 이상">
+            </div>
+            <div class="sf-item" style="min-width:120px;margin-bottom:0">
+              <label for="create-user-role">권한</label>
+              <select id="create-user-role">
+                <option value="user">일반 사용자</option>
+                <option value="super_admin">관리자</option>
+              </select>
+            </div>
+            <button class="settings-opt-btn" id="create-user-btn" onclick="createUserAccount()">계정 생성</button>
           </div>
-          <div id="invite-msg" style="font-size:10.5px;margin-top:8px;min-height:14px"></div>
+          <div id="create-user-msg" style="font-size:10.5px;margin-top:8px;min-height:14px;white-space:pre-line"></div>
         </div>
         <div class="dash-section">
           <h3>사용자 목록</h3>
@@ -5621,13 +5631,10 @@ function loadFromStorage() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// 로그인 (Supabase Auth — 이메일/비밀번호, 초대 기반)
-// 회원가입 기능은 없음 — 계정은 반드시 관리자가 아래 방법 중 하나로만 생성한다:
-//   1) Supabase 대시보드 → Authentication → Users → "Invite user"
-//   2) 관리자 전용 서버(Edge Function 등)에서 service_role 키로 auth.admin.inviteUserByEmail() 호출
-// ⚠ 브라우저에 노출되는 이 anon key로는 관리자 API(auth.admin.*)를 호출할 수 없으므로,
-//   추후 "관리자 페이지에서 사용자 초대" 기능을 추가할 때는 반드시 서버 사이드(Edge Function)를
-//   경유해야 한다 — 프런트에서는 그 서버 엔드포인트를 호출하는 inviteUser(email) 같은 함수만 추가하면 된다.
+// 로그인 (Supabase Auth — 이메일/비밀번호, 관리자 직접 생성 기반)
+// 회원가입 기능은 없음 — 계정은 반드시 관리자 페이지의 "사용자 추가"를 통해
+// Edge Function(supabase/functions/create-user)이 service_role 키로 auth.admin.createUser()를
+// 호출해야만 생성된다(브라우저에 노출되는 anon key로는 관리자 API를 직접 호출할 수 없다).
 // ⚠ Supabase 프로젝트의 Authentication → Providers → Email → "Allow new users to sign up"도
 //   반드시 꺼야 한다 — 이 파일에서 가입 폼을 지워도, 그 설정이 켜져 있으면 REST API로 직접
 //   호출해 계정을 만드는 것까지는 막지 못한다.
@@ -5660,7 +5667,6 @@ const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
 
 let currentUser = null;   // 로그인된 Supabase 사용자 — 로그아웃 상태면 null
 let appStarted  = false;  // init()이 이미 실행됐는지(세션 확인·로그인 이벤트가 겹쳐도 init()은 1회만 실행)
-let pendingInviteFlow = false; // 초대 링크(/auth/callback → /set-password)를 타고 들어와 새 비밀번호 설정을 기다리는 중인지
 
 // Supabase가 반환하는 원본(영문) 에러 메시지를 이해하기 쉬운 한국어 메시지로 변환
 function friendlyAuthError(err) {
@@ -5711,7 +5717,7 @@ async function tryLogin() {
 }
 
 // 로그인 화면 내 뷰 전환(로그인 / 비밀번호 찾기 / 새 비밀번호 설정)
-// 'signup' 뷰는 없음 — 회원가입 기능 자체가 없는 초대 전용(Invite Only) 인증이기 때문.
+// 'signup' 뷰는 없음 — 회원가입 기능 자체가 없고 계정은 관리자가 직접 생성하기 때문.
 function showAuthView(view) {
   ['login','forgot','reset'].forEach(v => {
     document.getElementById('auth-view-' + v).classList.toggle('show', v === view);
@@ -5741,8 +5747,6 @@ async function trySendResetEmail() {
 
 // 이메일의 재설정 링크를 타고 들어오면 Supabase가 PASSWORD_RECOVERY 이벤트를 발생시키고
 // 임시 세션을 발급한다(initAuthGate 참고) — 그 임시 세션 상태에서 새 비밀번호를 설정한다.
-// 초대(invite) 링크를 타고 들어온 경우(pendingInviteFlow=true)도 같은 화면·같은 세션 메커니즘을
-// 재사용하되, 설정 완료 후 계산기로 바로 들어가지 않고 로그인 화면으로 돌려보낸다.
 async function trySetNewPassword() {
   const pwInput  = document.getElementById('reset-pw');
   const pw2Input = document.getElementById('reset-pw2');
@@ -5763,20 +5767,6 @@ async function trySetNewPassword() {
 
   if (error) { err.textContent = friendlyAuthError(error); return; }
   err.className = 'auth-err auth-msg-ok';
-
-  if (pendingInviteFlow) {
-    pendingInviteFlow = false;
-    err.textContent = '비밀번호가 설정되었습니다. 로그인 화면으로 이동합니다...';
-    await supabaseClient.auth.signOut();
-    setTimeout(() => {
-      history.replaceState(null, '', window.location.pathname.replace(/\/(auth\/callback|set-password)\/?$/, '/'));
-      pwInput.value = ''; pw2Input.value = '';
-      document.getElementById('reset-sub').textContent = '새로운 비밀번호를 설정하세요';
-      err.className = 'auth-err'; err.textContent = '';
-      showAuthView('login');
-    }, 1000);
-    return;
-  }
 
   err.textContent = '비밀번호가 변경되었습니다. 계산기로 이동합니다...';
   const { data: { session } } = await supabaseClient.auth.getSession();
@@ -5826,7 +5816,7 @@ async function savePasswordChange() {
 // 조회해 관리자 전용 메뉴/페이지 노출을 제어한다.
 // · 새 관리자 전용 요소는 HTML에 data-requires-role="super_admin"만 붙이면 applyRoleUI()가
 //   자동으로 숨기고, showTab()이 자동으로 진입을 막는다 — 이 두 함수는 다시 손댈 필요 없음.
-// · 실제 "사용자 초대/역할 변경" 같은 관리 기능은 여기 currentUserRole/isSuperAdmin()을
+// · 실제 "사용자 생성/역할 변경" 같은 관리 기능은 여기 currentUserRole/isSuperAdmin()을
 //   그대로 재사용하되, Supabase admin API(service_role 키 필요) 호출은 반드시 서버
 //   사이드(Edge Function 등)에서만 수행한다 — 브라우저의 anon key로는 호출할 수 없다.
 // ════════════════════════════════════════════════════════════════════════════
@@ -5859,36 +5849,40 @@ function applyRoleUI() {
   if (!allowed && document.getElementById('tab-admin')?.classList.contains('active')) goTab('dash');
 }
 
-// 사용자 초대 — auth.admin.inviteUserByEmail()은 service_role 키가 필요해 브라우저에서
-// 직접 호출할 수 없으므로, Supabase Edge Function(supabase/functions/invite-user)을 통해서만
+// 사용자 계정 생성 — auth.admin.createUser()는 service_role 키가 필요해 브라우저에서
+// 직접 호출할 수 없으므로, Supabase Edge Function(supabase/functions/create-user)을 통해서만
 // 수행한다. 그 함수가 호출자의 super_admin 권한을 서버 사이드에서 다시 검증하므로, 여기
 // isSuperAdmin() 체크는 UX상 즉시 피드백을 주기 위한 1차 방어일 뿐이다.
-// 초대된 사용자는 DB 트리거(on_auth_user_created)가 profiles 행을 자동 생성한다(role='user').
-async function inviteUser() {
-  const emailInput = document.getElementById('invite-email');
-  const btn = document.getElementById('invite-btn');
-  const msg = document.getElementById('invite-msg');
+async function createUserAccount() {
+  const emailInput = document.getElementById('create-user-email');
+  const pwInput = document.getElementById('create-user-password');
+  const roleSelect = document.getElementById('create-user-role');
+  const btn = document.getElementById('create-user-btn');
+  const msg = document.getElementById('create-user-msg');
   const email = emailInput.value.trim();
+  const password = pwInput.value;
+  const role = roleSelect.value;
 
   msg.style.color = '#B03A2E';
   if (!isSuperAdmin()) { msg.textContent = 'super_admin 권한이 필요합니다.'; return; }
   if (!email) { msg.textContent = '이메일을 입력하세요.'; return; }
+  if (!password || password.length < 6) { msg.textContent = '초기 비밀번호는 6자 이상이어야 합니다.'; return; }
   if (!supabaseClient) { msg.textContent = friendlyAuthError(); return; }
 
-  btn.disabled = true; btn.textContent = '초대 중...'; msg.textContent = '';
+  btn.disabled = true; btn.textContent = '생성 중...'; msg.textContent = '';
   try {
-    const { data, error } = await supabaseClient.functions.invoke('invite-user', { body: { email } });
+    const { data, error } = await supabaseClient.functions.invoke('create-user', { body: { email, password, role } });
     if (error || data?.error) {
       msg.style.color = '#B03A2E';
-      msg.textContent = (data && data.error) || error.message || '초대 중 오류가 발생했습니다.';
+      msg.textContent = (data && data.error) || error.message || '계정 생성 중 오류가 발생했습니다.';
       return;
     }
     msg.style.color = 'var(--pass-t)';
-    msg.textContent = `${email} 주소로 초대를 보냈습니다.`;
-    emailInput.value = '';
+    msg.textContent = `계정이 생성되었습니다.\n아이디: ${email}\n초기 비밀번호: ${password}`;
+    emailInput.value = ''; pwInput.value = ''; roleSelect.value = 'user';
     loadAdminUsers();
   } finally {
-    btn.disabled = false; btn.textContent = '초대 보내기';
+    btn.disabled = false; btn.textContent = '계정 생성';
   }
 }
 
@@ -5938,7 +5932,7 @@ function renderAdminUserTable(box, rows) {
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  ['이메일', 'Role', '생성일'].forEach(text => {
+  ['이메일', 'Role', '생성일', '상태'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.appendChild(th);
@@ -5965,9 +5959,15 @@ function renderAdminUserTable(box, rows) {
       ? new Date(row.created_at).toLocaleString('ko-KR')
       : '─';
 
+    // 계정 정지/비활성화 기능이 없으므로 profiles에 등록된 계정은 모두 활성 상태로 표시한다.
+    const tdStatus = document.createElement('td');
+    tdStatus.className = 'center';
+    tdStatus.textContent = '활성';
+
     tr.appendChild(tdEmail);
     tr.appendChild(tdRole);
     tr.appendChild(tdCreated);
+    tr.appendChild(tdStatus);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
@@ -6025,12 +6025,6 @@ async function initAuthGate() {
   // 이 경우는 세션이 있어도(임시 세션) 계산기로 바로 들여보내지 않고 새 비밀번호 설정 화면을 보여준다.
   const isRecoveryLink = /type=recovery/.test(window.location.hash) || /type=recovery/.test(window.location.search);
 
-  // 관리자 초대 이메일의 링크를 타고 들어온 경우 Supabase가 /auth/callback으로 리다이렉트하며
-  // URL에 type=invite가 포함된다(supabase/functions/invite-user에서 redirectTo로 지정).
-  // vercel.json의 SPA rewrite 덕분에 /auth/callback, /set-password도 모두 이 index.html이 처리한다.
-  const isInviteLink = /type=invite/.test(window.location.hash) || /type=invite/.test(window.location.search) ||
-    /^\/(auth\/callback|set-password)\/?$/.test(window.location.pathname);
-
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === 'PASSWORD_RECOVERY') {
       document.getElementById('login-overlay').classList.remove('hidden');
@@ -6048,19 +6042,6 @@ async function initAuthGate() {
   if (isRecoveryLink) {
     document.getElementById('login-overlay').classList.remove('hidden');
     showAuthView('reset');
-  } else if (isInviteLink) {
-    // /auth/callback: 초대 링크의 인증 세션 확인 → 있으면 /set-password(비밀번호 설정 화면)로 이동,
-    // 없으면(만료·이미 사용된 링크) 로그인 화면에 안내 메시지를 띄운다.
-    history.replaceState(null, '', session ? '/set-password' : '/');
-    document.getElementById('login-overlay').classList.remove('hidden');
-    if (session) {
-      pendingInviteFlow = true;
-      document.getElementById('reset-sub').textContent = '초대받으신 계정의 비밀번호를 설정하세요';
-      showAuthView('reset');
-    } else {
-      document.getElementById('login-err').textContent = '초대 링크가 만료되었거나 이미 사용되었습니다. 관리자에게 다시 초대를 요청하세요.';
-      showAuthView('login');
-    }
   } else if (session) {
     enterApp(session);
   } else {

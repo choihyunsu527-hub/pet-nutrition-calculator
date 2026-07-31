@@ -1,16 +1,17 @@
 // ════════════════════════════════════════════════════════════════════════════
-// 사용자 초대 Edge Function
+// 관리자 직접 계정 생성 Edge Function
 //
-// auth.admin.inviteUserByEmail()은 service_role 키가 있어야 호출할 수 있어
+// auth.admin.createUser()는 service_role 키가 있어야 호출할 수 있어
 // 브라우저(anon key)에서는 직접 실행할 수 없다. 그래서 이 함수가 유일한 진입점이며,
 // 아래 순서로 반드시 서버 사이드에서 두 가지를 확인한다:
 //   1) 요청에 담긴 로그인 세션(JWT)이 유효한지
 //   2) 그 사용자의 profiles.role이 정말 'super_admin'인지 (프런트의 isSuperAdmin()은
-//      UX용일 뿐, 여기서 다시 검증하지 않으면 우회 호출로 아무나 초대를 보낼 수 있다)
-// 초대로 auth.users에 계정이 생기면, DB 트리거 on_auth_user_created(001_profiles_role.sql)가
-// profiles 행을 자동 생성한다(role 기본값 'user') — 이 함수는 profiles에 직접 쓰지 않는다.
+//      UX용일 뿐, 여기서 다시 검증하지 않으면 우회 호출로 아무나 계정을 만들 수 있다)
+// 계정이 auth.users에 생기면 DB 트리거 on_auth_user_created(001_profiles_role.sql)가
+// profiles 행을 role='user'로 자동 생성하므로, 관리자가 'super_admin' 권한으로 생성을
+// 요청한 경우에는 트리거 이후 이 함수가 profiles.role을 다시 upsert해 덮어쓴다.
 //
-// 배포: supabase functions deploy invite-user
+// 배포: supabase functions deploy create-user
 // (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY는 Edge Function 런타임에 자동으로 주입되므로
 //  별도로 시크릿을 등록할 필요는 없다.)
 // ════════════════════════════════════════════════════════════════════════════
@@ -18,15 +19,14 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-// 초대 이메일 링크가 최종적으로 돌아올 배포 주소. Supabase 대시보드의 Redirect URLs 허용 목록에도
-// `${SITE_URL}/auth/callback`이 등록돼 있어야 한다(프로젝트 설정 > Authentication > URL Configuration).
-const SITE_URL = Deno.env.get('SITE_URL') || 'https://pet-nutrition-calculator-virid.vercel.app';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+const ALLOWED_ROLES = ['user', 'super_admin'];
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -50,31 +50,50 @@ Deno.serve(async (req) => {
   if (userErr || !user) return json({ error: '유효하지 않은 세션입니다.' }, 401);
 
   // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회)
-  const { data: profile, error: profileErr } = await admin
+  const { data: callerProfile, error: callerProfileErr } = await admin
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (profileErr || !profile || profile.role !== 'super_admin') {
+  if (callerProfileErr || !callerProfile || callerProfile.role !== 'super_admin') {
     return json({ error: 'super_admin 권한이 필요합니다.' }, 403);
   }
 
   // 3) 입력 검증
   let email = '';
+  let password = '';
+  let role = 'user';
   try {
     const body = await req.json();
     email = typeof body?.email === 'string' ? body.email.trim() : '';
+    password = typeof body?.password === 'string' ? body.password : '';
+    role = typeof body?.role === 'string' ? body.role : 'user';
   } catch {
     return json({ error: '요청 본문이 올바르지 않습니다.' }, 400);
   }
   if (!email) return json({ error: '이메일을 입력하세요.' }, 400);
+  if (!password || password.length < 6) return json({ error: '비밀번호는 6자 이상이어야 합니다.' }, 400);
+  if (!ALLOWED_ROLES.includes(role)) return json({ error: '올바르지 않은 권한입니다.' }, 400);
 
-  // 4) 초대 발송 — 링크 클릭 시 /auth/callback으로 돌아오도록 명시적으로 지정한다.
-  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${SITE_URL}/auth/callback`,
+  // 4) 계정 즉시 생성 — 이메일 인증 없이 바로 로그인 가능하도록 email_confirm: true
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
   });
   if (error) return json({ error: error.message }, 400);
 
-  return json({ ok: true, user: { id: data.user?.id, email: data.user?.email } });
+  const newUserId = data.user?.id;
+
+  // 5) profiles.role 반영 — on_auth_user_created 트리거가 이미 role='user'로 행을 만들었으므로,
+  //    관리자로 생성 요청된 경우 여기서 다시 덮어써야 한다.
+  if (newUserId) {
+    const { error: roleErr } = await admin
+      .from('profiles')
+      .upsert({ id: newUserId, email, role }, { onConflict: 'id' });
+    if (roleErr) return json({ error: `계정은 생성됐지만 권한 저장에 실패했습니다: ${roleErr.message}` }, 500);
+  }
+
+  return json({ ok: true, user: { id: newUserId, email: data.user?.email } });
 });
