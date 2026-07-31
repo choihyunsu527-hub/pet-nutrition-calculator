@@ -1040,7 +1040,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                   <button type="button" class="seg-btn" data-value="완료">완료</button>
                   <button type="button" class="seg-btn" data-value="미완료">미완료</button>
                 </div>
-                <select id="pet-neuter" class="seg-hidden" onchange="saveToStorage()">
+                <select id="pet-neuter" class="seg-hidden" onchange="calculate()">
                   <option value="완료">완료</option><option value="미완료">미완료</option>
                 </select>
               </div>
@@ -4674,6 +4674,17 @@ const ACTIVITY_MULT = { '저활동': 0.9, '보통': 1.0, '고활동': 1.2 };
 // (수의영양학의 일반적인 체중 관리 가이드라인을 참고한 근사치이며, 실제 급여량은 수의사와 상의해 조정 필요)
 const BCS_MULT = { 1: 1.30, 2: 1.20, 3: 1.12, 4: 1.05, 5: 1.00, 6: 0.93, 7: 0.85, 8: 0.75, 9: 0.65 };
 
+// 중성화 여부에 따른 DER 가감 배율 — FEEDING_FACTOR의 "성체유지"/"노령" 계수는 중성화 완료
+// 개체 기준의 통용치(WSAVA/OSU 임상영양 가이드: 성견 1.6=중성화, 1.8=미중성화 / 성묘 1.2=중성화,
+// 1.4=미중성화)이므로, 미완료(중성화 안 함) 개체는 그 비율만큼 상향 적용한다.
+// 성장기·임신/수유기는 이미 그 자체로 훨씬 높은 기본 계수를 쓰고 중성화 여부가 적용되는 구간이
+// 아니므로(성장 중이거나 임신 중인 개체는 통상 미중성화) 이 배율을 적용하지 않는다.
+const NEUTER_ADULT_MULT = {
+  '개':   { '완료': 1.0, '미완료': 1.8 / 1.6 },
+  '고양이': { '완료': 1.0, '미완료': 1.4 / 1.2 },
+};
+const NEUTER_APPLICABLE_TARGETS = new Set(['성견(성체유지)', '노령견', '성묘(성체유지)', '노령묘']);
+
 // 목표 체중을 기준으로 계산해야 하는 상황인지 판정: 감량/증량을 명시했거나, BCS가 과체중(≥6)/저체중(≤4) 범위인 경우.
 // 이 경우 실제 급여 열량은 "지금 체중"이 아니라 "도달하고자 하는 목표 체중"에 맞춰 계산해야
 // 체중 감량·증량이 실제로 반영된다(RER이 체중^0.75에 비례하므로, 기준 체중 자체를 바꾸는 것이 핵심).
@@ -4688,6 +4699,8 @@ function computeFeedingPlan(result) {
   const bcs       = parseInt(document.getElementById('pet-bcs')?.value, 10) || 5;
   const activity  = document.getElementById('pet-activity')?.value || '보통';
   const weightGoal= document.getElementById('pet-weight-goal')?.value || '유지';
+  const species   = document.getElementById('sb-species')?.value || '개';
+  const neuter    = document.getElementById('pet-neuter')?.value || '완료';
 
   const useTargetWeight = shouldUseTargetWeight(weightGoal, bcs);
   const bw = (useTargetWeight && bwTarget > 0) ? bwTarget : bwCurrent;
@@ -4695,7 +4708,8 @@ function computeFeedingPlan(result) {
   const baseFactor   = FEEDING_FACTOR[target] || 1.6;
   const activityMult = ACTIVITY_MULT[activity] ?? 1.0;
   const bcsMult      = BCS_MULT[bcs] ?? 1.0;
-  const factor = baseFactor * activityMult * bcsMult;
+  const neuterMult   = NEUTER_APPLICABLE_TARGETS.has(target) ? (NEUTER_ADULT_MULT[species]?.[neuter] ?? 1.0) : 1.0;
+  const factor = baseFactor * activityMult * bcsMult * neuterMult;
 
   const noteEl = document.getElementById('pet-weight-basis-note');
   if (noteEl) {
