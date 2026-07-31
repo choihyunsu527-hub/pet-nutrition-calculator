@@ -1061,7 +1061,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <div class="settings-grid">
               <div class="sf-item">
                 <label>활동량</label>
-                <select id="pet-activity" onchange="calculate()">
+                <div class="seg-control" data-for="pet-activity">
+                  <button type="button" class="seg-btn" data-value="저활동">저활동</button>
+                  <button type="button" class="seg-btn" data-value="보통">보통</button>
+                  <button type="button" class="seg-btn" data-value="고활동">고활동</button>
+                </div>
+                <select id="pet-activity" class="seg-hidden" onchange="calculate()">
                   <option value="저활동">저활동</option>
                   <option value="보통" selected>보통</option>
                   <option value="고활동">고활동</option>
