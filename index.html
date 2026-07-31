@@ -1253,6 +1253,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         </div>
       </div>
       <div class="mix-unit-bar">
+        <div class="mix-unit-item" style="min-width:220px">
+          <label>레시피명</label>
+          <input type="text" id="mix-recipe-name" placeholder="레시피 이름 입력" oninput="onMixRecipeNameInput(this.value)" style="width:100%;text-align:left">
+        </div>
         <div class="mix-unit-item">
           <label>입력 단위</label>
           <select id="unit-select" onchange="onUnitChange()">
@@ -5070,6 +5074,19 @@ function showTab(id, el) {
   // 관리자 탭은 클릭으로 진입하든(사이드바) 새로고침 후 마지막 탭 복원으로 진입하든
   // (goTab(savedTab)) 항상 최신 목록을 불러오도록 여기서 한 번만 트리거한다.
   if (id === 'admin') loadAdminUsers();
+  if (id === 'mix') syncMixRecipeNameField();
+}
+
+// 배합 설계 탭의 "레시피명" 입력칸 — 제품/정보 탭의 sb-name과 같은 값을 가리키는
+// 별도 입력창이다(입력 즉시 sb-name에 반영, 탭 진입/레시피 불러오기 시 syncMixRecipeNameField로 역방향 동기화).
+function onMixRecipeNameInput(value) {
+  const nameEl = document.getElementById('sb-name');
+  if (nameEl) nameEl.value = value;
+}
+function syncMixRecipeNameField() {
+  const mixNameEl = document.getElementById('mix-recipe-name');
+  const nameEl = document.getElementById('sb-name');
+  if (mixNameEl && nameEl) mixNameEl.value = nameEl.value;
 }
 
 function goTab(id) {
@@ -5330,6 +5347,7 @@ async function saveRecipe() {
 
 function applyRecipeData(data, displayName) {
   document.getElementById('sb-name').value   = data.name||'';
+  syncMixRecipeNameField();
   document.getElementById('sb-maker').value  = data.maker||'';
   document.getElementById('sb-ptype').value  = data.ptype||'건식';
   if (document.getElementById('sb-species')) {
@@ -5641,6 +5659,7 @@ function loadFromStorage() {
     const data = JSON.parse(raw);
 
     if (data.name)     document.getElementById('sb-name').value    = data.name;
+    syncMixRecipeNameField();
     if (data.maker)    document.getElementById('sb-maker').value   = data.maker;
     if (data.ptype)    document.getElementById('sb-ptype').value   = data.ptype;
     if (data.species && document.getElementById('sb-species')) {
