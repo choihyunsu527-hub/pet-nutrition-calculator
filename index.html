@@ -943,8 +943,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </button>
           <div id="profile-dropdown" class="profile-dropdown">
             <div id="profile-dropdown-email">─</div>
-            <div class="profile-dropdown-item" onclick="closeProfileMenu(); goTab('settings')">⚙ 설정</div>
-            <div class="profile-dropdown-item" onclick="closeProfileMenu(); logout()">로그아웃</div>
+            <div class="profile-dropdown-item" onclick="closeProfileMenu(); openMyInfoModal()">👤 개인정보</div>
+            <div class="profile-dropdown-item" onclick="closeProfileMenu(); goTab('settings')">⚙ 환경설정</div>
+            <div class="profile-dropdown-item" style="border-top:1px solid var(--border)" onclick="closeProfileMenu(); logout()">로그아웃</div>
           </div>
         </div>
       </div>
@@ -1848,6 +1849,35 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('pw-change-modal')">취소</button>
       <button class="btn-save" onclick="savePasswordChange()">✅ 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 프로필 드롭다운: 개인정보 모달 (설정 탭의 비밀번호 변경과는 별개 화면) ══ -->
+<div class="modal-overlay" id="my-info-modal">
+  <div class="modal" style="width:420px;max-width:92vw">
+    <div class="modal-hdr">
+      <span>👤 개인정보</span>
+      <button onclick="closeModal('my-info-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:22px 28px">
+      <div class="pw-field">
+        <label>이메일</label>
+        <input type="text" id="my-info-email" readonly disabled>
+      </div>
+      <div class="pw-field">
+        <label>새 비밀번호</label>
+        <input type="password" id="my-info-pw" autocomplete="new-password">
+      </div>
+      <div class="pw-field">
+        <label>새 비밀번호 확인</label>
+        <input type="password" id="my-info-pw2" autocomplete="new-password">
+      </div>
+      <div id="my-info-err" style="font-size:10px;color:#B03A2E;min-height:14px;margin-top:4px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('my-info-modal')">닫기</button>
+      <button class="btn-save" id="my-info-save-btn" onclick="saveMyInfoPassword()">비밀번호 변경</button>
     </div>
   </div>
 </div>
@@ -5840,6 +5870,49 @@ async function savePasswordChange() {
   if (updateErr) { err.textContent = friendlyAuthError(updateErr); return; }
 
   closeModal('pw-change-modal');
+  alert('비밀번호가 변경되었습니다.');
+}
+
+// ── 프로필 드롭다운 "개인정보" — 이메일 확인 + 비밀번호 변경 전용 화면.
+// 설정 탭의 savePasswordChange()(현재 비밀번호 재인증 방식)와는 별개의 화면이며,
+// 여기서는 이미 로그인된 세션 기준으로 auth.updateUser()만 호출한다(본인 계정에만 영향).
+function openMyInfoModal() {
+  document.getElementById('my-info-email').value = currentUser ? currentUser.email : '';
+  document.getElementById('my-info-pw').value = '';
+  document.getElementById('my-info-pw2').value = '';
+  document.getElementById('my-info-err').textContent = '';
+  document.getElementById('my-info-modal').classList.add('open');
+}
+
+// Supabase 원본 에러 메시지를 그대로 노출하지 않고, 비밀번호 정책 미충족/기타 오류로만 구분해 안내한다.
+function friendlyPasswordChangeError(err) {
+  const msg = (err && err.message) || '';
+  if (/password/i.test(msg)) return '비밀번호는 최소 조건을 만족해야 합니다.';
+  return '비밀번호 변경 중 오류가 발생했습니다.';
+}
+
+async function saveMyInfoPassword() {
+  const pwInput  = document.getElementById('my-info-pw');
+  const pw2Input = document.getElementById('my-info-pw2');
+  const btn      = document.getElementById('my-info-save-btn');
+  const err      = document.getElementById('my-info-err');
+  const password  = pwInput.value;
+  const password2 = pw2Input.value;
+
+  err.textContent = '';
+  if (!supabaseClient || !currentUser) { err.textContent = '로그인 상태가 아닙니다.'; return; }
+  if (!password) { err.textContent = '새 비밀번호를 입력하세요.'; return; }
+  if (password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (password !== password2) { err.textContent = '비밀번호가 일치하지 않습니다.'; return; }
+
+  btn.disabled = true; btn.textContent = '변경 중...';
+  const { error } = await supabaseClient.auth.updateUser({ password });
+  btn.disabled = false; btn.textContent = '비밀번호 변경';
+
+  if (error) { err.textContent = friendlyPasswordChangeError(error); return; }
+
+  pwInput.value = ''; pw2Input.value = '';
+  closeModal('my-info-modal');
   alert('비밀번호가 변경되었습니다.');
 }
 
