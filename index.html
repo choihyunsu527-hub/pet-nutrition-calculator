@@ -1059,18 +1059,24 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <h3>🩺 생활 및 건강 정보</h3>
           <div class="accent-card">
             <div class="settings-grid">
-              <div class="sf-item">
-                <label>활동량</label>
-                <div class="seg-control" data-for="pet-activity">
-                  <button type="button" class="seg-btn" data-value="저활동">저활동</button>
-                  <button type="button" class="seg-btn" data-value="보통">보통</button>
-                  <button type="button" class="seg-btn" data-value="고활동">고활동</button>
+              <div class="full-width" style="display:flex;gap:8px">
+                <div class="sf-item" style="flex:1 1 0;min-width:0;margin-bottom:0">
+                  <label>활동량</label>
+                  <div class="seg-control" data-for="pet-activity">
+                    <button type="button" class="seg-btn" data-value="저활동">저활동</button>
+                    <button type="button" class="seg-btn" data-value="보통">보통</button>
+                    <button type="button" class="seg-btn" data-value="고활동">고활동</button>
+                  </div>
+                  <select id="pet-activity" class="seg-hidden" onchange="calculate()">
+                    <option value="저활동">저활동</option>
+                    <option value="보통" selected>보통</option>
+                    <option value="고활동">고활동</option>
+                  </select>
                 </div>
-                <select id="pet-activity" class="seg-hidden" onchange="calculate()">
-                  <option value="저활동">저활동</option>
-                  <option value="보통" selected>보통</option>
-                  <option value="고활동">고활동</option>
-                </select>
+                <div class="sf-item" style="flex:1 1 0;min-width:0;margin-bottom:0">
+                  <label>현재 건강 상태</label>
+                  <input id="pet-health" type="text" placeholder="예: 양호, 신장질환 관리중" onchange="saveToStorage()" style="width:100%;box-sizing:border-box">
+                </div>
               </div>
               <div class="sf-item full-width">
                 <label>BCS (신체지수)</label>
@@ -1102,10 +1108,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                   <option value="8">8단계</option>
                   <option value="9">9단계 (고도비만)</option>
                 </select>
-              </div>
-              <div class="sf-item">
-                <label>현재 건강 상태</label>
-                <input id="pet-health" type="text" placeholder="예: 양호, 신장질환 관리중" onchange="saveToStorage()">
               </div>
               <div class="sf-item full-width">
                 <label>알레르기</label>
