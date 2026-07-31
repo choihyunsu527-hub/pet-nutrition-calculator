@@ -588,10 +588,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 .pw-field { margin-bottom: 14px; text-align: left; }
 .pw-field label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
-.pw-field input { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 5px;
+.pw-field input, .pw-field select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 5px;
                    font-size: 12px; font-family: inherit; outline: none;
                    background: var(--side2); color: var(--text); box-sizing: border-box; }
-.pw-field input:focus { border-color: var(--acc); }
+.pw-field input:focus, .pw-field select:focus { border-color: var(--acc); }
+.pw-field input:disabled, .pw-field select:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── 대시보드 ── */
 #tab-dash { overflow-y: auto; }
@@ -1847,6 +1848,39 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('pw-change-modal')">취소</button>
       <button class="btn-save" onclick="savePasswordChange()">✅ 변경</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 관리자 페이지: 사용자 편집 모달 ══ -->
+<div class="modal-overlay" id="admin-edit-modal">
+  <div class="modal" style="width:420px">
+    <div class="modal-hdr">
+      <span>✏️ 사용자 편집</span>
+      <button onclick="closeModal('admin-edit-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:22px 28px">
+      <div class="pw-field">
+        <label>이메일</label>
+        <input type="text" id="edit-user-email" readonly disabled>
+      </div>
+      <div class="pw-field">
+        <label>권한</label>
+        <select id="edit-user-role">
+          <option value="user">일반 사용자</option>
+          <option value="super_admin">관리자</option>
+        </select>
+        <div id="edit-user-role-note" style="font-size:10px;color:var(--sub);margin-top:4px;display:none">본인 계정의 권한은 변경할 수 없습니다.</div>
+      </div>
+      <div class="pw-field">
+        <label>새 비밀번호 (변경할 때만 입력)</label>
+        <input type="text" id="edit-user-password" placeholder="6자 이상, 비워두면 변경 안 함" autocomplete="off">
+      </div>
+      <div id="edit-user-err" style="font-size:10px;color:#B03A2E;min-height:14px;margin-top:4px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('admin-edit-modal')">취소</button>
+      <button class="btn-save" id="edit-user-save-btn" onclick="saveEditUser()">✅ 저장</button>
     </div>
   </div>
 </div>
@@ -5903,7 +5937,7 @@ async function loadAdminUsers() {
 
   const { data, error } = await supabaseClient
     .from('profiles')
-    .select('email, role, created_at')
+    .select('id, email, role, created_at')
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -5932,7 +5966,7 @@ function renderAdminUserTable(box, rows) {
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  ['이메일', 'Role', '생성일', '상태'].forEach(text => {
+  ['이메일', 'Role', '생성일', '상태', '관리'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.appendChild(th);
@@ -5964,14 +5998,110 @@ function renderAdminUserTable(box, rows) {
     tdStatus.className = 'center';
     tdStatus.textContent = '활성';
 
+    // 관리(편집/삭제) — 본인 계정 삭제와 super_admin 계정 삭제는 버튼 자체를 비활성화해
+    // Edge Function을 호출하기 전에 UI에서부터 막는다(서버 사이드 검증은 delete-user에서 재수행).
+    const tdActions = document.createElement('td');
+    tdActions.className = 'center';
+    const isSelf = row.id === (currentUser && currentUser.id);
+    const editBtn = document.createElement('button');
+    editBtn.className = 'settings-opt-btn';
+    editBtn.style.cssText = 'padding:4px 10px;font-size:10.5px;margin-right:4px';
+    editBtn.textContent = '편집';
+    editBtn.onclick = () => openEditUserModal(row);
+    const delBtn = document.createElement('button');
+    delBtn.className = 'settings-opt-btn';
+    delBtn.style.cssText = 'padding:4px 10px;font-size:10.5px;color:#B03A2E;border-color:#B03A2E';
+    delBtn.textContent = '삭제';
+    if (isSelf || row.role === 'super_admin') {
+      delBtn.disabled = true;
+      delBtn.style.opacity = '0.4';
+      delBtn.style.cursor = 'not-allowed';
+      delBtn.title = isSelf ? '본인 계정은 삭제할 수 없습니다.' : '관리자 계정은 삭제할 수 없습니다.';
+    } else {
+      delBtn.onclick = () => deleteUserAccount(row);
+    }
+    tdActions.appendChild(editBtn);
+    tdActions.appendChild(delBtn);
+
     tr.appendChild(tdEmail);
     tr.appendChild(tdRole);
     tr.appendChild(tdCreated);
     tr.appendChild(tdStatus);
+    tr.appendChild(tdActions);
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
   box.appendChild(table);
+}
+
+let editUserTargetId = null;
+
+function openEditUserModal(row) {
+  editUserTargetId = row.id;
+  document.getElementById('edit-user-email').value = row.email || '';
+  const roleSelect = document.getElementById('edit-user-role');
+  roleSelect.value = row.role || 'user';
+  const isSelf = row.id === (currentUser && currentUser.id);
+  roleSelect.disabled = isSelf;
+  document.getElementById('edit-user-role-note').style.display = isSelf ? '' : 'none';
+  document.getElementById('edit-user-password').value = '';
+  document.getElementById('edit-user-err').textContent = '';
+  document.getElementById('admin-edit-modal').classList.add('open');
+}
+
+// 저장 — role은 본인이 아닐 때만, password는 입력된 경우에만 update-user Edge Function에 보낸다.
+// 서버(update-user)가 super_admin 권한과 본인 권한 변경 금지를 다시 검증하므로, 여기 UI 체크는
+// 1차 방어일 뿐이다.
+async function saveEditUser() {
+  const btn = document.getElementById('edit-user-save-btn');
+  const err = document.getElementById('edit-user-err');
+  const roleSelect = document.getElementById('edit-user-role');
+  const pwInput = document.getElementById('edit-user-password');
+  const isSelf = editUserTargetId === (currentUser && currentUser.id);
+  const password = pwInput.value;
+
+  err.textContent = '';
+  if (!isSuperAdmin()) { err.textContent = 'super_admin 권한이 필요합니다.'; return; }
+  if (!editUserTargetId) { err.textContent = '대상 사용자를 확인할 수 없습니다.'; return; }
+  if (password && password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
+
+  const body = { targetUserId: editUserTargetId };
+  if (!isSelf) body.role = roleSelect.value;
+  if (password) body.password = password;
+
+  if (body.role === undefined && body.password === undefined) {
+    err.textContent = '변경할 내용이 없습니다.';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = '저장 중...'; err.textContent = '';
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('update-user', { body });
+    if (error || data?.error) {
+      err.textContent = (data && data.error) || error.message || '저장 중 오류가 발생했습니다.';
+      return;
+    }
+    closeModal('admin-edit-modal');
+    loadAdminUsers();
+  } finally {
+    btn.disabled = false; btn.textContent = '✅ 저장';
+  }
+}
+
+// 삭제 — 확인창을 거친 뒤 delete-user Edge Function을 호출한다. 본인/super_admin 계정은
+// 목록 렌더링 단계에서 이미 삭제 버튼이 비활성화되지만, 서버(delete-user)에서도 다시 검증한다.
+async function deleteUserAccount(row) {
+  if (!isSuperAdmin()) return;
+  if (!confirm(`정말 '${row.email}' 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  if (!supabaseClient) { alert(friendlyAuthError()); return; }
+
+  const { data, error } = await supabaseClient.functions.invoke('delete-user', { body: { targetUserId: row.id } });
+  if (error || data?.error) {
+    alert((data && data.error) || error.message || '삭제 중 오류가 발생했습니다.');
+    return;
+  }
+  loadAdminUsers();
 }
 
 async function enterApp(session) {
