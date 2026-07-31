@@ -5289,7 +5289,7 @@ async function saveRecipe() {
       bw:      document.getElementById('sb-bw').value,
       totalG:  getMixTotalG(),
       rows:    getMixRows(),
-      vitk:    document.getElementById('vitk-inp').value,
+      vitk:    document.getElementById('vitk-inp')?.value,
       amino:   getAminoManual(),
       customIngs: customIngs,
       pet:     collectPetProfileData(),
@@ -5341,7 +5341,7 @@ function applyRecipeData(data, displayName) {
   document.getElementById('sb-moist').value  = data.moisture||10;
   document.getElementById('sb-bw').value     = data.bw||15;
   document.getElementById('mix-total-g').value = data.totalG||1000;
-  document.getElementById('vitk-inp').value  = data.vitk||0;
+  if (document.getElementById('vitk-inp')) document.getElementById('vitk-inp').value = data.vitk||0;
 
   applyPetProfileData(data.pet);
   // 옛 레시피 파일처럼 목표 체중 정보가 없으면 현재 체중을 기본값으로 채운다.
@@ -5652,7 +5652,7 @@ function loadFromStorage() {
     if (data.moisture) document.getElementById('sb-moist').value   = data.moisture;
     if (data.bw)       document.getElementById('sb-bw').value      = data.bw;
     if (data.totalG)   document.getElementById('mix-total-g').value = data.totalG;
-    if (data.vitk)     document.getElementById('vitk-inp').value   = data.vitk;
+    if (data.vitk && document.getElementById('vitk-inp')) document.getElementById('vitk-inp').value = data.vitk;
 
     applyPetProfileData(data.pet);
     if (!data.pet || !data.pet.petTargetBw) {
