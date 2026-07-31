@@ -159,7 +159,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #sidebar-logo img { width: 100%; max-width: 100%; height: auto; display: block; }
 #sidebar-tagline { font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: #8b96a3;
                     text-transform: uppercase; margin-top: 6px; white-space: nowrap; text-align: center; }
-#sidebar-nav { display: flex; flex-direction: column; gap: 2px; }
+#sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 #sidebar-foot { padding-top: 14px; font-size: 10px; color: #8b96a3; }
 #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
@@ -173,12 +173,35 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 .nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
 .nav-item.active { color: var(--pill-text); background: var(--pill-bg); font-weight: 700; }
 
+/* ── 사이드바 섹션 라벨 / 아코디언 그룹 ── */
+.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; color: #5b6b7a;
+                      text-transform: uppercase; margin: 14px 10px 4px; user-select: none; }
+.nav-section-label:first-child { margin-top: 0; }
+
+.nav-group-hdr { display: flex; align-items: center; justify-content: space-between; width: 100%;
+                 box-sizing: border-box; padding: 11px 12px;
+                 font-size: 13.5px; font-weight: 600; color: #8b96a3; cursor: pointer;
+                 border-radius: 8px;
+                 transition: color .3s ease, background-color .3s ease;
+                 user-select: none; white-space: nowrap; text-align: left; }
+.nav-group-hdr:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
+.nav-group.has-active > .nav-group-hdr { color: #FFFFFF; }
+.nav-group-arrow { width: 6px; height: 6px; flex-shrink: 0; margin-left: 8px;
+                   border-style: solid; border-color: currentColor; border-width: 0 1.6px 1.6px 0;
+                   transform: rotate(-45deg); transition: transform .25s ease; }
+.nav-group.open > .nav-group-hdr .nav-group-arrow { transform: rotate(45deg); }
+
+.nav-group-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+.nav-group.open > .nav-group-body { grid-template-rows: 1fr; }
+.nav-group-inner { overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
+.nav-subitem { padding-left: 30px; font-size: 12.5px; margin-top: 2px; }
+
 @media (max-width: 1150px) {
   #top-row1 { padding: 0 14px; gap: 16px; }
-  .nav-item { padding: 10px 12px; font-size: 13px; }
+  .nav-item, .nav-group-hdr { padding: 10px 12px; font-size: 13px; }
 }
 @media (max-width: 880px) {
-  .nav-item { padding: 9px 8px; font-size: 12px; }
+  .nav-item, .nav-group-hdr { padding: 9px 8px; font-size: 12px; }
   #top-recipe, #top-recipe-select { display: none; }
 }
 
@@ -911,18 +934,61 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="sidebar-tagline">Advanced Clinical Nutrition Systems</div>
   </div>
   <div id="sidebar-nav">
+    <div class="nav-section-label">작업 관리</div>
     <div class="nav-item active" data-tab="dash" onclick="showTab('dash', this)">대시보드</div>
-    <div class="nav-item" data-tab="product" onclick="showTab('product', this)">제품 / 정보</div>
-    <div class="nav-item" data-tab="mix" onclick="showTab('mix', this)">배합 설계</div>
+
+    <div class="nav-group" data-group="product-mgmt">
+      <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
+        <span>제품 관리</span><span class="nav-group-arrow"></span>
+      </div>
+      <div class="nav-group-body"><div class="nav-group-inner">
+        <div class="nav-item nav-subitem" data-tab="product" onclick="showTab('product', this)">제품 / 정보</div>
+      </div></div>
+    </div>
+
+    <div class="nav-group" data-group="dev">
+      <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
+        <span>개발</span><span class="nav-group-arrow"></span>
+      </div>
+      <div class="nav-group-body"><div class="nav-group-inner">
+        <div class="nav-item nav-subitem" data-tab="mix" onclick="showTab('mix', this)">배합 설계</div>
+      </div></div>
+    </div>
+
+    <div class="nav-section-label">분석 및 검증</div>
     <div class="nav-item" data-tab="analysis" onclick="showTab('analysis', this)">분석 현황</div>
-    <div class="nav-item" data-tab="ana" onclick="showTab('ana', this)">영양 분석</div>
-    <div class="nav-item" data-tab="amino" onclick="showTab('amino', this)">아미노산</div>
+
+    <div class="nav-group" data-group="nutri-analysis">
+      <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
+        <span>영양 분석</span><span class="nav-group-arrow"></span>
+      </div>
+      <div class="nav-group-body"><div class="nav-group-inner">
+        <div class="nav-item nav-subitem" data-tab="ana" onclick="showTab('ana', this)">영양소 분석</div>
+        <div class="nav-item nav-subitem" data-tab="ana-energy" onclick="showTab('ana-energy', this)">에너지 분석</div>
+      </div></div>
+    </div>
+
+    <div class="nav-item" data-tab="amino" onclick="showTab('amino', this)">아미노산 분석</div>
     <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">경고 패널</div>
-    <div class="nav-item" data-tab="std" onclick="showTab('std', this)">기준 DB</div>
+
+    <div class="nav-section-label">데이터 관리</div>
     <div class="nav-item" data-tab="ing" onclick="showTab('ing', this)">원료 DB</div>
-    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">🛡 관리자</div>
+
+    <div class="nav-group" data-group="std-terms">
+      <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
+        <span>기준 / 용어</span><span class="nav-group-arrow"></span>
+      </div>
+      <div class="nav-group-body"><div class="nav-group-inner">
+        <div class="nav-item nav-subitem" data-tab="std" onclick="showTab('std', this)">영양 기준 DB</div>
+        <div class="nav-item nav-subitem" data-tab="glossary" onclick="showTab('glossary', this)">전문 용어</div>
+        <div class="nav-item nav-subitem" data-tab="calcbasis" onclick="showTab('calcbasis', this)">계산 기준</div>
+      </div></div>
+    </div>
+
+    <div class="nav-section-label" style="margin-top:auto">시스템 관리</div>
+    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">관리자</div>
+    <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)">설정</div>
   </div>
-  <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)" style="margin-top:auto">⚙ 설정</div>
   <div id="sidebar-foot">© 2026 Hyunsu Choi<br>All Rights Reserved.</div>
 </div>
 
@@ -1535,6 +1601,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
     </div>
 
+    <!-- ── TAB: 에너지 분석 (준비 중) ── -->
+    <div class="tab-pane" id="tab-ana-energy">
+      <div class="hdr-bar">에너지 분석</div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel">
+        <div class="dash-section">
+          <div style="padding:60px 20px;text-align:center;color:var(--sub)">
+            <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">준비 중입니다</div>
+            <div style="font-size:12px;line-height:1.7">에너지 분석 화면은 아직 준비 중입니다.<br>현재는 대시보드 / 제품 정보 탭에서 RER · MER · 일일 급여량을 확인하실 수 있습니다.</div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── TAB 3: 아미노산·VitK ── -->
     <div class="tab-pane" id="tab-amino">
       <div class="hdr-bar">필수아미노산 11종 — 원료DB 자동계산 + 직접 보정 가능</div>
@@ -1627,6 +1708,36 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <tbody id="std-body"></tbody>
         </table>
       </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: 전문 용어 (준비 중) ── -->
+    <div class="tab-pane" id="tab-glossary">
+      <div class="hdr-bar">전문 용어</div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel">
+        <div class="dash-section">
+          <div style="padding:60px 20px;text-align:center;color:var(--sub)">
+            <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">준비 중입니다</div>
+            <div style="font-size:12px;line-height:1.7">앱에서 쓰이는 전문 용어(DMB, ME, AAFCO 등) 설명 페이지는 아직 준비 중입니다.</div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: 계산 기준 (준비 중) ── -->
+    <div class="tab-pane" id="tab-calcbasis">
+      <div class="hdr-bar">계산 기준</div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel">
+        <div class="dash-section">
+          <div style="padding:60px 20px;text-align:center;color:var(--sub)">
+            <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">준비 중입니다</div>
+            <div style="font-size:12px;line-height:1.7">RER · MER 계산식과 각종 보정 계수에 대한 상세 설명 페이지는 아직 준비 중입니다.</div>
+          </div>
+        </div>
+        </div>
       </div>
     </div>
 
@@ -5077,7 +5188,21 @@ function renderDashWarnSummary() {
 // ════════════════════════════════════════════════════════════════════════════
 // 탭 전환
 // ════════════════════════════════════════════════════════════════════════════
-const TAB_LABELS = {dash:'대시보드', product:'제품 / 정보', mix:'배합 설계', analysis:'분석 현황', ana:'영양 분석', amino:'아미노산', warn:'경고 패널', std:'기준 DB', ing:'원료 DB', settings:'설정', admin:'관리자'};
+const TAB_LABELS = {
+  dash:'대시보드', product:'제품 / 정보', mix:'배합 설계', analysis:'분석 현황',
+  ana:'영양소 분석', 'ana-energy':'에너지 분석', amino:'아미노산 분석', warn:'경고 패널',
+  std:'영양 기준 DB', glossary:'전문 용어', calcbasis:'계산 기준',
+  ing:'원료 DB', settings:'설정', admin:'관리자',
+};
+
+// 사이드바 아코디언 그룹 펼침/접힘 — 그룹 헤더 클릭 시 호출된다.
+function toggleNavGroup(groupEl) {
+  const willOpen = !groupEl.classList.contains('open');
+  // 한 번에 하나의 그룹만 펼쳐 사이드바가 길어지지 않도록 아코디언 방식으로 동작한다.
+  document.querySelectorAll('.nav-group.open').forEach(g => { if (g !== groupEl) g.classList.remove('open'); });
+  groupEl.classList.toggle('open', willOpen);
+}
+
 function showTab(id, el) {
   const pane = document.getElementById('tab-'+id);
   if (!pane) return;
@@ -5086,8 +5211,14 @@ function showTab(id, el) {
   if (pane.dataset.requiresRole && pane.dataset.requiresRole !== currentUserRole) return;
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-group').forEach(g => g.classList.remove('has-active'));
   pane.classList.add('active');
   if (el) el.classList.add('active');
+  // 하위 메뉴가 속한 아코디언 그룹은 자동으로 펼치고 강조 표시한다(직접 클릭 진입 + 새로고침
+  // 후 마지막 탭 복원(goTab) 양쪽 모두 여기 한 곳에서 처리됨).
+  const parentGroup = el ? el.closest('.nav-group') : null;
+  document.querySelectorAll('.nav-group').forEach(g => g.classList.toggle('open', g === parentGroup));
+  if (parentGroup) parentGroup.classList.add('has-active');
   const vt = document.getElementById('top-view-title');
   if (vt) vt.textContent = TAB_LABELS[id] || '';
   sessionStorage.setItem('feedcalc_v4_tab', id);
