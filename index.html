@@ -160,40 +160,47 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #sidebar-tagline { font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: #8b96a3;
                     text-transform: uppercase; margin-top: 6px; white-space: nowrap; text-align: center; }
 #sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-#sidebar-foot { padding-top: 14px; font-size: 10px; color: #8b96a3; }
+#sidebar-foot { padding-top: 14px; font-size: 9px; color: #8b96a3; opacity: 0.55; }
 #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
 
 /* ── 사이드바 네비게이션 ── */
-.nav-item { display: flex; align-items: center; width: 100%; box-sizing: border-box;
+.nav-item { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box;
             padding: 11px 12px;
             font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
             border-radius: 8px;
-            transition: color .3s ease, background-color .3s ease, padding .15s ease;
+            transition: color .2s ease, background-color .2s ease, padding .2s ease;
             user-select: none; white-space: nowrap; text-align: left; }
-.nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
+.nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
 .nav-item.active { color: var(--pill-text); background: var(--pill-bg); font-weight: 700;
-                    padding: 9px 10px; border-radius: 6px; }
+                    padding: 9px 8px; border-radius: 5px; }
+
+/* Lucide 라인 아이콘 — stroke는 currentColor를 상속해 텍스트와 같은 색/상태로 움직인다 */
+.nav-icon { width: 18px; height: 18px; flex-shrink: 0; display: block;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            stroke-linecap: round; stroke-linejoin: round; }
+.nav-label { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.nav-chevron { width: 15px; height: 15px; flex-shrink: 0; margin-left: 8px;
+               fill: none; stroke: currentColor; stroke-width: 2;
+               stroke-linecap: round; stroke-linejoin: round;
+               transition: transform .2s ease; }
+.nav-group.open > .nav-group-hdr .nav-chevron { transform: rotate(90deg); }
 
 /* ── 사이드바 구분선 ── */
-.nav-divider { height: 1px; margin: 14px 4px; background: rgba(255,255,255,0.07); border: none; flex-shrink: 0; }
+.nav-divider { height: 1px; margin: 14px 4px; background: rgba(255,255,255,0.045); border: none; flex-shrink: 0; }
 
 /* ── 사이드바 섹션 라벨 / 아코디언 그룹 ── */
-.nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: #7d8894;
-                      text-transform: uppercase; margin: 2px 12px 6px; user-select: none; }
+.nav-section-label { font-size: 9.5px; font-weight: 600; letter-spacing: 0.5px; color: #b7c0ca;
+                      opacity: 0.5; text-transform: uppercase; margin: 4px 12px 9px; user-select: none; }
 .nav-section-label:first-child { margin-top: 0; }
 
 .nav-group-hdr { display: flex; align-items: center; justify-content: space-between; width: 100%;
                  box-sizing: border-box; padding: 11px 12px;
                  font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
                  border-radius: 8px;
-                 transition: color .3s ease, background-color .3s ease;
+                 transition: color .2s ease, background-color .2s ease;
                  user-select: none; white-space: nowrap; text-align: left; }
-.nav-group-hdr:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
+.nav-group-hdr:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
 .nav-group.has-active > .nav-group-hdr { color: #FFFFFF; }
-.nav-group-arrow { width: 6px; height: 6px; flex-shrink: 0; margin-left: 8px;
-                   border-style: solid; border-color: currentColor; border-width: 0 1.6px 1.6px 0;
-                   transform: rotate(-45deg); transition: transform .25s ease; }
-.nav-group.open > .nav-group-hdr .nav-group-arrow { transform: rotate(45deg); }
 
 .nav-group-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
 .nav-group.open > .nav-group-body { grid-template-rows: 1fr; }
@@ -1000,13 +1007,20 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="sidebar-tagline">Advanced Clinical Nutrition Systems</div>
   </div>
   <div id="sidebar-nav">
-    <div class="nav-item active" data-tab="dash" onclick="showTab('dash', this)">대시보드</div>
+    <div class="nav-item active" data-tab="dash" onclick="showTab('dash', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      <span>대시보드</span>
+    </div>
     <div class="nav-divider"></div>
 
     <div class="nav-section-label">작업</div>
     <div class="nav-group" data-group="product-mgmt">
       <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
-        <span>제품 관리</span><span class="nav-group-arrow"></span>
+        <span class="nav-label">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>
+          <span>제품 관리</span>
+        </span>
+        <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
         <div class="nav-item nav-subitem" data-tab="product" onclick="showTab('product', this)">제품 / 정보</div>
@@ -1015,7 +1029,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <div class="nav-group" data-group="dev">
       <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
-        <span>개발</span><span class="nav-group-arrow"></span>
+        <span class="nav-label">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
+          <span>개발</span>
+        </span>
+        <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
         <div class="nav-item nav-subitem" data-tab="mix" onclick="showTab('mix', this)">배합 설계</div>
@@ -1024,11 +1042,18 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">분석</div>
-    <div class="nav-item" data-tab="analysis" onclick="showTab('analysis', this)">분석 현황</div>
+    <div class="nav-item" data-tab="analysis" onclick="showTab('analysis', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+      <span>분석 현황</span>
+    </div>
 
     <div class="nav-group" data-group="nutri-analysis">
       <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
-        <span>영양 분석</span><span class="nav-group-arrow"></span>
+        <span class="nav-label">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+          <span>영양 분석</span>
+        </span>
+        <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
         <div class="nav-item nav-subitem" data-tab="ana" onclick="showTab('ana', this)">영양소 분석</div>
@@ -1036,28 +1061,50 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div></div>
     </div>
 
-    <div class="nav-item" data-tab="amino" onclick="showTab('amino', this)">아미노산 분석</div>
-    <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">경고 패널</div>
+    <div class="nav-item" data-tab="amino" onclick="showTab('amino', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>
+      <span>아미노산 분석</span>
+    </div>
+    <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <span>경고 패널</span>
+    </div>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">데이터</div>
-    <div class="nav-item" data-tab="ing" onclick="showTab('ing', this)">원료 DB</div>
+    <div class="nav-item" data-tab="ing" onclick="showTab('ing', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+      <span>원료 DB</span>
+    </div>
 
     <div class="nav-group" data-group="std-terms">
       <div class="nav-group-hdr nav-item" data-tab="std" onclick="showTab('std', this)">
-        <span>영양기준 DB</span><span class="nav-group-arrow"></span>
+        <span class="nav-label">
+          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg>
+          <span>영양기준 DB</span>
+        </span>
+        <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
         <div class="nav-item nav-subitem" data-tab="calcbasis" onclick="showTab('calcbasis', this)">계산 기준</div>
       </div></div>
     </div>
 
-    <div class="nav-item" data-tab="glossary" onclick="showTab('glossary', this)">용어</div>
+    <div class="nav-item" data-tab="glossary" onclick="showTab('glossary', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M8 11h8"/><path d="M8 7h6"/></svg>
+      <span>용어</span>
+    </div>
 
     <div class="nav-divider" style="margin-top:auto"></div>
     <div class="nav-section-label">시스템</div>
-    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">관리자</div>
-    <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)">설정</div>
+    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M6.376 18.91a6 6 0 0 1 11.249.003"/><circle cx="12" cy="11" r="4"/></svg>
+      <span>관리자</span>
+    </div>
+    <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
+      <span>설정</span>
+    </div>
   </div>
   <div id="sidebar-foot">© 2026 Hyunsu Choi<br>All Rights Reserved.</div>
 </div>
