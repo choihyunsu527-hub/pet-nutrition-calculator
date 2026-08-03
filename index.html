@@ -7068,6 +7068,11 @@ function renderNotifList() {
 function openNotifDrawer() {
   document.getElementById('notif-overlay').classList.add('open');
   document.getElementById('notif-drawer').classList.add('open');
+  // Drawer를 열어 알림을 확인한 시점에 모두 읽음 처리 — 안읽음 Dot(아이템·Bell 모두)이 즉시 사라진다.
+  if (NOTIF_ITEMS.some(n => n.unread)) {
+    NOTIF_ITEMS.forEach(n => { n.unread = false; });
+    renderNotifList();
+  }
 }
 function closeNotifDrawer() {
   document.getElementById('notif-overlay').classList.remove('open');
