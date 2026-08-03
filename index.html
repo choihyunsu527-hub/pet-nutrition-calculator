@@ -3229,7 +3229,7 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
     "ALA(α-리놀렌,n-3)": dmb.ala,
     "조섬유": dmb.fiber,
     "수분":                 dmb.moist,
-    "오메가6:오메가3 비율": dmb.la > 0 && (dmb.epa + dmb.dha + dmb.ala) > 0
+    "ω-6:ω-3 비율": dmb.la > 0 && (dmb.epa + dmb.dha + dmb.ala) > 0
                             ? dmb.la / (dmb.epa + dmb.dha + dmb.ala)
                             : null,
     "조회분":              dmb.ash,
@@ -4331,10 +4331,10 @@ const CONTRIB_NUTRIENTS = [
   { key:'vitA',    label:'비타민 A',   unit:'IU', asisIdx:15, get: ing => ing[16] || 0 },
   { key:'vitD',    label:'비타민 D',   unit:'IU', asisIdx:16, get: ing => ing[17] || 0 },
   { key:'vitE',    label:'비타민 E',   unit:'mg', asisIdx:17, get: ing => ing[18] || 0 },
-  // 오메가-6는 원료DB의 리놀레산(LA)을, 오메가-3는 ALA+EPA+DHA 합산을 사용 — 둘 다 원료DB 실측값 그대로 조합한 것으로,
+  // ω-6는 원료DB의 리놀레산(LA)을, ω-3는 ALA+EPA+DHA 합산을 사용 — 둘 다 원료DB 실측값 그대로 조합한 것으로,
   // DB에 없는 값을 임의로 만든 것이 아님(대시보드 등 기존 화면의 EPA+DHA 합산 표기와 동일한 방식)
-  { key:'omega6',  label:'오메가-6',   unit:'g',  asisIdx:34, get: ing => ing[35] || 0 },
-  { key:'omega3',  label:'오메가-3',   unit:'mg', asisIdx:null, get: ing => (ing[36]||0)*1000 + (ing[27]||0) + (ing[28]||0) },
+  { key:'omega6',  label:'ω-6',   unit:'g',  asisIdx:34, get: ing => ing[35] || 0 },
+  { key:'omega3',  label:'ω-3',   unit:'mg', asisIdx:null, get: ing => (ing[36]||0)*1000 + (ing[27]||0) + (ing[28]||0) },
 ];
 
 let lastContribAnalysis = null;
