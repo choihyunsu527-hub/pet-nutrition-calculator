@@ -151,6 +151,52 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                           cursor: pointer; transition: background-color .2s ease; }
 .profile-dropdown-item:hover { background: var(--side2); }
 
+/* ── 알림(우측 상단 벨 + 우측 슬라이드 Drawer) ── */
+#notif-btn { position: relative; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
+             border: none; background: transparent; color: var(--sub); cursor: pointer;
+             display: flex; align-items: center; justify-content: center; padding: 0;
+             transition: background-color .2s ease, color .2s ease; }
+#notif-btn:hover { background: var(--hover-tint); color: var(--text); }
+#notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
+             background: #34c759; border: 2px solid var(--side2); display: none; }
+#notif-dot.show { display: block; }
+
+#notif-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+                 z-index: 1000; opacity: 0; transition: opacity .28s ease; }
+#notif-overlay.open { display: block; opacity: 1; }
+
+#notif-drawer { position: fixed; top: 0; right: 0; height: 100%; width: 380px;
+                background: var(--panel-grad); border-left: 1px solid var(--panel-border);
+                box-shadow: var(--sh-md); z-index: 1001;
+                display: flex; flex-direction: column;
+                transform: translateX(100%); transition: transform .28s ease; }
+#notif-drawer.open { transform: translateX(0); }
+
+#notif-drawer-hdr { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+                    padding: 18px 20px; border-bottom: 1px solid var(--border); }
+#notif-drawer-hdr span { font-size: 14.5px; font-weight: 700; color: var(--hdr); }
+#notif-close-btn { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent;
+                    color: var(--sub); cursor: pointer; display: flex; align-items: center; justify-content: center;
+                    padding: 0; transition: background-color .2s ease, color .2s ease; }
+#notif-close-btn:hover { background: var(--hover-tint); color: var(--text); }
+
+#notif-list { flex: 1; overflow-y: auto; }
+.notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 14px 20px;
+              border-bottom: 1px solid var(--border); }
+.notif-dot-col { width: 8px; flex-shrink: 0; padding-top: 5px; }
+.notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; display: block; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-title { font-size: 12.5px; font-weight: 700; color: var(--hdr); line-height: 1.4; }
+.notif-desc { font-size: 11.5px; color: var(--text); line-height: 1.55; margin-top: 3px; }
+.notif-time { font-size: 10px; color: var(--sub); margin-top: 6px; }
+.notif-empty { padding: 60px 20px; text-align: center; color: var(--sub); font-size: 12px; }
+
+@media (max-width: 480px) {
+  /* vw 대신 left:0으로 폭을 맞춘다 — 이 앱은 body에 zoom:1.1이 걸려 있어 100vw 같은 뷰포트
+     단위 폭 계산이 실제 화면보다 커지는 오차가 생긴다(edge-anchoring은 이 오차의 영향을 받지 않는다). */
+  #notif-drawer { left: 0; width: auto; }
+}
+
 /* ── 레이아웃 ── */
 #app { display: flex; flex: 1; overflow: hidden; }
 #sidebar { display: flex; flex-direction: column; width: 220px; flex-shrink: 0; box-sizing: border-box;
@@ -1131,6 +1177,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <div class="profile-dropdown-item" style="border-top:1px solid var(--border)" onclick="closeProfileMenu(); logout()">로그아웃</div>
           </div>
         </div>
+        <button id="notif-btn" onclick="toggleNotifDrawer()" title="알림">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.268 21a2 2 0 0 0 3.464 0"/>
+            <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
+          </svg>
+          <span id="notif-dot"></span>
+        </button>
       </div>
     </div>
   </div>
@@ -2236,6 +2289,23 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   </div><!-- /tab-content -->
 </div><!-- /main -->
 </div><!-- /app -->
+
+<!-- ══ 알림(우측 상단 Bell → 우측 슬라이드 Drawer) ══
+     #app이 position:relative + z-index:1로 자체 스태킹 컨텍스트를 만들기 때문에, #app 내부에 두면
+     z-index를 아무리 올려도 body 바로 아래(#app의 형제)에 있는 #fab(z-index:900)보다 위로 뜰 수 없다.
+     그래서 #fab와 마찬가지로 #app의 형제로 배치한다. -->
+<div id="notif-overlay" onclick="closeNotifDrawer()"></div>
+<div id="notif-drawer" role="dialog" aria-label="알림">
+  <div id="notif-drawer-hdr">
+    <span>알림</span>
+    <button id="notif-close-btn" onclick="closeNotifDrawer()" title="닫기">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div id="notif-list"></div>
+</div>
 
 <!-- ══ 플로팅 액션 버튼 ══ -->
 <div class="fab" id="fab">
@@ -6965,6 +7035,52 @@ document.addEventListener('click', (e) => {
   if (wrap && !wrap.contains(e.target)) closeProfileMenu();
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// 알림(우측 상단 Bell → 우측 슬라이드 Drawer) — 아직 서버 발행 알림 시스템이 없어
+// 예시 데이터를 정적으로 표시한다. 백엔드 알림 API가 생기면 NOTIF_ITEMS를 그 응답으로 교체하면 된다.
+// ════════════════════════════════════════════════════════════════════════════
+const NOTIF_ITEMS = [
+  { title: '에너지 분석 탭 추가', desc: 'ME·RER/MER·칼로리 조성·AAFCO 열량 밀도 보정을 한 화면에서 확인할 수 있습니다.', time: '방금 전', unread: true },
+  { title: '용어 사전 업데이트', desc: 'AAFCO·NRC·FEDIAF 등 전문 용어 27개를 검색 가능한 사전 형태로 정리했습니다.', time: '오늘', unread: true },
+  { title: '계산 기준 문서 추가', desc: '이 계산기가 사용하는 공식·기준·판정 로직을 한 곳에서 확인할 수 있습니다.', time: '어제', unread: false },
+  { title: '사이드바 UI 개선', desc: '메뉴 아이콘과 여백을 다듬어 가독성을 높였습니다.', time: '3일 전', unread: false },
+];
+
+function renderNotifList() {
+  const listEl = document.getElementById('notif-list');
+  if (!listEl) return;
+  listEl.innerHTML = NOTIF_ITEMS.length
+    ? NOTIF_ITEMS.map(n => `
+        <div class="notif-item">
+          <div class="notif-dot-col">${n.unread ? '<span class="notif-unread-dot"></span>' : ''}</div>
+          <div class="notif-body">
+            <div class="notif-title">${n.title}</div>
+            <div class="notif-desc">${n.desc}</div>
+            <div class="notif-time">${n.time}</div>
+          </div>
+        </div>`).join('')
+    : '<div class="notif-empty">새로운 알림이 없습니다.</div>';
+
+  const dotEl = document.getElementById('notif-dot');
+  if (dotEl) dotEl.classList.toggle('show', NOTIF_ITEMS.some(n => n.unread));
+}
+
+function openNotifDrawer() {
+  document.getElementById('notif-overlay').classList.add('open');
+  document.getElementById('notif-drawer').classList.add('open');
+}
+function closeNotifDrawer() {
+  document.getElementById('notif-overlay').classList.remove('open');
+  document.getElementById('notif-drawer').classList.remove('open');
+}
+function toggleNotifDrawer() {
+  const isOpen = document.getElementById('notif-drawer').classList.contains('open');
+  if (isOpen) closeNotifDrawer(); else openNotifDrawer();
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('notif-drawer')?.classList.contains('open')) closeNotifDrawer();
+});
+
 async function initAuthGate() {
   // 저장된 "아이디 저장"/"로그인 유지하기" 설정을 로그인 화면에 반영
   const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
@@ -7024,6 +7140,7 @@ function init() {
   renderCalcBasisPage();
   buildGlossaryChips();
   renderGlossary();
+  renderNotifList();
 
   const loaded = loadFromStorage();
   if (!loaded) {
