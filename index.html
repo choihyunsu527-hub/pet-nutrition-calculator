@@ -126,6 +126,25 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-title { display: none; }
 #top-view-title { font-size: 17px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
 #top-nav { display: none; }
+
+/* ── 헤더 중앙 전역 검색(UI만 — 검색 기능은 아직 없음) — #top-row1의 position:relative를 기준으로
+   좌/우 콘텐츠 폭과 무관하게 항상 정중앙에 오도록 절대 배치한다. ── */
+#top-search-wrap { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+                    display: flex; align-items: center; gap: 10px;
+                    width: 360px; max-width: 400px; height: 40px; box-sizing: border-box;
+                    background: var(--side2); border: 1px solid var(--border); border-radius: 10px;
+                    padding: 0 14px; transition: border-color .2s ease, box-shadow .2s ease; }
+#top-search-wrap:hover { border-color: var(--sub); }
+#top-search-wrap:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+#top-search-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--sub);
+                    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#top-search-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+                     font-size: 13px; font-family: inherit; color: var(--text); }
+#top-search-input::placeholder { color: var(--sub); }
+@media (max-width: 1150px) { #top-search-wrap { width: 320px; } }
+@media (max-width: 880px)  { #top-search-wrap { width: 280px; } }
+@media (max-width: 700px)  { #top-search-wrap { display: none; } }
+
 #top-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 #top-recipe { font-size: 11px; font-weight: 600; color: var(--sub); white-space: nowrap; }
 #top-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: var(--inp);
@@ -1219,6 +1238,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   <div id="top-bar">
     <div id="top-row1">
       <div id="top-view-title">대시보드</div>
+      <div id="top-search-wrap">
+        <svg id="top-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
+        <input id="top-search-input" type="text" placeholder="원료, 제품, 레시피 검색..." autocomplete="off">
+      </div>
       <div id="top-right">
         <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 연결된 폴더에 저장">저장</button>
         <select id="top-recipe-select" onchange="onTopRecipeChange(this.value)" title="같은 폴더에 저장된 레시피 목록">
