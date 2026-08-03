@@ -166,21 +166,25 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 /* ── 사이드바 네비게이션 ── */
 .nav-item { display: flex; align-items: center; width: 100%; box-sizing: border-box;
             padding: 11px 12px;
-            font-size: 13.5px; font-weight: 600; color: #8b96a3; cursor: pointer;
+            font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
             border-radius: 8px;
-            transition: color .3s ease, background-color .3s ease;
+            transition: color .3s ease, background-color .3s ease, padding .15s ease;
             user-select: none; white-space: nowrap; text-align: left; }
 .nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
-.nav-item.active { color: var(--pill-text); background: var(--pill-bg); font-weight: 700; }
+.nav-item.active { color: var(--pill-text); background: var(--pill-bg); font-weight: 700;
+                    padding: 9px 10px; border-radius: 6px; }
+
+/* ── 사이드바 구분선 ── */
+.nav-divider { height: 1px; margin: 14px 4px; background: rgba(255,255,255,0.07); border: none; flex-shrink: 0; }
 
 /* ── 사이드바 섹션 라벨 / 아코디언 그룹 ── */
-.nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; color: #5b6b7a;
-                      text-transform: uppercase; margin: 14px 10px 4px; user-select: none; }
+.nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; color: #7d8894;
+                      text-transform: uppercase; margin: 2px 12px 6px; user-select: none; }
 .nav-section-label:first-child { margin-top: 0; }
 
 .nav-group-hdr { display: flex; align-items: center; justify-content: space-between; width: 100%;
                  box-sizing: border-box; padding: 11px 12px;
-                 font-size: 13.5px; font-weight: 600; color: #8b96a3; cursor: pointer;
+                 font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
                  border-radius: 8px;
                  transition: color .3s ease, background-color .3s ease;
                  user-select: none; white-space: nowrap; text-align: left; }
@@ -737,6 +741,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   .dnc-value .dnc-mult { display: none; }
 }
 
+/* ── 에너지 분석: DER 계수 분해 체인 ── */
+.ae-factor-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ae-factor-chip { background: var(--gray-grad); border: 1px solid var(--border); border-radius: 10px;
+                   padding: 8px 12px; display: flex; flex-direction: column; align-items: center;
+                   min-width: 76px; box-shadow: var(--sh); }
+.ae-fc-label { font-size: 9px; color: var(--sub); white-space: nowrap; }
+.ae-fc-name  { font-size: 10px; font-weight: 600; color: var(--text); margin-top: 2px; white-space: nowrap; }
+.ae-fc-val   { font-size: 14px; font-weight: 700; color: var(--hdr); margin-top: 2px; }
+.ae-fc-op    { font-size: 14px; font-weight: 700; color: var(--sub); }
+.ae-fc-final { background: var(--calc); border-color: var(--acc); }
+#ae-calorie-bars.dash-bar-list .dash-bar-row { grid-template-columns: 66px 1fr 148px; }
+#ae-calorie-bars .dash-bar-pct { white-space: nowrap; }
+
 /* ── 제품 유형 자동 판정 카드 & 배너 ── */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
               border-radius: 14px; padding: 18px 22px; margin-bottom: 14px;
@@ -934,9 +951,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="sidebar-tagline">Advanced Clinical Nutrition Systems</div>
   </div>
   <div id="sidebar-nav">
-    <div class="nav-section-label">작업 관리</div>
     <div class="nav-item active" data-tab="dash" onclick="showTab('dash', this)">대시보드</div>
+    <div class="nav-divider"></div>
 
+    <div class="nav-section-label">작업</div>
     <div class="nav-group" data-group="product-mgmt">
       <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
         <span>제품 관리</span><span class="nav-group-arrow"></span>
@@ -955,7 +973,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div></div>
     </div>
 
-    <div class="nav-section-label">분석 및 검증</div>
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">분석</div>
     <div class="nav-item" data-tab="analysis" onclick="showTab('analysis', this)">분석 현황</div>
 
     <div class="nav-group" data-group="nutri-analysis">
@@ -971,21 +990,23 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="nav-item" data-tab="amino" onclick="showTab('amino', this)">아미노산 분석</div>
     <div class="nav-item" data-tab="warn" onclick="showTab('warn', this)">경고 패널</div>
 
-    <div class="nav-section-label">데이터 관리</div>
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">데이터</div>
     <div class="nav-item" data-tab="ing" onclick="showTab('ing', this)">원료 DB</div>
 
     <div class="nav-group" data-group="std-terms">
-      <div class="nav-group-hdr" onclick="toggleNavGroup(this.parentElement)">
-        <span>기준 / 용어</span><span class="nav-group-arrow"></span>
+      <div class="nav-group-hdr nav-item" data-tab="std" onclick="showTab('std', this)">
+        <span>영양기준 DB</span><span class="nav-group-arrow"></span>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
-        <div class="nav-item nav-subitem" data-tab="std" onclick="showTab('std', this)">영양 기준 DB</div>
-        <div class="nav-item nav-subitem" data-tab="glossary" onclick="showTab('glossary', this)">전문 용어</div>
         <div class="nav-item nav-subitem" data-tab="calcbasis" onclick="showTab('calcbasis', this)">계산 기준</div>
       </div></div>
     </div>
 
-    <div class="nav-section-label" style="margin-top:auto">시스템 관리</div>
+    <div class="nav-item" data-tab="glossary" onclick="showTab('glossary', this)">용어</div>
+
+    <div class="nav-divider" style="margin-top:auto"></div>
+    <div class="nav-section-label">시스템</div>
     <div class="nav-item" data-tab="admin" data-requires-role="super_admin" onclick="showTab('admin', this)" style="display:none">관리자</div>
     <div class="nav-item" data-tab="settings" onclick="showTab('settings', this)">설정</div>
   </div>
@@ -1601,17 +1622,73 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
     </div>
 
-    <!-- ── TAB: 에너지 분석 (준비 중) ── -->
+    <!-- ── TAB: 에너지 분석 ── -->
     <div class="tab-pane" id="tab-ana-energy">
-      <div class="hdr-bar">에너지 분석</div>
+      <div class="hdr-bar">에너지 분석 — ME(대사에너지) · RER/MER 급여량 · 칼로리 조성 · AAFCO 열량 밀도 보정</div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel">
-        <div class="dash-section">
-          <div style="padding:60px 20px;text-align:center;color:var(--sub)">
-            <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">준비 중입니다</div>
-            <div style="font-size:12px;line-height:1.7">에너지 분석 화면은 아직 준비 중입니다.<br>현재는 대시보드 / 제품 정보 탭에서 RER · MER · 일일 급여량을 확인하실 수 있습니다.</div>
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+
+          <div class="dash-section">
+            <h3>핵심 에너지 지표</h3>
+            <div class="dash-kpi-grid">
+              <div class="dash-kpi">
+                <div class="kpi-label">ME (as-is)</div>
+                <div class="kpi-val" id="ae-me-asis">─</div>
+                <div class="kpi-unit">kcal/kg</div>
+              </div>
+              <div class="dash-kpi">
+                <div class="kpi-label">ME (DMB)</div>
+                <div class="kpi-val" id="ae-me-dmb">─</div>
+                <div class="kpi-unit">kcal/kg DM</div>
+              </div>
+              <div class="dash-kpi">
+                <div class="kpi-label">기초대사량 (RER)</div>
+                <div class="kpi-val" id="ae-rer">─</div>
+                <div class="kpi-unit">kcal/일</div>
+              </div>
+              <div class="dash-kpi">
+                <div class="kpi-label">유지에너지요구량 (MER)</div>
+                <div class="kpi-val" id="ae-mer">─</div>
+                <div class="kpi-unit">kcal/일</div>
+              </div>
+              <div class="dash-kpi">
+                <div class="kpi-label">일일 급여량</div>
+                <div class="kpi-val" id="ae-daily-g">─</div>
+                <div class="kpi-unit">g/일 (as-is)</div>
+              </div>
+              <div class="dash-kpi">
+                <div class="kpi-label">1회 급여량 (2회 기준)</div>
+                <div class="kpi-val" id="ae-meal-g">─</div>
+                <div class="kpi-unit">g/회</div>
+              </div>
+            </div>
+            <div style="font-size:9.5px;color:var(--sub);margin-top:8px">
+              ME(kcal/kg) = 10 × [(조단백%×3.5) + (조지방%×8.5) + (탄수화물%×3.5)] — AAFCO Modified Atwater 공식(Model Regulation PF9) ·
+              RER = 70 × 체중(kg)<sup>0.75</sup> · MER = RER × DER 계수
+            </div>
           </div>
-        </div>
+
+          <div class="dash-section">
+            <h3><span class="linkable" onclick="goTab('product')">DER 계수 분해 — MER = RER × 최종 계수</span></h3>
+            <div id="ae-factor-rows"></div>
+            <div style="font-size:9.5px;color:var(--sub);margin-top:8px;line-height:1.6">
+              생애주기 기초계수는 NRC(2006) Table 4-2 / WSAVA Global Nutrition Toolkit의 유지에너지 배수 기준값이며,
+              활동량·BCS(체형점수)·중성화 여부에 따라 가감됩니다. 실제 급여량은 반려동물의 체중 변화를 관찰하며
+              수의사와 상의해 조정하는 것을 권장합니다.
+            </div>
+          </div>
+
+          <div class="dash-section">
+            <h3>칼로리 조성 — 3대 영양소별 열량 기여도</h3>
+            <div class="dash-bar-list" id="ae-calorie-bars"></div>
+            <div style="font-size:9.5px;color:var(--sub);margin-top:8px" id="ae-calorie-note"></div>
+          </div>
+
+          <div class="dash-section">
+            <h3>AAFCO 열량 밀도 보정 (Caloric Density Adjustment)</h3>
+            <div id="ae-density-body"></div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -3882,6 +3959,7 @@ function calculate() {
   renderAminoContribHeatmap(result, rows);
   renderAminoScoreCard(result);
   updateDashboard(result, productClass);
+  renderEnergyAnalysis(result, productClass);
   renderAnaContribPanel(result, rows);
   saveToStorage();
   syncPanelWidths();
@@ -4823,10 +4901,11 @@ function computeFeedingPlan(result) {
   const useTargetWeight = shouldUseTargetWeight(weightGoal, bcs);
   const bw = (useTargetWeight && bwTarget > 0) ? bwTarget : bwCurrent;
 
-  const baseFactor   = FEEDING_FACTOR[target] || 1.6;
-  const activityMult = ACTIVITY_MULT[activity] ?? 1.0;
-  const bcsMult      = BCS_MULT[bcs] ?? 1.0;
-  const neuterMult   = NEUTER_APPLICABLE_TARGETS.has(target) ? (NEUTER_ADULT_MULT[species]?.[neuter] ?? 1.0) : 1.0;
+  const baseFactor      = FEEDING_FACTOR[target] || 1.6;
+  const activityMult    = ACTIVITY_MULT[activity] ?? 1.0;
+  const bcsMult         = BCS_MULT[bcs] ?? 1.0;
+  const neuterApplicable = NEUTER_APPLICABLE_TARGETS.has(target);
+  const neuterMult      = neuterApplicable ? (NEUTER_ADULT_MULT[species]?.[neuter] ?? 1.0) : 1.0;
   const factor = baseFactor * activityMult * bcsMult * neuterMult;
 
   const noteEl = document.getElementById('pet-weight-basis-note');
@@ -4836,14 +4915,16 @@ function computeFeedingPlan(result) {
       : '';
   }
 
+  const factorDetail = { target, activity, bcs, neuter, species, baseFactor, activityMult, bcsMult, neuterMult, neuterApplicable };
+
   if (!bw || bw <= 0 || !result.meAsis) {
-    return { rer: 0, mer: 0, dailyG: 0, mealG: 0, factor: 0, bwUsed: 0, usedTargetWeight: false };
+    return { rer: 0, mer: 0, dailyG: 0, mealG: 0, factor: 0, bwUsed: 0, usedTargetWeight: false, ...factorDetail };
   }
   const rer    = 70 * Math.pow(bw, 0.75);
   const mer    = rer * factor;
   const dailyG = (mer / result.meAsis) * 1000;
   const mealG  = dailyG / 2;
-  return { rer, mer, dailyG, mealG, factor, bwUsed: bw, usedTargetWeight: useTargetWeight };
+  return { rer, mer, dailyG, mealG, factor, bwUsed: bw, usedTargetWeight: useTargetWeight, ...factorDetail };
 }
 
 function updateDashboard(result, pc) {
@@ -4984,6 +5065,115 @@ function updateDashboard(result, pc) {
   renderDashCapGauge(cap, policy, isCat);
   renderDashIngredientDonut();
   renderDashWarnSummary();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 에너지 분석 탭 — ME(대사에너지)·RER/MER 급여량·칼로리 조성·AAFCO 열량 밀도 보정을 한 화면에 모은다.
+// 값 계산 자체는 새로 만들지 않고 calcNutrition()의 result와 computeFeedingPlan()의 급여 계획을 그대로 재사용한다.
+// ════════════════════════════════════════════════════════════════════════════
+
+// AAFCO Dog/Cat Food Nutrient Profiles(2016 개정)는 조단백·조지방 등 최소기준을 "4000kcal ME/kg DM" 사료를
+// 전제로 설정했다 — 이보다 열량 밀도가 높은 사료는 같은 양을 먹어도 섭취하는 영양소 총량이 적어지므로,
+// 실제 비교 시에는 최소기준에 (자사 배합의 kcal ME/kg DM ÷ 4000)를 곱해 보정해야 한다(AAFCO PFC 개·고양이
+// 공통 기준 밀도). 열량 밀도가 4000 이하인 사료는 보정 없이 원래 기준을 그대로 적용한다.
+const AAFCO_REFERENCE_KCAL_PER_KG_DM = 4000;
+
+function renderEnergyAnalysis(result, pc) {
+  const wrap = document.getElementById('tab-ana-energy');
+  if (!wrap) return;
+
+  document.getElementById('ae-me-asis').textContent = result.meAsis.toLocaleString('ko', {maximumFractionDigits:0});
+  document.getElementById('ae-me-dmb').textContent  = result.meDmb.toLocaleString('ko', {maximumFractionDigits:0});
+
+  const feed = computeFeedingPlan(result);
+  document.getElementById('ae-rer').textContent     = feed.rer    ? feed.rer.toFixed(0)    : '─';
+  document.getElementById('ae-mer').textContent     = feed.mer    ? feed.mer.toFixed(0)    : '─';
+  document.getElementById('ae-daily-g').textContent = feed.dailyG ? feed.dailyG.toFixed(0) : '─';
+  document.getElementById('ae-meal-g').textContent  = feed.mealG  ? feed.mealG.toFixed(0)  : '─';
+
+  // ── DER 계수 분해: MER = RER × (생애주기 기초계수 × 활동계수 × BCS계수 × 중성화계수) ──
+  const chips = [
+    { label: '생애주기', name: feed.target || '─', val: feed.baseFactor },
+    { label: '활동량',   name: feed.activity || '─', val: feed.activityMult },
+    { label: 'BCS',      name: (feed.bcs ?? '─') + '단계', val: feed.bcsMult },
+  ];
+  if (feed.neuterApplicable) chips.push({ label: '중성화', name: feed.neuter || '─', val: feed.neuterMult });
+  const chainHtml = chips.map((c, i) =>
+    (i > 0 ? '<span class="ae-fc-op">×</span>' : '') +
+    `<div class="ae-factor-chip"><span class="ae-fc-label">${c.label}</span><span class="ae-fc-name">${c.name}</span><span class="ae-fc-val">${c.val.toFixed(2)}</span></div>`
+  ).join('') +
+  `<span class="ae-fc-op">=</span><div class="ae-factor-chip ae-fc-final"><span class="ae-fc-label">최종 DER 계수</span><span class="ae-fc-val">${feed.factor ? feed.factor.toFixed(2) : '─'}</span></div>`;
+  document.getElementById('ae-factor-rows').innerHTML = `<div class="ae-factor-chain">${chainHtml}</div>`;
+
+  // ── 칼로리 조성: AAFCO Modified Atwater(단백질 3.5 / 지방 8.5 / 탄수화물 3.5 kcal/g)로 ME를 구성한 3대 영양소 비중 ──
+  const asis = result.asis;
+  const kcalProt = (asis[2] || 0) * 3.5 * 10;
+  const kcalFat  = (asis[3] || 0) * 8.5 * 10;
+  const kcalCarb = (asis[4] || 0) * 3.5 * 10;
+  const kcalTot  = kcalProt + kcalFat + kcalCarb;
+  const macros = [
+    { label: '단백질',   kcal: kcalProt, color: 'var(--acc)',   dmb: result.dmb.prot },
+    { label: '지방',     kcal: kcalFat,  color: 'var(--warn-t)', dmb: result.dmb.fat },
+    { label: '탄수화물', kcal: kcalCarb, color: 'var(--nrc-t)',  dmb: result.dmb.nfe },
+  ];
+  document.getElementById('ae-calorie-bars').innerHTML = macros.map(m => {
+    const pct = kcalTot > 0 ? (m.kcal / kcalTot * 100) : 0;
+    const gPer1000 = result.meDmb > 0 ? (m.dmb * 10000 / result.meDmb) : 0;
+    return `<div class="dash-bar-row">
+      <div class="dash-bar-label">${m.label}</div>
+      <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${pct.toFixed(1)}%;background:${m.color}"></div></div>
+      <div class="dash-bar-pct">${pct.toFixed(0)}%<span style="font-weight:400;color:var(--sub);margin-left:4px">· ${gPer1000.toFixed(0)}g/1000kcal</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('ae-calorie-note').textContent =
+    kcalTot > 0
+      ? `%kcal = 각 영양소의 ME 기여분(kcal/kg as-is) ÷ 전체 ME(as-is) — 3개 값의 합은 항상 ME(as-is)와 일치합니다.`
+      : '배합비를 입력하면 칼로리 조성이 계산됩니다.';
+
+  // ── AAFCO 열량 밀도 보정: 기준 밀도(4000kcal/kg DM) 대비 현재 배합 ME(DMB)의 배율 ──
+  const ratio = result.meDmb > 0 ? result.meDmb / AAFCO_REFERENCE_KCAL_PER_KG_DM : 0;
+  const densityBody = document.getElementById('ae-density-body');
+  const policy = getEvaluationPolicy(pc);
+  if (policy.mode === 'not_for_direct_feeding') {
+    densityBody.innerHTML = `<div style="font-size:11px;color:var(--sub)">배합용 원료로 판단되어 열량 밀도 보정 평가를 적용하지 않습니다.</div>`;
+  } else if (!ratio) {
+    densityBody.innerHTML = `<div style="font-size:11px;color:var(--sub)">배합비를 입력하면 계산됩니다.</div>`;
+  } else {
+    const target = feed.target || (document.getElementById('sb-target')?.value);
+    const findMin = nm => {
+      const s = result.standards.find(st => st.name === nm);
+      if (!s) return null;
+      if (target && target.includes('성장')) return s.aa_gr;
+      if (target && target.includes('임신')) return s.aa_rp;
+      return s.aa_min;
+    };
+    const protMin = findMin('조단백');
+    const fatMin  = findMin('조지방');
+    if (ratio > 1.01) {
+      const adjProt = protMin != null ? (protMin * ratio).toFixed(1) : null;
+      const adjFat  = fatMin  != null ? (fatMin  * ratio).toFixed(1) : null;
+      densityBody.innerHTML = `
+        <div class="dash-cap-bar" style="background:var(--warn-bg);border-color:transparent">
+          <span class="dash-cap-label" style="color:var(--warn-t)">⚠️ 열량 밀도 ${ratio.toFixed(2)}배</span>
+          <span style="font-size:11px;color:var(--text)">ME(DMB) ${result.meDmb.toFixed(0)}kcal/kg — AAFCO 기준 밀도(${AAFCO_REFERENCE_KCAL_PER_KG_DM.toLocaleString()}kcal/kg DM)를 초과합니다.</span>
+        </div>
+        <div style="font-size:10.5px;color:var(--sub);margin-top:8px;line-height:1.7">
+          AAFCO 영양기준(2016 개정)은 4000kcal ME/kg DM 사료를 전제로 설정되어, 이보다 열량 밀도가 높은 사료는
+          같은 체중을 유지하기 위해 더 적은 양을 먹게 되므로 필수영양소도 그만큼 더 진하게 들어있어야 합니다.
+          이 배합에 보정을 적용하면 조단백·조지방의 실질 최소기준은 다음과 같이 올라갑니다.
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          ${adjProt ? `<div class="ae-factor-chip"><span class="ae-fc-label">조단백 보정 최소치</span><span class="ae-fc-name">${protMin}% → </span><span class="ae-fc-val">${adjProt}% DMB</span></div>` : ''}
+          ${adjFat  ? `<div class="ae-factor-chip"><span class="ae-fc-label">조지방 보정 최소치</span><span class="ae-fc-name">${fatMin}% → </span><span class="ae-fc-val">${adjFat}% DMB</span></div>` : ''}
+        </div>`;
+    } else {
+      densityBody.innerHTML = `
+        <div class="dash-cap-bar" style="background:var(--pass-bg);border-color:transparent">
+          <span class="dash-cap-label" style="color:var(--pass-t)">✅ 열량 밀도 ${ratio.toFixed(2)}배</span>
+          <span style="font-size:11px;color:var(--text)">ME(DMB) ${result.meDmb.toFixed(0)}kcal/kg — AAFCO 기준 밀도(${AAFCO_REFERENCE_KCAL_PER_KG_DM.toLocaleString()}kcal/kg DM) 이하이므로 별도 보정 없이 영양 분석 탭의 기준치를 그대로 적용할 수 있습니다.</span>
+        </div>`;
+    }
+  }
 }
 
 // 대시보드 막대 차트에 표시할 영양소/아미노산 목록(AAFCO 최소치 대비 %로 표시)
