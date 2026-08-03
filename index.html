@@ -775,6 +775,34 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cb-table { margin-bottom: 4px; }
 .cb-table th, .cb-table td { font-size: 10.5px; white-space: normal; }
 
+/* ── 전문 용어 사전 탭 ── */
+.gl-search-row { display: flex; align-items: center; gap: 10px; }
+#gl-search { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+             background: var(--inp); color: var(--text); font-size: 13px; font-family: inherit; outline: none;
+             transition: border-color .2s ease; }
+#gl-search:focus { border-color: var(--acc); }
+.gl-count { font-size: 10.5px; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
+.gl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.gl-chip { font-size: 10.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+           border: 1px solid var(--border); background: var(--side2); color: var(--sub);
+           cursor: pointer; transition: all .15s ease; user-select: none; }
+.gl-chip:hover { border-color: var(--acc); color: var(--acc); }
+.gl-chip.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.gl-groups { display: flex; flex-direction: column; gap: 16px; }
+.gl-cat-hdr { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+              letter-spacing: .6px; margin: 2px 2px 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.gl-group-items { display: flex; flex-direction: column; gap: 8px; }
+.gl-entry { background: var(--side2); border: 1px solid var(--border); border-radius: 12px;
+            padding: 13px 16px; box-shadow: var(--sh); }
+.gl-entry-hdr { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+.gl-term { font-size: 14.5px; font-weight: 800; color: var(--hdr); }
+.gl-abbr { font-size: 11px; font-weight: 500; color: var(--sub); font-style: italic; }
+.gl-def { font-size: 12px; color: var(--text); line-height: 1.65; }
+.gl-def b { color: var(--hdr); }
+.gl-link { font-size: 10.5px; color: var(--acc); cursor: pointer; margin-top: 6px; display: inline-block; }
+.gl-link:hover { text-decoration: underline; }
+.gl-empty { text-align: center; padding: 50px 20px; color: var(--sub); font-size: 12px; }
+
 /* ── 제품 유형 자동 판정 카드 & 배너 ── */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
               border-radius: 14px; padding: 18px 22px; margin-bottom: 14px;
@@ -1809,17 +1837,22 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
     </div>
 
-    <!-- ── TAB: 전문 용어 (준비 중) ── -->
+    <!-- ── TAB: 전문 용어 ── -->
     <div class="tab-pane" id="tab-glossary">
-      <div class="hdr-bar">전문 용어</div>
+      <div class="hdr-bar">전문 용어 사전 — 이 계산기가 쓰는 수의영양학 · AAFCO 용어 모음</div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel">
-        <div class="dash-section">
-          <div style="padding:60px 20px;text-align:center;color:var(--sub)">
-            <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">준비 중입니다</div>
-            <div style="font-size:12px;line-height:1.7">앱에서 쓰이는 전문 용어(DMB, ME, AAFCO 등) 설명 페이지는 아직 준비 중입니다.</div>
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+
+          <div class="dash-section" style="gap:0">
+            <div class="gl-search-row">
+              <input id="gl-search" type="text" placeholder="용어 검색 — 예: ME, DMB, 제한 아미노산, 타우린..." oninput="renderGlossary()">
+              <span class="gl-count" id="gl-count"></span>
+            </div>
+            <div class="gl-chips" id="gl-chips"></div>
           </div>
-        </div>
+
+          <div id="gl-list"></div>
+
         </div>
       </div>
     </div>
@@ -5116,6 +5149,135 @@ function renderCalcBasisPage() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// 전문 용어 사전 탭 — 이 계산기 전반에서 쓰이는 수의영양학·AAFCO 용어를 사전 형태로 정리한다.
+// 현재 배합·반려동물 정보와 무관한 정적 레퍼런스이므로 init() 시 1회만 그리고, 이후는 검색/카테고리
+// 필터 조작 시 renderGlossary()가 다시 그린다.
+// ════════════════════════════════════════════════════════════════════════════
+const GLOSSARY_TERMS = [
+  // ── 기관·기준 ──
+  { term: 'AAFCO', abbr: 'Association of American Feed Control Officials', cat: '기관·기준',
+    def: '미국 사료관리협회. 각 주(州)의 사료 규제당국 대표들이 모여 동물사료의 영양소 기준과 라벨링 규정을 제정하는 자율규제기구입니다. 이 계산기가 표시하는 "AAFCO 기준"은 AAFCO Dog and Cat Food Nutrient Profiles(2023년 개정판)를 의미합니다.' },
+  { term: 'NRC', abbr: 'National Research Council', cat: '기관·기준',
+    def: '미국국립학술원 산하 연구위원회. 2006년 발간한 「Nutrient Requirements of Dogs and Cats」는 안전계수를 더하지 않은 순수 생리학적 최소요구량(MR)과 권장섭취량(RA)을 제시하는 학술 기준으로, AAFCO 기준의 과학적 토대가 되었습니다.' },
+  { term: 'FEDIAF', abbr: 'European Pet Food Industry Federation', cat: '기관·기준',
+    def: '유럽 반려동물사료산업연맹. AAFCO와 성격이 유사한 유럽판 영양 가이드라인을 매년 발간하며, 오메가지방산·일부 미량 미네랄 등에서 AAFCO와 다른 기준값을 제시합니다.' },
+  { term: 'WSAVA', abbr: 'World Small Animal Veterinary Association', cat: '기관·기준',
+    def: '세계소동물수의사회. 임상 수의사를 위한 「Global Nutrition Guidelines」를 발간하며, 이 계산기의 활동량·생애주기별 에너지 계수 상당 부분이 이 가이드라인과 NRC 2006을 기반으로 합니다.', tab: 'calcbasis' },
+
+  // ── 제품 분류 ──
+  { term: '완전·균형식', abbr: 'Complete and Balanced', cat: '제품 분류',
+    def: 'AAFCO 최소기준을 모두 충족해 다른 보충 없이 그 자체로 주식으로 급여할 수 있는 사료. 라벨에 이 문구를 표시하려면 AAFCO 영양소 프로파일을 충족하거나 급여시험으로 입증해야 합니다.' },
+  { term: '간헐적·보조적 급여 전용', abbr: 'Intermittent or Supplemental Feeding Only', cat: '제품 분류',
+    def: '완전·균형식 기준을 충족하지 못해 주식으로 쓸 수 없는 제품에 AAFCO가 의무적으로 표시하도록 하는 라벨 문구. 간식·토퍼·보조식이 여기 해당하며, 반려동물 하루 총 섭취 열량의 10% 이하로만 급여하도록 권장됩니다.' },
+  { term: '주식 / 간식 / 보조식·보충식 / 직접급여불가', cat: '제품 분류',
+    def: '이 계산기가 배합 데이터를 분석해 자동으로 분류하는 4개 제품 유형입니다. 유형에 따라 결핍·과다 경고를 얼마나 엄격하게 적용할지가 달라집니다. 자세한 판정 조건은 계산 기준 탭 8번 항목을 참고하세요.', tab: 'calcbasis' },
+
+  // ── 에너지·급여량 ──
+  { term: 'ME (대사에너지)', abbr: 'Metabolizable Energy', cat: '에너지·급여량',
+    def: '사료가 실제로 체내에서 에너지원으로 쓸 수 있는 열량. 총에너지에서 소화되지 않고 분·소변·가스로 손실되는 양을 뺀 값이며, 이 계산기는 AAFCO가 채택한 Modified Atwater 공식으로 추정합니다.', tab: 'ana-energy' },
+  { term: 'Modified Atwater 계수', cat: '에너지·급여량',
+    def: '단백질 3.5, 지방 8.5, 탄수화물 3.5 kcal/g의 열량 환산계수. 사람용 Atwater 계수(4-9-4)를 반려동물의 소화흡수율에 맞게 보정한 값으로, AAFCO Model Regulation PF9가 ME 계산의 공식 방법으로 지정하고 있습니다.', tab: 'calcbasis' },
+  { term: 'RER (기초대사량)', abbr: 'Resting Energy Requirement', cat: '에너지·급여량',
+    def: '체중만으로 추정하는 안정 시 에너지 소비량. RER = 70 × 체중(kg)^0.75 공식을 쓰며, 모든 급여량 계산의 출발점이 됩니다.', tab: 'ana-energy' },
+  { term: 'MER / DER (유지에너지요구량)', abbr: 'Maintenance / Daily Energy Requirement', cat: '에너지·급여량',
+    def: 'RER에 생애주기·활동량·체형(BCS)·중성화 여부를 반영한 계수를 곱해 구하는 하루 실제 에너지 요구량. 이 계산기는 MER과 DER을 같은 의미로 사용합니다.', tab: 'ana-energy' },
+
+  // ── 영양성분 표기 ──
+  { term: 'DM / DMB (건물, 건물 기준)', abbr: 'Dry Matter / Dry Matter Basis', cat: '영양성분 표기',
+    def: '사료에서 수분을 제외한 나머지 성분(그리고 그 기준으로 환산한 값). 제품마다 수분 함량이 크게 달라(습식 75~80% vs 건식 8~12%) 있는 그대로(as-is)의 값으로는 공정한 비교가 불가능하므로, NRC·AAFCO·FEDIAF 기준은 모두 건물 기준(DMB)으로 환산한 값을 씁니다.', tab: 'calcbasis' },
+  { term: 'as-is (원물 기준)', cat: '영양성분 표기',
+    def: '수분을 포함해 실제 포장·급여 상태 그대로 측정한 값. 급여량(g/일) 계산이나 라벨 표시값은 as-is 기준을 쓰고, 서로 다른 제품 간 영양소 함량 비교는 DMB 기준을 씁니다.' },
+  { term: '조단백 / 조지방 / 조섬유 / 조회분', abbr: 'Crude Protein / Fat / Fiber / Ash', cat: '영양성분 표기',
+    def: '사료 성분 분석의 기본 5대 항목(수분 포함) 중 4가지. "조(粗)"는 개별 성분을 정밀 분리한 값이 아니라 특정 화학적 분석법(예: 단백질은 질소 함량×6.25)으로 일괄 추정한 값임을 의미합니다.' },
+  { term: 'NFE (가용무질소물)', abbr: 'Nitrogen-Free Extract', cat: '영양성분 표기',
+    def: '흔히 "탄수화물"로 표기되는 값으로, 직접 측정이 아니라 100%에서 수분·조단백·조지방·조섬유·조회분을 뺀 나머지로 계산하는 추정치입니다. ME 계산식의 탄수화물 항목이 바로 이 NFE입니다.', tab: 'calcbasis' },
+  { term: '프리믹스', abbr: 'Premix', cat: '영양성분 표기',
+    def: '비타민·미네랄 등을 미리 배합해둔 첨가제 원료. 완전식에는 보통 1~5% 소량만 들어가며, 배합비의 상당 부분(50% 이상)을 차지하면 이 계산기는 "직접 급여 불가(배합용 원료)"로 자동 분류합니다.', tab: 'calcbasis' },
+
+  // ── 판정·단위 ──
+  { term: 'MR / RA', abbr: 'Minimum Requirement / Recommended Allowance', cat: '판정·단위',
+    def: 'NRC 2006이 제시하는 두 단계 기준. MR은 결핍을 막는 최소 생리학적 요구량이고, RA는 여기에 개체차·흡수율 변동을 감안한 안전 여유를 더해 실무적으로 권장하는 섭취량입니다.', tab: 'calcbasis' },
+  { term: 'Min / Max (AAFCO 최소·최대기준)', cat: '판정·단위',
+    def: 'AAFCO 영양소 프로파일이 제시하는 규제 기준값. Min 미만이면 결핍(fail), Max를 초과하면 과다(over)로 판정합니다. 모든 영양소에 Max가 설정된 것은 아닙니다.' },
+  { term: 'g/1000kcal ME', cat: '판정·단위',
+    def: '아미노산처럼 "체중당"이 아니라 "섭취 열량당" 함량으로 비교해야 하는 영양소에 쓰는 단위. 같은 체중이라도 사료의 열량 밀도에 따라 실제 먹는 양이 달라지므로, 실제 하루 섭취량을 비교하려면 체중이 아니라 열량이 기준이 되어야 합니다(NRC 2006 방식).', tab: 'amino' },
+  { term: '제한 아미노산', abbr: 'Limiting Amino Acid', cat: '판정·단위',
+    def: '배합에 포함된 필수아미노산 중 기준 대비 상대 충족률이 가장 낮은 아미노산. 이 값이 100% 미만일 때만 실제 "제한"이 존재하며, 그 아미노산부터 보강해야 전체 단백질 이용 효율이 개선됩니다(최소량의 법칙과 같은 개념).', tab: 'amino' },
+  { term: '필수아미노산', abbr: 'Essential Amino Acid', cat: '판정·단위',
+    def: '체내에서 합성되지 않거나 충분히 합성되지 않아 반드시 사료로 섭취해야 하는 아미노산. 개·고양이는 아르기닌·히스티딘·이소류신·류신·라이신·메티오닌+시스틴·페닐알라닌+티로신·트레오닌·트립토판·발린 10종이 해당합니다.' },
+  { term: '타우린', abbr: 'Taurine', cat: '판정·단위',
+    def: '고양이에게는 조건부 필수아미노산이지만 개에게는 일반적으로 필수가 아닌 함황아미노산. 결핍 시 고양이는 확장성 심근증·망막변성(실명) 위험이 있어 AAFCO 고양이 기준에만 별도 최소치가 설정되어 있습니다.' },
+  { term: '필수지방산 (LA · AA · ALA · EPA/DHA)', cat: '판정·단위',
+    def: '체내 합성이 안 되거나 부족한 지방산. 특히 아라키돈산(AA)은 고양이에서만 필수로 지정되는데, 고양이는 리놀레산(LA)으로부터 아라키돈산을 합성하는 효소(Δ6-불포화효소) 활성이 낮기 때문입니다.' },
+  { term: 'AAFCO 열량 밀도 보정', abbr: 'Caloric Density Adjustment', cat: '판정·단위',
+    def: 'AAFCO의 %DMB 최소기준은 4000kcal ME/kg DM 사료를 전제로 정해져 있어, 이보다 열량 밀도가 높은 사료는 최소기준에 (배합 ME ÷ 4000) 배율을 곱해 보정해야 실제 필요량과 맞습니다.', tab: 'ana-energy' },
+
+  // ── 반려동물 상태 ──
+  { term: 'Ca:P 비율 (칼슘:인 비율)', cat: '반려동물 상태',
+    def: '칼슘과 인은 절대량뿐 아니라 상대 비율이 골격 발달·유지에 중요합니다. AAFCO 허용범위는 1:1~2:1이며, 특히 대형견 성장기에 비율이 심하게 무너지면 골격 기형 위험이 커집니다.', tab: 'warn' },
+  { term: 'BCS (체형점수)', abbr: 'Body Condition Score', cat: '반려동물 상태',
+    def: '갈비뼈·허리 라인 등 체형을 만져보고 관찰해 1~9단계로 매기는 표준화된 비만도 평가 척도. 5단계가 이상적 체형이며, 이 계산기는 BCS에 따라 급여 열량을 자동으로 가감합니다.', tab: 'product' },
+  { term: '활동량 계수 · 중성화 계수', cat: '반려동물 상태',
+    def: '같은 생애주기라도 활동량이 많거나 중성화하지 않은 개체는 기초 에너지 소비가 더 높아, 각각 별도의 배율을 곱해 실제 필요 열량에 가깝게 보정합니다.', tab: 'calcbasis' },
+];
+
+function setGlossaryCat(cat, btn) {
+  document.querySelectorAll('.gl-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderGlossary();
+}
+
+function buildGlossaryChips() {
+  const chipsEl = document.getElementById('gl-chips');
+  if (!chipsEl) return;
+  const cats = ['전체', ...Array.from(new Set(GLOSSARY_TERMS.map(t => t.cat)))];
+  chipsEl.innerHTML = cats.map((c, i) =>
+    `<span class="gl-chip${i===0 ? ' active' : ''}" onclick="setGlossaryCat('${c}', this)">${c}</span>`
+  ).join('');
+}
+
+function renderGlossary() {
+  const listEl = document.getElementById('gl-list');
+  if (!listEl) return;
+  const q = (document.getElementById('gl-search')?.value || '').trim().toLowerCase();
+  const activeCat = document.querySelector('.gl-chip.active')?.textContent || '전체';
+
+  const filtered = GLOSSARY_TERMS.filter(t => {
+    const matchesCat = activeCat === '전체' || t.cat === activeCat;
+    const haystack = (t.term + ' ' + (t.abbr||'') + ' ' + t.def).toLowerCase();
+    return matchesCat && (!q || haystack.includes(q));
+  });
+
+  document.getElementById('gl-count').textContent = `${filtered.length}개 용어`;
+
+  if (!filtered.length) {
+    listEl.innerHTML = `<div class="gl-empty">"${q}"에 해당하는 용어를 찾을 수 없습니다.</div>`;
+    return;
+  }
+
+  const order = [];
+  filtered.forEach(t => { if (!order.includes(t.cat)) order.push(t.cat); });
+
+  listEl.innerHTML = `<div class="gl-groups">${order.map(cat => `
+    <div class="gl-group">
+      <div class="gl-cat-hdr">${cat}</div>
+      <div class="gl-group-items">
+        ${filtered.filter(t => t.cat === cat).map(t => `
+          <div class="gl-entry">
+            <div class="gl-entry-hdr">
+              <span class="gl-term">${t.term}</span>
+              ${t.abbr ? `<span class="gl-abbr">${t.abbr}</span>` : ''}
+            </div>
+            <div class="gl-def">${t.def}</div>
+            ${t.tab ? `<span class="gl-link" onclick="goTab('${t.tab}')">→ 관련 탭에서 확인</span>` : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('')}</div>`;
+}
+
 function updateDashboard(result, pc) {
   const dmb  = result.dmb;
   const stds = result.standards;
@@ -6813,6 +6975,8 @@ function init() {
   buildStdTable();
   buildIngTable(getSortedIngs(allIngs()));
   renderCalcBasisPage();
+  buildGlossaryChips();
+  renderGlossary();
 
   const loaded = loadFromStorage();
   if (!loaded) {
