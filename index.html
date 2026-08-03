@@ -754,6 +754,27 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #ae-calorie-bars.dash-bar-list .dash-bar-row { grid-template-columns: 66px 1fr 148px; }
 #ae-calorie-bars .dash-bar-pct { white-space: nowrap; }
 
+/* ── 계산 기준 탭 ── */
+.cb-text { font-size: 11.5px; color: var(--text); line-height: 1.7; margin-bottom: 8px; }
+.cb-text b { color: var(--hdr); }
+.cb-formula { font-size: 11px; font-weight: 600; color: var(--hdr); background: var(--calc);
+              border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; line-height: 1.6; }
+.cb-note { font-size: 10px; color: var(--sub); line-height: 1.6; margin-top: 4px; }
+.cb-note .linkable { color: var(--acc); cursor: pointer; }
+.cb-note .linkable:hover { text-decoration: underline; }
+.cb-list { margin: 0 0 8px; padding-left: 18px; font-size: 11.5px; color: var(--text); line-height: 1.7; }
+.cb-list b { color: var(--hdr); }
+.cb-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; font-size: 11px; }
+.cb-badge-desc { color: var(--sub); margin-right: 10px; }
+.cb-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 4px; }
+.cb-subcard { background: var(--side2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.cb-subtitle { font-size: 10.5px; font-weight: 700; color: var(--hdr); margin-bottom: 6px; }
+.cb-mini-table { width: 100%; font-size: 10.5px; border-collapse: collapse; }
+.cb-mini-table td { padding: 3px 4px; border-bottom: 1px solid var(--border); white-space: normal; }
+.cb-mini-table td:last-child { text-align: right; font-weight: 700; color: var(--hdr); }
+.cb-table { margin-bottom: 4px; }
+.cb-table th, .cb-table td { font-size: 10.5px; white-space: normal; }
+
 /* ── 제품 유형 자동 판정 카드 & 배너 ── */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
               border-radius: 14px; padding: 18px 22px; margin-bottom: 14px;
@@ -1803,17 +1824,159 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
     </div>
 
-    <!-- ── TAB: 계산 기준 (준비 중) ── -->
+    <!-- ── TAB: 계산 기준 ── -->
     <div class="tab-pane" id="tab-calcbasis">
-      <div class="hdr-bar">계산 기준</div>
+      <div class="hdr-bar">계산 기준 — 이 계산기가 사용하는 공식·기준·판정 로직 레퍼런스</div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel">
-        <div class="dash-section">
-          <div style="padding:60px 20px;text-align:center;color:var(--sub)">
-            <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--text)">준비 중입니다</div>
-            <div style="font-size:12px;line-height:1.7">RER · MER 계산식과 각종 보정 계수에 대한 상세 설명 페이지는 아직 준비 중입니다.</div>
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+
+          <div class="dash-section">
+            <h3>1. 왜 건물(DM) 기준으로 환산하는가</h3>
+            <div class="cb-text">
+              사료의 수분 함량은 제품마다(습식 75~80% vs 건식 8~12%) 크게 달라, 있는 그대로(as-is) 성분표만으로는
+              서로 다른 두 제품을 공정하게 비교할 수 없습니다. 그래서 NRC·AAFCO·FEDIAF는 모두 <b>건물(Dry Matter, DM)
+              기준</b>으로 환산한 값을 기준치로 제시하며, 이 계산기도 모든 영양소 판정을 DMB(Dry Matter Basis)로
+              변환한 뒤 비교합니다.
+            </div>
+            <div class="cb-formula">건물 비율(DM%) = 1 − 수분(%) ÷ 100&nbsp;&nbsp;·&nbsp;&nbsp;DMB 값 = as-is 값 ÷ DM%</div>
           </div>
-        </div>
+
+          <div class="dash-section">
+            <h3>2. 대사에너지(ME) 계산 — Modified Atwater 공식</h3>
+            <div class="cb-text">
+              대사에너지(ME, Metabolizable Energy)는 실험적으로 직접 측정하기 어려워, AAFCO Model Regulation PF9는
+              조단백·조지방·탄수화물(NFE) 함량으로부터 ME를 추정하는 <b>Modified Atwater 계수(단백질 3.5 / 지방 8.5 /
+              탄수화물 3.5 kcal/g)</b>를 공식 계산 방법으로 채택하고 있습니다. 반려동물 대상 급여시험 검증 결과, 이
+              공식은 실측 ME와 개는 약 0.2~2.2%, 고양이는 약 1.6~1.8% 오차 범위 내로 일치하는 것으로 보고되었습니다.
+            </div>
+            <div class="cb-formula">ME(kcal/kg) = 10 × [(조단백% × 3.5) + (조지방% × 8.5) + (탄수화물% × 3.5)]</div>
+            <div class="cb-note">※ 실제 배합의 ME 계산·칼로리 조성 분석은 <span class="linkable" onclick="goTab('ana-energy')">에너지 분석</span> 탭에서 확인할 수 있습니다.</div>
+          </div>
+
+          <div class="dash-section">
+            <h3>3. 영양소 기준 비교 — NRC / AAFCO / FEDIAF 3개 기준 병기</h3>
+            <div class="cb-text">
+              세 기준은 성격이 서로 달라 하나만으로는 충분하지 않기 때문에 이 계산기는 세 기준을 함께 표시합니다.
+            </div>
+            <ul class="cb-list">
+              <li><b>NRC(2006)</b> — 최소요구량(MR, Minimum Requirement)과 권장섭취량(RA, Recommended Allowance)을
+                제시하는 학술적 기준. 안전계수가 없는 순수 생리학적 요구량에 가깝습니다.</li>
+              <li><b>AAFCO(2023 개정 영양소 프로파일)</b> — 미국에서 사료를 "완전·균형식"으로 표시하기 위해 반드시
+                충족해야 하는 규제 최소/최대 기준. 생애주기를 성체유지(Adult Maintenance)와 성장·번식(Growth &amp;
+                Reproduction) 두 프로파일로 나눕니다.</li>
+              <li><b>FEDIAF(2025)</b> — 유럽사료협회의 영양 가이드라인으로, AAFCO와 유사하되 일부 영양소(오메가지방산,
+                미량 미네랄 등)에서 값이 다릅니다.</li>
+            </ul>
+            <div class="cb-text">
+              판정은 실측값(DMB)을 각 기준의 최소/최대값과 비교해 세 가지로 분류합니다.
+            </div>
+            <div class="cb-badges">
+              <span class="qi-badge qi-pass">✅ 충족(pass)</span><span class="cb-badge-desc">최소기준 이상 (최대기준이 있다면 그 이하)</span>
+              <span class="qi-badge qi-fail">❌ 미달(fail)</span><span class="cb-badge-desc">최소기준 미만</span>
+              <span class="qi-badge qi-over">⚠️ 초과(over)</span><span class="cb-badge-desc">최대기준 초과</span>
+            </div>
+          </div>
+
+          <div class="dash-section">
+            <h3>4. RER · MER · 급여량 계산</h3>
+            <div class="cb-text">
+              기초대사량(RER, Resting Energy Requirement)은 체중만으로 추정하는 표준 공식이며, 실제 유지에너지요구량
+              (MER, Maintenance Energy Requirement)은 여기에 생애주기·활동량·체형(BCS)·중성화 여부를 반영한
+              <b>DER(Daily Energy Requirement) 계수</b>를 곱해 구합니다. 계수 체계는 NRC(2006) Table 4-2 및 WSAVA
+              Global Nutrition Toolkit의 유지에너지 배수를 기반으로 합니다.
+            </div>
+            <div class="cb-formula">RER = 70 × 체중(kg)<sup>0.75</sup>&nbsp;&nbsp;·&nbsp;&nbsp;MER = RER × DER 계수&nbsp;&nbsp;·&nbsp;&nbsp;일일 급여량(g) = MER ÷ ME(as-is) × 1000</div>
+            <div class="cb-subgrid">
+              <div class="cb-subcard">
+                <div class="cb-subtitle">생애주기 기초계수</div>
+                <div id="cb-tbl-life"></div>
+              </div>
+              <div class="cb-subcard">
+                <div class="cb-subtitle">활동량 계수</div>
+                <div id="cb-tbl-activity"></div>
+              </div>
+              <div class="cb-subcard">
+                <div class="cb-subtitle">BCS(체형점수 1~9) 계수</div>
+                <div id="cb-tbl-bcs"></div>
+              </div>
+              <div class="cb-subcard">
+                <div class="cb-subtitle">중성화 여부 계수 (성체유지·노령 구간에만 적용)</div>
+                <div id="cb-tbl-neuter"></div>
+              </div>
+            </div>
+            <div class="cb-note">※ 실제 반려동물의 급여량·DER 계수 분해는 <span class="linkable" onclick="goTab('ana-energy')">에너지 분석</span> 탭에서 확인할 수 있습니다. 위 계수는 참고용 평균값이며, 실제 급여량은 체중 변화를 관찰하며 수의사와 상의해 조정해야 합니다.</div>
+          </div>
+
+          <div class="dash-section">
+            <h3>5. AAFCO 열량 밀도 보정 (Caloric Density Adjustment)</h3>
+            <div class="cb-text">
+              AAFCO 영양소 프로파일의 %DMB 최소기준은 <b>4000kcal ME/kg DM</b> 사료를 전제로 설정되어 있습니다(2016년
+              개정 이후 개·고양이 공통 기준 밀도). 이보다 열량 밀도가 높은 사료는 같은 체중을 유지하는 데 더 적은
+              양만 먹으므로, 단순히 %DMB 최소기준만 충족해서는 실제 섭취하는 영양소 절대량이 부족할 수 있습니다.
+              이 경우 최소기준에 배율을 곱해 보정한 값과 비교해야 합니다.
+            </div>
+            <div class="cb-formula">보정 배율 = 배합 ME(kcal/kg DM) ÷ 4000&nbsp;&nbsp;·&nbsp;&nbsp;보정된 최소기준(%DMB) = 원래 최소기준 × 보정 배율 (배율 &gt; 1일 때만 적용)</div>
+            <div class="cb-note">※ 현재 배합에 실제로 적용한 보정 계산은 <span class="linkable" onclick="goTab('ana-energy')">에너지 분석</span> 탭에서 확인할 수 있습니다.</div>
+          </div>
+
+          <div class="dash-section">
+            <h3>6. Ca:P(칼슘:인) 비율 평가 기준</h3>
+            <div class="cb-text">
+              칼슘과 인은 절대량뿐 아니라 상대 비율이 골격 발달·유지에 중요합니다. AAFCO 기준 Ca:P 허용 범위는
+              1:1~2:1이며, 이 계산기는 조금 더 보수적인 임상 권장범위와 심각 단계를 함께 적용해 조기에 주의를
+              환기합니다.
+            </div>
+            <table class="cb-table">
+              <thead><tr><th>구분</th><th>정상 범위</th><th>주의</th><th>심각(위험)</th></tr></thead>
+              <tbody>
+                <tr><td class="left">개</td><td>1.1 ~ 2.0</td><td rowspan="2">정상 범위를 벗어남</td><td rowspan="2">&lt; 0.8 (Ca 심각 부족 — 골격기형 위험) 또는 &gt; 2.5 (Ca 과잉 — 연골석회화 위험)</td></tr>
+                <tr><td class="left">고양이</td><td>1.0 ~ 2.0</td></tr>
+              </tbody>
+            </table>
+            <div class="cb-note">※ 간식·보조식·직접급여불가 유형은 완전식과 동일한 위험 판정을 적용하지 않고 참고 수준으로 완화합니다(아래 8번 항목 참고).</div>
+          </div>
+
+          <div class="dash-section">
+            <h3>7. 아미노산 평가 — 제한 아미노산(Limiting Amino Acid)</h3>
+            <div class="cb-text">
+              아미노산은 체중(kg)이 아니라 <b>섭취 열량당 함량(g/1000kcal ME)</b> 단위로 비교합니다 — 같은 체중이라도
+              먹는 양은 사료의 열량 밀도에 따라 달라지므로, "실제로 하루에 섭취하는 아미노산 양"을 비교하려면 체중
+              기준이 아니라 열량 기준이 되어야 하기 때문입니다(NRC 2006 방식). 각 아미노산마다 NRC/AAFCO/FEDIAF 중
+              현재 종·생애주기에 적용 가능한 기준들의 충족률을 모두 계산한 뒤, 가장 엄격한(충족률이 가장 낮게
+              나오는) 기준을 대표값으로 채택합니다.
+            </div>
+            <div class="cb-text">
+              필수아미노산 10종(타우린 제외) 중 기준 대비 상대 충족률이 가장 낮은 아미노산을 <b>제한 아미노산</b>이라
+              부릅니다. 이 값이 100% 미만일 때만 실제로 "제한"이 존재하는 것으로 판정합니다 — 전부 100% 이상이면
+              가장 낮은 값이라도 결핍이 아니라 상대적으로 여유가 적은 항목일 뿐입니다.
+            </div>
+            <div class="cb-note">※ 현재 배합의 제한 아미노산 판정은 <span class="linkable" onclick="goTab('amino')">아미노산 분석</span> 탭에서 확인할 수 있습니다.</div>
+          </div>
+
+          <div class="dash-section">
+            <h3>8. 제품 유형 자동 판정 — 주식 / 간식 / 보조식 / 직접급여불가</h3>
+            <div class="cb-text">
+              AAFCO 라벨링 규정상 사료는 "완전·균형식(complete and balanced)"이거나, 그 기준을 충족하지 못하면
+              "간헐적·보조적 급여 전용(intermittent or supplemental feeding only)"으로 표시해야 합니다. 이 계산기는
+              배합된 원료와 AAFCO 최소기준 충족 패턴을 분석해 아래 4개 유형 중 하나로 자동 분류하고, 유형에 따라
+              결핍·과다 경고를 얼마나 엄격하게 적용할지 다르게 적용합니다.
+            </div>
+            <table class="cb-table">
+              <thead><tr><th>유형</th><th>판정 조건(요약)</th><th>평가 정책</th></tr></thead>
+              <tbody>
+                <tr><td class="left">🥩 주식</td><td class="left">필수영양소 데이터 완전성 ≥85% 그리고 AAFCO 최소기준 충족률 ≥90% 그리고 최대기준 초과 항목 없음</td><td class="left">결핍·초과 모두 엄격 평가</td></tr>
+                <tr><td class="left">🦴 간식</td><td class="left">단일 원료 100% 배합(단, 그 원료 하나로 주식 기준을 충족하면 주식으로 판정)</td><td class="left">결핍은 참고, 과다·안전성은 계속 평가</td></tr>
+                <tr><td class="left">🥣 보조식/보충식</td><td class="left">복수 원료이지만 주식 기준(위 조건)을 충족하지 못함</td><td class="left">결핍은 참고, 과다·안전성은 계속 평가</td></tr>
+                <tr><td class="left">⛔ 직접급여불가</td><td class="left">미네랄·비타민 프리믹스 등 배합용 고농축 원료가 배합비의 50% 이상</td><td class="left">일반 식품 기준 평가 제외</td></tr>
+              </tbody>
+            </table>
+            <div class="cb-note">
+              참고로 AAFCO는 "간헐적·보조적 급여 전용" 제품을 반려동물 하루 섭취 열량의 10% 이하로만 급여하도록
+              권장합니다(간식이 주식을 대체해서는 안 되는 이유입니다).<br>
+              ※ 현재 배합의 실제 판정 결과와 근거는 <span class="linkable" onclick="goTab('dash')">대시보드</span> 상단의 "제품 유형 분석" 카드에서 확인할 수 있습니다.
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -4927,6 +5090,32 @@ function computeFeedingPlan(result) {
   return { rer, mer, dailyG, mealG, factor, bwUsed: bw, usedTargetWeight: useTargetWeight, ...factorDetail };
 }
 
+// "계산 기준" 탭의 4개 계수표(생애주기/활동량/BCS/중성화)를 실제 계산에 쓰이는 상수 객체
+// (FEEDING_FACTOR/ACTIVITY_MULT/BCS_MULT/NEUTER_ADULT_MULT)로부터 그대로 생성한다 — 표 값을 다시
+// 하드코딩하면 상수가 나중에 조정될 때 문서만 낡아버리므로, 항상 실제 계산값과 일치하도록 한다.
+// 현재 배합·반려동물 정보에 의존하지 않는 정적 레퍼런스이므로 calculate()가 아니라 init() 시 1회만 그린다.
+function renderCalcBasisPage() {
+  const mini = rows => `<table class="cb-mini-table"><tbody>${rows.map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</tbody></table>`;
+
+  const lifeEl = document.getElementById('cb-tbl-life');
+  if (lifeEl) lifeEl.innerHTML = mini(Object.entries(FEEDING_FACTOR).map(([k,v]) => [k, `× ${v.toFixed(1)}`]));
+
+  const actEl = document.getElementById('cb-tbl-activity');
+  if (actEl) actEl.innerHTML = mini(Object.entries(ACTIVITY_MULT).map(([k,v]) => [k, `× ${v.toFixed(2)}`]));
+
+  const bcsEl = document.getElementById('cb-tbl-bcs');
+  if (bcsEl) bcsEl.innerHTML = mini(Object.entries(BCS_MULT).map(([k,v]) => [`${k}단계${k==='5'?' (이상적)':''}`, `× ${v.toFixed(2)}`]));
+
+  const neuterEl = document.getElementById('cb-tbl-neuter');
+  if (neuterEl) {
+    const rows = [];
+    Object.entries(NEUTER_ADULT_MULT).forEach(([species, opts]) => {
+      Object.entries(opts).forEach(([k,v]) => rows.push([`${species} · ${k}`, `× ${v.toFixed(2)}`]));
+    });
+    neuterEl.innerHTML = mini(rows);
+  }
+}
+
 function updateDashboard(result, pc) {
   const dmb  = result.dmb;
   const stds = result.standards;
@@ -6623,6 +6812,7 @@ function init() {
   buildAminoGrid();
   buildStdTable();
   buildIngTable(getSortedIngs(allIngs()));
+  renderCalcBasisPage();
 
   const loaded = loadFromStorage();
   if (!loaded) {
