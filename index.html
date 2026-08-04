@@ -1201,17 +1201,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <span>원료 DB</span>
     </div>
 
-    <div class="nav-group" data-group="std-terms">
-      <div class="nav-group-hdr nav-item" data-tab="std" data-label="영양기준 DB" onclick="showTab('std', this)">
-        <span class="nav-label">
-          <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg>
-          <span>영양기준 DB</span>
-        </span>
-        <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-      </div>
-      <div class="nav-group-body"><div class="nav-group-inner">
-        <div class="nav-item nav-subitem" data-tab="calcbasis" onclick="showTab('calcbasis', this)">계산 기준</div>
-      </div></div>
+    <div class="nav-item" data-tab="std" data-label="영양기준 DB" onclick="showTab('std', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg>
+      <span>영양기준 DB</span>
+    </div>
+
+    <div class="nav-item" data-tab="calcbasis" data-label="계산 기준" onclick="showTab('calcbasis', this)">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+      <span>계산 기준</span>
     </div>
 
     <div class="nav-item" data-tab="glossary" data-label="용어" onclick="showTab('glossary', this)">
