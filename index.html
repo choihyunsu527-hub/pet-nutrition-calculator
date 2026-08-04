@@ -3566,7 +3566,9 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
       nrc_mr:mr, nrc_ra:ra,
       aa_min:aa, aa_max:aaMax, aa_gr:aaGr, aa_rp:aaRp,
       fed_ad:fed, fed_gr:fedGr,
-      nrc_j:     judge(v, mr,   ra),
+      // RA(권장섭취량)는 상한섭취량이 아니라 "권장" 수치일 뿐이므로, RA를 넘겼다고 'over'(초과)로
+      // 판정하지 않는다 — NRC MR(최소요구량)만 충족하면 'pass'. RA는 표에 참고값으로만 표시.
+      nrc_j:     judge(v, mr,   null),
       aafco_j:   judge(v, aa,   aaMax),
       aafco_gr_j:judge(v, aaGr, null),
       aafco_rp_j:judge(v, aaRp, null),
@@ -4645,14 +4647,15 @@ function judgeGeneric(v, lo, hi) {
 // 선택된 기준(source)에 따라 한 영양소 행의 {min,max,j}를 반환 — AAFCO/NRC는 calcNutrition이 이미
 // 계산해둔 판정을 그대로 쓰고, 사용자 등록 기준만 judgeGeneric()으로 즉석 계산한다.
 function stdVerifyRowStd(s) {
-  if (stdVerifySource === 'nrc') return { min: s.nrc_mr, max: s.nrc_ra, j: s.nrc_j };
+  // NRC의 RA(권장섭취량)는 상한섭취량이 아니므로 max(상한)로 취급하지 않는다 — 참고값(ref)으로만 전달.
+  if (stdVerifySource === 'nrc') return { min: s.nrc_mr, max: null, ref: s.nrc_ra, j: s.nrc_j };
   if (stdVerifySource === 'custom') {
     const std = customStandards.find(c => c.id === stdVerifyCustomId);
     const entry = std ? std.values[s.name] : null;
-    if (!entry) return { min: null, max: null, j: '─' };
-    return { min: entry.min, max: entry.max, j: judgeGeneric(s.value, entry.min, entry.max) };
+    if (!entry) return { min: null, max: null, ref: null, j: '─' };
+    return { min: entry.min, max: entry.max, ref: null, j: judgeGeneric(s.value, entry.min, entry.max) };
   }
-  return { min: s.aa_min, max: s.aa_max, j: s.aafco_j };
+  return { min: s.aa_min, max: s.aa_max, ref: null, j: s.aafco_j };
 }
 
 function setStdVerifySource(src) {
@@ -4705,13 +4708,16 @@ function renderStdVerify(result, pc) {
   const deficits = []; const excesses = [];
 
   result.standards.forEach(s => {
-    const { min, max, j } = stdVerifyRowStd(s);
+    const { min, max, ref, j } = stdVerifyRowStd(s);
     if (s.cat !== curCat) {
       curCat = s.cat;
       html += `<tr class="cat-row"><td colspan="7">── ${s.cat} ──</td></tr>`;
     }
     const v = s.value;
-    const stdText = min == null ? '─' : (max != null ? `${min}~${max} ${s.unit}` : `${min} ${s.unit} 이상`);
+    const stdText = min == null ? '─'
+      : max != null ? `${min}~${max} ${s.unit}`
+      : ref != null ? `${min} ${s.unit} 이상 (권장 ${ref})`
+      : `${min} ${s.unit} 이상`;
     const pct = (v != null && min) ? Math.round(v / min * 100) : null;
     const pctText = pct == null ? '─' : `${pct}%`;
 
