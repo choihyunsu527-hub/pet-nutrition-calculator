@@ -1555,8 +1555,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               <div class="sf-item">
                 <label>제품유형</label>
                 <select id="sb-ptype" onchange="calculate()">
-                  <option>건식</option><option>습식</option><option>간식</option>
+                  <option>주식</option><option>보조식</option><option>간식</option>
                 </select>
+                <div style="font-size:10px;color:var(--sub);margin-top:3px">"간식"만 수동 지정이 그대로 적용됩니다. 주식/보조식 여부는 배합의 영양 분석 결과에 따라 자동으로 판정됩니다.</div>
               </div>
               <div class="sf-item">
                 <label>수분함량 (%) <span style="font-weight:400;color:var(--sub)">— 배합 원료 기준 자동 계산</span></label>
@@ -1842,6 +1843,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <tbody id="ana-body"></tbody>
         </table>
       </div>
+      <div id="ana-basic-panel" style="display:none"></div>
       </div>
 
       <div class="ana-contrib-panel" id="ana-contrib-panel">
@@ -4306,8 +4308,8 @@ function updateAminoJudges(result, pc) {
   const policy = getEvaluationPolicy(pc);
   renderPtypeBanner('amino-ptype-banner', pc);
   // 아미노산 기준은 최소치만 있고(최대치 없음) 판정 축이 "결핍" 하나뿐이므로 evalMinDeficiency만으로 판단.
-  // 주식: 그대로 pass/fail. 간식·보조식: "참고값"(위험 아님). 직접급여불가: 애초에 원료 성격상 아미노산
-  // 적합성 평가 대상이 아니므로 "제외".
+  // 주식·보조식: 그대로 pass/fail(보조식도 부족 아미노산을 그대로 보여줘야 개선 항목을 알 수 있다).
+  // 간식·직접급여불가: 완전·균형식 기준 자체를 적용하지 않는 유형이므로 "제외".
   function renderAminoCell(el, pass, tooltip) {
     if (policy.evalMinDeficiency) {
       el.textContent = pass ? '✅' : '❌';
@@ -4315,12 +4317,9 @@ function updateAminoJudges(result, pc) {
       el.title = tooltip;
       return;
     }
-    const excluded = policy.mode === 'not_for_direct_feeding';
-    el.textContent = excluded ? '제외' : '참고';
+    el.textContent = '제외';
     el.className = 'ag-cell center none';
-    el.title = excluded
-      ? `${tooltip} — 배합용 원료로 판단되어 아미노산 적합성 평가에서 제외됨`
-      : `${tooltip} — 주식용 완전·균형식 기준 대비 참고값(${pc.short} 유형으로 분석됨)`;
+    el.title = `${tooltip} — ${pc.short} 유형으로 판단되어 아미노산 적합성 평가에서 제외됨`;
   }
   const stds = getAminoStds(species);
   const aminoMap = {
@@ -4588,9 +4587,9 @@ const PTYPE_META = {
     desc: '입력된 영양성분을 분석한 결과, AAFCO 완전·균형식(주식) 프로파일에 가까운 제품으로 분석됩니다.',
   },
   supplement: {
-    short: '보조식 / 보충식', en: 'Supplementary / Complementary', icon: '🥣',
+    short: '보조식', en: 'Supplementary / Complementary', icon: '🥣',
     label: '보조식 유형으로 분석됨',
-    desc: '특정 영양소나 기능성 원료를 보충하는 목적의 보조식·보충식 유형으로 분석됩니다. 모든 필수 영양소를 주식 수준으로 충족하도록 설계된 제품이 아닐 수 있습니다.',
+    desc: '특정 영양소나 기능성 원료를 보충하는 목적의 보조식 유형으로 분석됩니다. 완전·균형식 판정은 적용하지 않으며, 주식으로 전환하려면 어떤 영양소가 더 필요한지를 안내합니다.',
   },
   treat: {
     short: '간식', en: 'Treat / Snack', icon: '🦴',
@@ -4615,32 +4614,34 @@ function isStapleClass(pc) { return !pc || !pc.type || pc.type === 'staple'; }
 // 4개 제품 유형 → 4개 평가 모드로 1:1 매핑하며, 모든 화면(영양분석/경고패널/아미노산/대시보드)이
 // 이 한 곳의 정책만 참조하도록 해서 판정 분기 로직이 여러 함수에 중복되지 않게 한다.
 //   - evalMinDeficiency: AAFCO/NRC 최소 기준 미달을 "결핍 경고"로 평가할지
-//   - evalMaxExcess:     AAFCO 최대 기준 초과를 "과다·안전성 경고"로 평가할지(간식·보조식도 계속 평가)
-//   - showCompleteness:  "전체 충족률" 등 완전·균형식 지표를 핵심 지표로 표시할지
+//   - evalMaxExcess:     AAFCO 최대 기준 초과를 "과다·안전성 경고"로 평가할지
+//   - showCompleteness:  완전·균형식 여부(핵심 지표)를 표시할지 — 주식만 true
+//   - hideStandardsTable: AAFCO/NRC/FEDIAF 기준 비교 자체를 화면에서 숨기고 원료구성·칼로리·기본
+//     영양성분만 보여줄지 — 간식만 true (결핍·초과 판정 자체가 성립하지 않는 유형)
 // ════════════════════════════════════════════════════════════════════════════
 const EVAL_MODE_BY_TYPE = { staple: 'complete', treat: 'snack', supplement: 'supplement', unsuitable: 'not_for_direct_feeding' };
 const EVAL_MODE_META = {
   complete: {
     label: '완전·균형식(AAFCO)',
-    evalMinDeficiency: true, evalMaxExcess: true, showCompleteness: true,
+    evalMinDeficiency: true, evalMaxExcess: true, showCompleteness: true, hideStandardsTable: false,
     summary: '평가 기준: AAFCO 완전·균형식',
     bannerNote: null, // 주식은 배너 자체를 표시하지 않음(isStapleClass)
   },
   snack: {
-    label: '간식(참고용)',
-    evalMinDeficiency: false, evalMaxExcess: true, showCompleteness: false,
-    summary: '평가 기준: 완전·균형식 기준 미적용 / 안전성 중심',
-    bannerNote: '아래 AAFCO 최소 기준 미달 항목은 완전·균형식 결핍 판정에서 제외됩니다. 단, 과다 함량 및 안전성 관련 경고는 계속 평가됩니다.',
+    label: '간식(기준 비교 제외)',
+    evalMinDeficiency: false, evalMaxExcess: false, showCompleteness: false, hideStandardsTable: true,
+    summary: '평가 기준: 영양 기준 비교 제외 / 원료구성·칼로리·기본 영양성분만 표시',
+    bannerNote: '간식 유형은 AAFCO/NRC/FEDIAF 영양 기준 비교와 결핍·초과 경고를 적용하지 않으며, 원료 구성·칼로리·기본 영양성분만 참고용으로 표시합니다.',
   },
   supplement: {
-    label: '보조식(참고용)',
-    evalMinDeficiency: false, evalMaxExcess: true, showCompleteness: false,
-    summary: '평가 기준: 완전·균형식 기준 미적용 / 보충 목적 및 안전성 중심',
-    bannerNote: '완전·균형식 기준은 적용하지 않으며, 영양소 과다 및 안전성 관련 항목을 중심으로 확인합니다.',
+    label: '보조식(결핍 표시, 완전균형식 판정 제외)',
+    evalMinDeficiency: true, evalMaxExcess: true, showCompleteness: false, hideStandardsTable: false,
+    summary: '평가 기준: AAFCO/NRC 결핍·과다 평가 적용 / 완전·균형식 판정은 미적용',
+    bannerNote: '보조식은 완전·균형식 판정을 내리지 않지만, 주식으로 전환할 때 보완이 필요한 부족 영양소는 아래에서 그대로 확인할 수 있습니다.',
   },
   not_for_direct_feeding: {
     label: '배합용 원료(평가 제외)',
-    evalMinDeficiency: false, evalMaxExcess: false, showCompleteness: false,
+    evalMinDeficiency: false, evalMaxExcess: false, showCompleteness: false, hideStandardsTable: false,
     summary: '평가 기준: 일반 식품 영양 평가 제외 / 배합 원료로 관리',
     bannerNote: '직접 급여용 제품이 아닌 배합용 원료로 판단되어 일반적인 주식/간식 영양 평가를 적용하지 않습니다.',
   },
@@ -4651,9 +4652,8 @@ function getEvaluationPolicy(pc) {
   return { mode, ...EVAL_MODE_META[mode] };
 }
 // judge() 결과값(pass/fail/over/─)을 평가 정책에 따라 화면 표시용 값으로 변환.
-// - complete(주식): 그대로
-// - not_for_direct_feeding(직접급여불가): fail/over 모두 'gated'(평가 제외)
-// - snack/supplement(간식·보조식): fail(최소 미달)만 'gated', over(최대 초과)는 그대로 유지
+// - complete(주식)·supplement(보조식): 그대로 — 결핍(fail)·초과(over) 모두 실측 판정 유지
+// - snack(간식)·not_for_direct_feeding(직접급여불가): fail/over 모두 'gated'(평가 제외)
 function gateJudge(j, policy) {
   if (j !== 'fail' && j !== 'over') return j;
   if (j === 'fail' && !policy.evalMinDeficiency) return 'gated';
@@ -4664,12 +4664,14 @@ function gateJudge(j, policy) {
 // Ca:P 비율 평가를 한 곳에서 계산해 경고 패널(cap-card)·대시보드 요약(dk-cap-badge)·
 // 대시보드 게이지(renderDashCapGauge) 3곳이 동일한 판정을 재사용하도록 한다(로직 중복 방지).
 // Ca:P 수치·정상범위(1.1~2.0, 심각 <0.8 또는 >2.5) 계산 자체는 그대로 두고, "그 판정을 얼마나
-// 심각하게 보여줄지"만 평가 정책에 따라 완화한다 — 간식·보조식은 위험 대신 참고로, 직접급여불가는 평가 제외.
+// 심각하게 보여줄지"만 평가 정책에 따라 완화한다 — 보조식은 위험 대신 참고로, 간식·직접급여불가는 평가 제외.
 function evaluateCapStatus(cap, policy, isCat) {
   const lowPass = isCat ? 1.0 : 1.1;
-  if (policy.mode === 'not_for_direct_feeding') {
-    return { level: 'excluded', label: '평가 제외',
-      text: 'Ca:P 평가 제외 — 배합용 원료로 판단되어 일반 식품 기준을 적용하지 않습니다.',
+  if (!policy.evalMaxExcess) {
+    const reason = policy.mode === 'not_for_direct_feeding'
+      ? '배합용 원료로 판단되어 일반 식품 기준을 적용하지 않습니다.'
+      : `${policy.label} 유형은 영양 기준 비교를 적용하지 않습니다.`;
+    return { level: 'excluded', label: '평가 제외', text: `Ca:P 평가 제외 — ${reason}`,
       color: 'var(--sub)', bg: 'var(--gray-l)' };
   }
   if (cap === 0) {
@@ -4682,8 +4684,8 @@ function evaluateCapStatus(cap, policy, isCat) {
   }
   const severe = cap < 0.8 || cap > 2.5;
   const dir = cap < lowPass ? '낮음' : '높음';
-  if (policy.mode !== 'complete') {
-    // 간식·보조식: 적정 범위를 벗어나도 주식과 동일한 "위험/심각" 판정을 적용하지 않고 참고 수준으로 완화
+  if (!policy.showCompleteness) {
+    // 보조식: 적정 범위를 벗어나도 주식과 동일한 "위험/심각" 판정을 적용하지 않고 참고 수준으로 완화
     return { level: 'reference', label: '참고',
       text: `[참고] Ca:P=${cap.toFixed(2)} — 권장 범위(${lowPass}~2.0)에서 벗어남(${dir}). ${policy.label} 유형은 주식과 동일한 위험 판정을 적용하지 않습니다.`,
       color: 'var(--warn-t)', bg: 'var(--warn-bg)' };
@@ -4808,6 +4810,23 @@ function classifyProductPurpose(result, rows) {
   return build('supplement', confidence, reasons);
 }
 
+// 제품 설정의 "제품유형" 선택(주식/보조식/간식)은 "간식"만 자동판정 결과를 덮어쓰는 수동 스위치로 쓴다 —
+// 주식 vs 보조식 구분은 여전히 classifyProductPurpose()의 영양 기반 자동판정을 그대로 따른다(사용자가
+// 직접 "주식"/"보조식"을 골라도 실제 영양 분석 결과가 다르면 자동판정값이 우선한다). 배합용 원료(직접
+// 급여 불가) 판정은 안전 신호이므로 수동 간식 지정보다 항상 우선한다.
+function applyManualPtypeOverride(pc, manualPtype) {
+  if (!pc || !pc.type || pc.type === 'unsuitable' || pc.type === 'treat') return pc;
+  if (manualPtype !== '간식') return pc;
+  const evaluationMode = EVAL_MODE_BY_TYPE.treat;
+  return {
+    ...pc, type: 'treat', ...PTYPE_META.treat,
+    confidence: 'high', confidenceLabel: PTYPE_CONF_LABEL.high,
+    reasons: ['제품 설정 화면에서 "간식"으로 수동 지정되었습니다.'],
+    evaluationMode, evaluationPolicy: EVAL_MODE_META[evaluationMode],
+    manualOverride: true,
+  };
+}
+
 // 대시보드 상단 "제품 유형 분석" 카드
 function renderProductTypeCard(pc) {
   const card = document.getElementById('ptype-card');
@@ -4911,7 +4930,7 @@ function calculate() {
   lastResult = result;
   // 수분함량(%)은 더 이상 수동 입력값이 아니라 배합 원료 기준으로 자동 계산된 값 — 표시만 동기화
   document.getElementById('sb-moist').value = result.dmb.moist.toFixed(1);
-  const productClass = classifyProductPurpose(result, rows);
+  const productClass = applyManualPtypeOverride(classifyProductPurpose(result, rows), ptype);
   lastProductClass = productClass;
 
   updateMixRowVals(rows);
@@ -4982,7 +5001,7 @@ function updateTotBar(result, rows) {
 function updateCards(result, pc) {
   const stds = result.standards;
   const isCat = (document.getElementById('sb-species')?.value || '개') === '고양이';
-  const staple = isStapleClass(pc);
+  const policy = getEvaluationPolicy(pc);
   const nf = stds.filter(s => s.nrc_j==='fail' || s.nrc_j==='over').length;
   const af = stds.filter(s => s.aafco_j==='fail').length;
   const ff = stds.filter(s => s.fediaf_j==='fail').length;
@@ -4992,7 +5011,8 @@ function updateCards(result, pc) {
   document.getElementById('c-dm').textContent      = (result.dmPct*100).toFixed(1)+'%';
   document.getElementById('c-tot').textContent     = result.totalRatio.toFixed(1)+'%';
 
-  if (!staple) {
+  // 간식/직접급여불가는 결핍 평가 자체를 적용하지 않음 — 요약 카드도 "주식기준 외"로 통일
+  if (!policy.evalMinDeficiency) {
     const note = `주식 기준 미적용 (${pc.short} 유형)`;
     document.getElementById('c-nrc').textContent    = '주식기준 외';
     document.getElementById('c-nrc').title = note;
@@ -5003,13 +5023,24 @@ function updateCards(result, pc) {
     return;
   }
 
-  document.getElementById('c-nrc').textContent     = nf===0 ? '✅ 충족' : `❌ ${nf}개`;
-  document.getElementById('c-nrc').title = '';
   const gf = stds.filter(s => s.aafco_gr_j==='fail').length;
-  document.getElementById('c-aafco').textContent   = af===0 ? (isCat ? '✅ 성묘' : '✅ 성견') : `❌ ${af}개`;
-  document.getElementById('c-aafco').title = `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개`;
-  document.getElementById('c-fediaf').textContent  = ff===0 ? '✅ 적합' : `❌ ${ff}개`;
-  document.getElementById('c-fediaf').title = '';
+  if (policy.showCompleteness) {
+    // 주식: 완전·균형식 인증 문구(✅ 충족/성견 등) 그대로 사용
+    document.getElementById('c-nrc').textContent     = nf===0 ? '✅ 충족' : `❌ ${nf}개`;
+    document.getElementById('c-nrc').title = '';
+    document.getElementById('c-aafco').textContent   = af===0 ? (isCat ? '✅ 성묘' : '✅ 성견') : `❌ ${af}개`;
+    document.getElementById('c-aafco').title = `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개`;
+    document.getElementById('c-fediaf').textContent  = ff===0 ? '✅ 적합' : `❌ ${ff}개`;
+    document.getElementById('c-fediaf').title = '';
+  } else {
+    // 보조식: 완전·균형식 인증 문구는 쓰지 않고, 결핍(개선 필요) 항목 개수만 안내
+    document.getElementById('c-nrc').textContent     = nf===0 ? '결핍 없음' : `❌ ${nf}개 부족`;
+    document.getElementById('c-nrc').title = '보조식은 완전·균형식 판정을 적용하지 않으며, 주식 전환 시 개선이 필요한 항목만 안내합니다.';
+    document.getElementById('c-aafco').textContent   = af===0 ? '결핍 없음' : `❌ ${af}개 부족`;
+    document.getElementById('c-aafco').title = `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개 (보조식 참고용, 완전·균형식 판정 아님)`;
+    document.getElementById('c-fediaf').textContent  = ff===0 ? '결핍 없음' : `❌ ${ff}개 부족`;
+    document.getElementById('c-fediaf').title = '보조식 참고용 — 완전·균형식 판정 아님';
+  }
 }
 
 const J_LABEL = {pass:'✅ 적합',fail:'❌ 미달',over:'⚠️ 초과',gated:'주식기준 외','─':'─'};
@@ -5020,6 +5051,27 @@ function updateAnaTable(result, pc) {
   const isCat = (document.getElementById('sb-species')?.value || '개') === '고양이';
   const policy = getEvaluationPolicy(pc);
   renderPtypeBanner('ana-ptype-banner', pc);
+
+  const tblWrap  = document.getElementById('ana-table').closest('.tbl-wrap');
+  const legend   = document.getElementById('ana-legend');
+  const basicPanel = document.getElementById('ana-basic-panel');
+  if (policy.hideStandardsTable) {
+    if (tblWrap) tblWrap.style.display = 'none';
+    if (legend)  legend.style.display  = 'none';
+    basicPanel.style.display = '';
+    const fmt = n => (n == null ? '─' : n.toFixed(2));
+    basicPanel.innerHTML = `
+      <div style="padding:10px 8px;font-size:11.5px;color:var(--sub)">${pc.short} 유형은 AAFCO/NRC/FEDIAF 영양 기준 비교를 적용하지 않습니다. 아래 원료 구성 기반 기본 영양성분만 참고하세요.</div>
+      <table class="ana-basic-table"><tbody>
+        ${(pc.topNutrients || []).map(n => `<tr><td class="left">${n.name}</td><td class="num">${fmt(n.value)}</td><td style="font-size:10px;color:var(--sub)">${n.unit}</td></tr>`).join('')}
+      </tbody></table>`;
+    return;
+  }
+  if (tblWrap) tblWrap.style.display = '';
+  if (legend)  legend.style.display  = '';
+  basicPanel.style.display = 'none';
+  basicPanel.innerHTML = '';
+
   let html = ''; let curCat = '';
 
   const JN  = J_NRC;
@@ -5029,9 +5081,9 @@ function updateAnaTable(result, pc) {
     return j==='pass'?'pass':j==='fail'?'fail':j==='over'?'over':j==='gated'?'none':'';
   }
 
-  // 주식이 아닌 제품(간식/보조식/직접급여불가)은 평가 정책(policy, getEvaluationPolicy)에 따라 판정을
-  // 선택적으로 완화한다. 간식·보조식은 "결핍(fail)"만 완화하고 "초과(over, 안전성)"는 그대로 평가하며,
-  // 직접급여불가는 결핍·초과 모두 평가하지 않는다 — 자세한 규칙은 gateJudge() 참고.
+  // 이 표는 hideStandardsTable(간식)이면 위에서 이미 return되어 여기까지 오지 않는다. 남는 경우는
+  // 주식(그대로 평가)·보조식(그대로 평가, 완전균형식 인증만 카드에서 생략)·직접급여불가(결핍·초과 모두
+  // 미평가)뿐이므로 gate()는 사실상 직접급여불가에서만 'gated'를 반환한다 — 자세한 규칙은 gateJudge() 참고.
   function gate(j) { return gateJudge(j, policy); }
 
   function tooltip(label, min, max, origJ, gatedJ) {
@@ -5537,8 +5589,8 @@ function updateWarnPanel(result, pc) {
   const isCat = species === '고양이';
   const policy = getEvaluationPolicy(pc);
   renderPtypeBanner('warn-ptype-banner', pc,
-    policy.evalMaxExcess
-      ? '아래 최대 기준 초과 여부는 이 제품을 100% 급여했다고 가정한 수치이며, 간식·보조식은 소량 급여가 일반적이므로 참고용으로만 활용하세요.'
+    (policy.evalMaxExcess && !policy.showCompleteness)
+      ? '아래 최대 기준 초과 여부는 이 제품을 100% 급여했다고 가정한 수치이며, 보조식은 소량 급여가 일반적이므로 참고용으로만 활용하세요.'
       : undefined);
 
   // Ca:P 카드 — 판정 자체는 evaluateCapStatus()에서 정책에 따라 한 곳에서 계산(로직 중복 방지)
@@ -5548,12 +5600,12 @@ function updateWarnPanel(result, pc) {
   capCard.style.background = capStatus.bg;
   capCard.style.color = capStatus.color;
 
-  // 직접 급여 불가로 판정된 배합용 원료는 일반 식품 기준 초과 평가 자체를 적용하지 않는다
+  // 간식(기준 비교 제외)·직접급여불가(배합용 원료)는 과다·안전성 평가 자체를 적용하지 않는다
   if (!policy.evalMaxExcess) {
     lastWarnItems = [];
     document.getElementById('warn-body').innerHTML =
       `<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--sub)">
-        배합용 원료(${pc.short})로 판단되어 일반 식품 기준의 과다·안전성 평가를 적용하지 않습니다.
+        ${pc.short} 유형으로 판단되어 일반 식품 기준의 과다·안전성 평가를 적용하지 않습니다.
       </td></tr>`;
     return;
   }
@@ -6331,7 +6383,8 @@ function updateDashboard(result, pc) {
   const fedPass = stds.filter(s => s.fediaf_j === 'pass').length;
   const fedFail = stds.filter(s => s.fediaf_j === 'fail').length;
 
-  if (policy.mode === 'complete') {
+  if (policy.evalMinDeficiency) {
+    // 주식·보조식: 실측 결핍/초과 판정 그대로 표시(보조식은 완전균형식 "인증" 카드만 아래에서 생략)
     document.getElementById('dc-nrc-pass').textContent = nrcPass + '개';
     document.getElementById('dc-nrc-fail').textContent = nrcFail + '개';
     document.getElementById('dc-nrc-over').textContent = nrcOver + '개';
@@ -6340,17 +6393,15 @@ function updateDashboard(result, pc) {
     document.getElementById('dc-aa-over').textContent  = aaOver  + '개';
     document.getElementById('dc-fed-pass').textContent = fedPass + '개';
     document.getElementById('dc-fed-fail').textContent = fedFail + '개';
-  } else if (policy.mode === 'not_for_direct_feeding') {
-    const note = '배합용 원료로 판단되어 일반 영양 평가를 적용하지 않습니다.';
+    ['dc-nrc-pass','dc-nrc-fail','dc-nrc-over','dc-aa-pass','dc-aa-fail','dc-aa-over','dc-fed-pass','dc-fed-fail']
+      .forEach(id => { document.getElementById(id).title = ''; });
+  } else {
+    // 간식(영양 기준 비교 제외)·직접급여불가(배합용 원료): 평가 자체를 적용하지 않음
+    const note = policy.mode === 'not_for_direct_feeding'
+      ? '배합용 원료로 판단되어 일반 영양 평가를 적용하지 않습니다.'
+      : `${pc.short} 유형은 영양 기준 비교를 적용하지 않습니다.`;
     ['dc-nrc-pass','dc-nrc-fail','dc-nrc-over','dc-aa-pass','dc-aa-fail','dc-aa-over','dc-fed-pass','dc-fed-fail']
       .forEach(id => { const el = document.getElementById(id); el.textContent = '평가 제외'; el.title = note; });
-  } else {
-    // 간식/보조식: 완전식 결핍(pass/fail) 판정은 참고로 완화하되, 과다(over)는 안전성 신호이므로 그대로 표시
-    const note = `완전·균형식 기준 미적용 (${pc.short} 유형으로 분석됨)`;
-    ['dc-nrc-pass','dc-aa-pass','dc-fed-pass','dc-nrc-fail','dc-aa-fail','dc-fed-fail']
-      .forEach(id => { const el = document.getElementById(id); el.textContent = '참고'; el.title = note; });
-    document.getElementById('dc-nrc-over').textContent = nrcOver + '개'; document.getElementById('dc-nrc-over').title = '';
-    document.getElementById('dc-aa-over').textContent  = aaOver  + '개'; document.getElementById('dc-aa-over').title  = '';
   }
 
   const keyNutrients = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)',
@@ -6362,7 +6413,7 @@ function updateDashboard(result, pc) {
     const j = gateJudge(s.aafco_j, policy);
     let cls, lbl;
     if (j === 'gated') {
-      cls = 'qi-none'; lbl = policy.mode === 'not_for_direct_feeding' ? '평가 제외' : '참고';
+      cls = 'qi-none'; lbl = '평가 제외';
     } else {
       cls = j==='pass' ? 'qi-pass' : j==='fail' ? 'qi-fail' : j==='over' ? 'qi-over' : 'qi-none';
       lbl = j==='pass' ? '✅ 적합' : j==='fail' ? '❌ 미달' : j==='over' ? '⚠️ 초과' : '─';
@@ -6387,7 +6438,7 @@ function updateDashboard(result, pc) {
   const overallLabel = document.getElementById('ds-overall-label');
   const overallFill = document.getElementById('ds-overall-fill');
   const overallPctEl = document.getElementById('ds-overall-pct');
-  if (policy.mode === 'complete') {
+  if (policy.showCompleteness) {
     overallPctEl.innerHTML = overallPct + '<span class="dash-stat-unit">%</span>';
     overallPctEl.style.fontSize = '';
     overallPctEl.title = '';
@@ -6395,14 +6446,17 @@ function updateDashboard(result, pc) {
     overallFill.style.width = overallPct + '%';
     overallFill.style.background = overallPct >= 80 ? 'var(--pass-t)' : overallPct >= 50 ? 'var(--warn-t)' : 'var(--fail-t)';
   } else {
-    // 간식/보조식/직접급여불가는 "완전·균형식 충족률"이라는 지표 자체가 성립하지 않으므로,
+    // 보조식·간식·직접급여불가는 "완전·균형식 충족률"이라는 지표 자체가 성립하지 않으므로,
     // 퍼센트 숫자 대신 "해당없음"을 표시해 완전식 평가 결과로 오해되지 않게 한다.
+    const overallText = {
+      supplement: ['완전·균형식 평가', '보조식은 완전·균형식 판정을 적용하지 않습니다. 부족 영양소는 영양 분석 탭에서 확인하세요.'],
+      snack: ['영양 기준 비교', `${pc.short} 유형은 영양 기준 비교를 적용하지 않습니다.`],
+      not_for_direct_feeding: ['영양 적합성 평가', '배합용 원료로 판단되어 영양 적합성 평가를 적용하지 않습니다.'],
+    }[policy.mode] || ['완전·균형식 평가', ''];
     overallPctEl.textContent = '해당없음';
     overallPctEl.style.fontSize = '16px';
-    overallPctEl.title = policy.mode === 'not_for_direct_feeding'
-      ? '배합용 원료로 판단되어 영양 적합성 평가를 적용하지 않습니다.'
-      : `${pc.short} 유형으로 분석되어 완전·균형식(AAFCO) 기준을 적용하지 않습니다.`;
-    if (overallLabel) overallLabel.textContent = policy.mode === 'not_for_direct_feeding' ? '영양 적합성 평가' : '완전·균형식 평가';
+    overallPctEl.title = overallText[1];
+    if (overallLabel) overallLabel.textContent = overallText[0];
     overallFill.style.width = '0%';
     overallFill.style.background = 'var(--sub)';
   }
@@ -7082,7 +7136,9 @@ function applyRecipeData(data, displayName) {
   document.getElementById('sb-name').value   = data.name||'';
   syncMixRecipeNameField();
   document.getElementById('sb-maker').value  = data.maker||'';
-  document.getElementById('sb-ptype').value  = data.ptype||'건식';
+  // 기존 저장 데이터의 제품유형은 건식/습식/간식(형태 기준)이었으나 주식/보조식/간식(용도 기준)으로 개편됨 —
+  // "간식"만 그대로 이어받고, 건식/습식 등 옛 값이나 빈 값은 기본값 "주식"으로 대체한다.
+  document.getElementById('sb-ptype').value  = data.ptype==='간식' ? '간식' : '주식';
   if (document.getElementById('sb-species')) {
     document.getElementById('sb-species').value = data.species||'개';
     onSpeciesChange();
@@ -7394,7 +7450,8 @@ function loadFromStorage() {
     if (data.name)     document.getElementById('sb-name').value    = data.name;
     syncMixRecipeNameField();
     if (data.maker)    document.getElementById('sb-maker').value   = data.maker;
-    if (data.ptype)    document.getElementById('sb-ptype').value   = data.ptype;
+    // applyRecipeData()와 동일하게 옛 건식/습식 값은 "주식"으로 대체(간식만 그대로 이어받음)
+    if (data.ptype)    document.getElementById('sb-ptype').value   = data.ptype==='간식' ? '간식' : '주식';
     if (data.species && document.getElementById('sb-species')) {
       document.getElementById('sb-species').value = data.species;
       onSpeciesChange();
