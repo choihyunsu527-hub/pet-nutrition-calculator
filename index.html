@@ -159,6 +159,11 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                         font-family: inherit; white-space: nowrap; transition: filter .2s ease; }
 #top-recipe-save-btn:hover { filter: brightness(1.08); }
 #top-recipe-save-btn:active { transform: scale(0.97); }
+.top-recipe-btn-sub { font-size: 11px; font-weight: 600; color: var(--text); background: var(--inp);
+                       border: 1px solid var(--border); border-radius: 5px; padding: 6px 10px;
+                       cursor: pointer; font-family: inherit; white-space: nowrap; }
+.top-recipe-btn-sub:hover { border-color: var(--acc); }
+.top-recipe-btn-sub:active { transform: scale(0.97); }
 
 /* ── 프로필(우측 상단) ── */
 #profile-menu-wrap { position: relative; flex-shrink: 0; }
@@ -330,7 +335,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 }
 @media (max-width: 880px) {
   .nav-item, .nav-group-hdr { padding: 9px 8px; font-size: 12px; }
-  #top-recipe, #top-recipe-select { display: none; }
+  #top-recipe, #top-recipe-select, .top-recipe-btn-sub { display: none; }
 }
 
 /* ── 대시보드 설정 폼 ── */
@@ -1255,7 +1260,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <input id="top-search-input" type="text" placeholder="원료, 제품, 레시피 검색..." autocomplete="off">
       </div>
       <div id="top-right">
-        <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 연결된 폴더에 저장">저장</button>
+        <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 업데이트합니다(아직 저장한 적이 없으면 새로 저장)">저장</button>
+        <button class="top-recipe-btn-sub" onclick="saveRecipeAs()" title="현재 레시피를 다른 이름으로 복제해 새 레시피로 저장">다른 이름으로 저장</button>
+        <button class="top-recipe-btn-sub" onclick="newRecipe()" title="새 레시피를 시작합니다">새 레시피</button>
         <select id="top-recipe-select" onchange="onTopRecipeChange(this.value)" title="같은 폴더에 저장된 레시피 목록">
           <option value="__none__">레시피 없음</option>
         </select>
@@ -7080,26 +7087,72 @@ function initAllergyControl() {
 // ════════════════════════════════════════════════════════════════════════════
 // 레시피 저장 / 불러오기
 // ════════════════════════════════════════════════════════════════════════════
+function collectRecipeData() {
+  return {
+    name:    document.getElementById('sb-name').value,
+    maker:   document.getElementById('sb-maker').value,
+    ptype:   document.getElementById('sb-ptype').value,
+    species: document.getElementById('sb-species')?.value,
+    target:  document.getElementById('sb-target').value,
+    moisture:document.getElementById('sb-moist').value,
+    bw:      document.getElementById('sb-bw').value,
+    totalG:  getMixTotalG(),
+    rows:    getMixRows(),
+    vitk:    document.getElementById('vitk-inp')?.value,
+    amino:   getAminoManual(),
+    customIngs: customIngs,
+    pet:     collectPetProfileData(),
+  };
+}
+
+// 저장 = 현재 "열려 있는" 레시피(currentRecipeFilename/currentRecipeFileHandle)가 있으면
+// 그 문서를 그대로 업데이트한다(레시피명을 바꿔도 새 파일을 만들지 않는다).
+// 열린 문서가 없는 경우(새 레시피)에만 레시피명을 파일명으로 삼아 새로 만들고, 그 순간부터
+// 이 문서가 "열린" 상태가 된다 — 이후 저장은 다시 이 파일을 업데이트한다.
 async function saveRecipe() {
   try {
-    const data = {
-      name:    document.getElementById('sb-name').value,
-      maker:   document.getElementById('sb-maker').value,
-      ptype:   document.getElementById('sb-ptype').value,
-      species: document.getElementById('sb-species')?.value,
-      target:  document.getElementById('sb-target').value,
-      moisture:document.getElementById('sb-moist').value,
-      bw:      document.getElementById('sb-bw').value,
-      totalG:  getMixTotalG(),
-      rows:    getMixRows(),
-      vitk:    document.getElementById('vitk-inp')?.value,
-      amino:   getAminoManual(),
-      customIngs: customIngs,
-      pet:     collectPetProfileData(),
-    };
-    const filename = (data.name||'레시피') + '.json';
+    const data = collectRecipeData();
+
+    // 1) showOpenFilePicker로 직접 연 파일 — 폴더 연동 여부와 무관하게 그 파일에 곧바로 덮어쓴다.
+    if (currentRecipeFileHandle) {
+      try {
+        const writable = await currentRecipeFileHandle.createWritable();
+        await writable.write(JSON.stringify(data,null,2));
+        await writable.close();
+        document.getElementById('recipe-name').textContent = '📄 ' + currentRecipeFilename;
+        isDirty = false;
+        alert('레시피를 업데이트했습니다: ' + currentRecipeFilename);
+        return;
+      } catch(e) {
+        alert('열려 있던 파일에 저장하지 못해 새로 저장합니다.\n' + e.message);
+        currentRecipeFileHandle = null;
+      }
+    }
 
     await ensureRecipeDirHandle();
+
+    // 2) 연결된 폴더 안에 있는, 이미 열려 있는 레시피 — 같은 파일명으로 덮어써 업데이트한다.
+    if (currentRecipeFilename && recipeDirHandle) {
+      try {
+        const fh = await recipeDirHandle.getFileHandle(currentRecipeFilename, {create:true});
+        const writable = await fh.createWritable();
+        await writable.write(JSON.stringify(data,null,2));
+        await writable.close();
+        document.getElementById('recipe-name').textContent = '📁 ' + currentRecipeFilename;
+        await refreshRecipeList();
+        const sel = document.getElementById('top-recipe-select');
+        if (sel) sel.value = currentRecipeFilename;
+        isDirty = false;
+        alert('레시피를 업데이트했습니다: ' + currentRecipeFilename);
+        return;
+      } catch(e) {
+        alert('연결된 폴더에 저장하지 못해 파일 다운로드로 대체합니다.\n' + e.message);
+      }
+    }
+
+    // 3) 폴더에 새로 저장 — 이미 열려 있던 문서라면(폴더 접근이 막혀 2번을 건너뛴 경우)
+    //    그 파일명을 그대로 쓰고, 한 번도 저장한 적 없는 새 레시피라면 레시피명으로 파일명을 만든다.
+    const filename = currentRecipeFilename || ((data.name||'레시피') + '.json');
 
     if (recipeDirHandle) {
       try {
@@ -7111,6 +7164,9 @@ async function saveRecipe() {
         await refreshRecipeList();
         const sel = document.getElementById('top-recipe-select');
         if (sel) sel.value = filename;
+        currentRecipeFilename   = filename;
+        currentRecipeFileHandle = null;
+        isDirty = false;
         alert('레시피를 폴더에 저장했습니다: ' + filename);
         return;
       } catch(e) {
@@ -7118,6 +7174,10 @@ async function saveRecipe() {
       }
     }
 
+    // 폴더 연동이 없으면 항상 다운로드로만 저장할 수 있다(브라우저가 기존 다운로드 파일을
+    // 덮어쓰게 해주지 않음) — 그래도 파일명(=문서 ID)만은 계속 유지해, 다음 저장에서도
+    // 레시피명을 바꾼 것과 무관하게 "같은 문서"로 취급되도록 한다.
+    const isUpdate = !!currentRecipeFilename;
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -7126,13 +7186,45 @@ async function saveRecipe() {
     a.click();
     a.remove();
     document.getElementById('recipe-name').textContent = '📁 ' + filename;
-    if (!recipeDirHandle) alert('연결된 폴더가 없어 다운로드로 저장했습니다: ' + filename + '\n(우측 상단 📂로 폴더를 연결하면 그 폴더에 바로 저장됩니다.)');
+    currentRecipeFilename   = filename;
+    currentRecipeFileHandle = null;
+    isDirty = false;
+    if (!recipeDirHandle) {
+      alert(
+        (isUpdate ? '연결된 폴더가 없어 같은 파일명으로 다시 다운로드했습니다: ' : '연결된 폴더가 없어 다운로드로 저장했습니다: ')
+        + filename + '\n(우측 상단 📂로 폴더를 연결하면 그 폴더에 바로 덮어써 저장됩니다.)'
+      );
+    }
   } catch(e) {
     alert('저장 중 오류가 발생했습니다: ' + e.message);
   }
 }
 
-function applyRecipeData(data, displayName) {
+// 다른 이름으로 저장 — 현재 열린 레시피를 복제해 새 문서(새 파일)를 만든다.
+// 저장이 끝나면 그 새 문서가 "현재 열린 레시피"가 된다(원본은 그대로 남는다).
+async function saveRecipeAs() {
+  const suggested = document.getElementById('sb-name').value || '레시피';
+  const newName = prompt('다른 이름으로 저장 — 새 레시피 이름을 입력하세요:', suggested + ' 사본');
+  if (newName === null) return; // 취소
+  const trimmed = newName.trim();
+  if (!trimmed) { alert('레시피 이름을 입력하세요.'); return; }
+
+  document.getElementById('sb-name').value = trimmed;
+  syncMixRecipeNameField();
+  calculate();
+
+  // 원본 문서와의 연결을 끊어야 saveRecipe()가 "새 레시피" 경로를 타 새 파일을 만든다.
+  currentRecipeFilename   = null;
+  currentRecipeFileHandle = null;
+
+  await saveRecipe();
+}
+
+function applyRecipeData(data, displayName, fileHandle=null) {
+  // 이 레시피를 "연다" — 이후 저장 시 새 파일을 만들지 않고 이 문서를 업데이트한다.
+  currentRecipeFilename   = displayName || null;
+  currentRecipeFileHandle = fileHandle || null;
+
   document.getElementById('sb-name').value   = data.name||'';
   syncMixRecipeNameField();
   document.getElementById('sb-maker').value  = data.maker||'';
@@ -7178,14 +7270,38 @@ function applyRecipeData(data, displayName) {
     });
   }
 
-  document.getElementById('recipe-name').textContent = '📁 ' + displayName;
+  document.getElementById('recipe-name').textContent = (fileHandle ? '📄 ' : '📁 ') + displayName;
   const tr2 = document.getElementById('top-recipe-select');
   if (tr2) tr2.value = [...tr2.options].some(o => o.value === displayName) ? displayName : '__none__';
   updateUnitHint();
   calculate();
+
+  // calculate() 내부의 saveToStorage()가 dirty 플래그를 세우지만, 방금 불러온 레시피는
+  // 아직 아무것도 수정하지 않은 상태이므로 되돌린다(= 문서를 "연" 것이지 "수정"한 게 아니다).
+  isDirty = false;
 }
 
-function loadRecipe() {
+// 레시피 불러오기 = 기존 문서를 "여는" 동작이다(복사본을 만들지 않음).
+// showOpenFilePicker를 지원하는 브라우저(Chrome/Edge)에서는 파일 핸들을 그대로 쥐고 있다가
+// 저장 시 같은 파일에 덮어써 진짜 "열기→수정→저장" 흐름을 구현한다. 지원하지 않는 브라우저에서는
+// 기존 방식(파일 선택 → 읽기 전용 File)으로 대체하되, 파일명을 문서 ID로 취급해 저장 시 항상
+// 같은 이름으로 재다운로드한다(그래야 이름을 바꿔도 "저장"이 새 사본을 만들지 않는다).
+async function loadRecipe() {
+  if (window.showOpenFilePicker) {
+    try {
+      const [fh] = await window.showOpenFilePicker({
+        types: [{ description: 'FeedCalc 레시피', accept: { 'application/json': ['.json'] } }],
+      });
+      const file = await fh.getFile();
+      const data = JSON.parse(await file.text());
+      applyRecipeData(data, file.name, fh);
+      alert('레시피를 열었습니다.');
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('파일을 읽을 수 없습니다: ' + e.message);
+    }
+    return;
+  }
+
   const input = document.createElement('input');
   input.type = 'file'; input.accept = '.json';
   input.onchange = e => {
@@ -7195,8 +7311,8 @@ function loadRecipe() {
     reader.onload = ev => {
       try {
         const data = JSON.parse(ev.target.result);
-        applyRecipeData(data, file.name);
-        alert('레시피를 불러왔습니다.');
+        applyRecipeData(data, file.name, null);
+        alert('레시피를 열었습니다.');
       } catch(err) {
         alert('파일을 읽을 수 없습니다: '+err.message);
       }
@@ -7206,10 +7322,26 @@ function loadRecipe() {
   input.click();
 }
 
+// 현재 열려 있는 레시피와의 연결을 끊고 빈 상태에서 새로 시작한다(= 레시피 ID 초기화).
+// init()이 만드는 초기 빈 상태를 그대로 재사용하기 위해 새로고침한다.
+function newRecipe() {
+  if (isDirty && !confirm('수정 중인 내용이 있습니다.\n저장하지 않은 변경 내용은 모두 사라집니다.\n그래도 새 레시피를 시작하시겠습니까?')) return;
+  isDirty = false; // 이미 사용자가 확인했으므로 새로고침 시 beforeunload 확인창을 다시 띄우지 않는다
+  location.reload();
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // 레시피 폴더 연동 (같은 폴더에 저장된 레시피 목록 — File System Access API)
 // ════════════════════════════════════════════════════════════════════════════
 let recipeDirHandle = null;
+
+// 현재 "열려 있는" 레시피 문서의 정체성 — 파일 기반 저장 방식이라 별도 DB ID 대신
+// 파일명을 ID로 삼는다. null이면 아직 한 번도 저장하지 않은 새 레시피.
+//   - currentRecipeFilename: 연결된 폴더 안에서 이 이름으로 덮어써야 "업데이트"가 된다.
+//   - currentRecipeFileHandle: showOpenFilePicker로 폴더 연동과 무관하게 직접 연 파일의 핸들 —
+//     있으면 연결된 폴더 대신 이 파일에 곧바로 덮어쓴다.
+let currentRecipeFilename   = null;
+let currentRecipeFileHandle = null;
 
 function recipeDirDB() {
   return new Promise((resolve, reject) => {
@@ -7339,6 +7471,8 @@ async function onTopRecipeChange(name) {
     const fh = await recipeDirHandle.getFileHandle(name);
     const file = await fh.getFile();
     const data = JSON.parse(await file.text());
+    // 폴더 안 파일은 recipeDirHandle을 통해 파일명으로 다시 찾아 덮어쓸 수 있으므로
+    // fileHandle은 넘기지 않는다(파일명 기반 업데이트 경로를 그대로 탄다).
     applyRecipeData(data, name);
   } catch(e) {
     alert('레시피를 불러올 수 없습니다: ' + e.message);
