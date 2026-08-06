@@ -1613,7 +1613,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="mix-unit-item">
           <label>총 배치량</label>
           <div style="display:flex;align-items:center;gap:4px">
-            <input type="number" id="mix-total-g" value="1000" min="1" step="10" onchange="onTotalGChange()">
+            <input type="number" id="mix-total-g" value="1000" min="1" step="10" oninput="onTotalGChange()" onchange="onTotalGChange()">
             <span style="font-size:11px;color:var(--sub)">g</span>
           </div>
         </div>
@@ -4182,6 +4182,20 @@ function getMixTotalG() {
   return parseFloat(document.getElementById('mix-total-g')?.value) || 1000;
 }
 
+// g/kg 입력 모드에서는 "총 배치량"이 원료 중량의 합계와 항상 같아야 한다 — 사용자가 직접
+// 입력하는 기준값이 아니라 원료 행에서 파생되는 값이므로, 매 계산 시작 시 여기서 재계산해
+// 필드에 반영한다(% 모드에서는 반대로 총 배치량이 사용자가 정하는 기준이므로 손대지 않는다).
+function syncTotalGFromRows() {
+  const unit = document.getElementById('unit-select')?.value || 'pct';
+  if (unit === 'pct') return;
+  const sumRaw = mixRows.reduce((sum, row) => {
+    return sum + (parseFloat(row.querySelector('input[type=number]').value) || 0);
+  }, 0);
+  const totalG = unit === 'kg' ? sumRaw * 1000 : sumRaw;
+  const el = document.getElementById('mix-total-g');
+  if (el) el.value = totalG > 0 ? +totalG.toFixed(3) : 0;
+}
+
 function getMixRows() {
   const unit = document.getElementById('unit-select')?.value || 'pct';
   const totalG = getMixTotalG();
@@ -4222,6 +4236,20 @@ function onUnitChange() {
     inp.step = stepMap[unit];
     inp.value = 0;
   });
+
+  // g/kg 모드에서는 총 배치량이 원료 중량 합계로 자동 계산되므로 직접 입력을 막는다.
+  // % 모드에서는 총 배치량이 사용자가 정하는 기준값이라 다시 편집 가능하게 되돌린다.
+  const totalEl = document.getElementById('mix-total-g');
+  if (totalEl) {
+    const isAuto = unit !== 'pct';
+    totalEl.readOnly = isAuto;
+    totalEl.tabIndex = isAuto ? -1 : 0;
+    totalEl.title = isAuto ? '원료 중량 합계로 자동 계산됩니다' : '';
+    totalEl.style.background = isAuto ? 'var(--gray-l)' : '';
+    totalEl.style.cursor = isAuto ? 'not-allowed' : '';
+  }
+
+  syncTotalGFromRows();
   updateUnitHint();
   calculate();
 }
@@ -4927,7 +4955,13 @@ function renderPtypeBanner(elId, pc, message) {
 let lastResult = null;
 let lastWarnItems = []; // updateWarnPanel()이 채움 — 대시보드의 경고 항목 타일/요약 카드가 재사용
 
+// 배합비/총 배치량/단위 중 무엇이 바뀌든 항상 이 함수 하나로 들어와서 화면 전체(배합표·영양성분·
+// 아미노산·AAFCO/NRC 판정·경고 패널·대시보드·차트 등)를 다시 그린다 — 개별 값이 바뀔 때마다
+// 부분적으로만 갱신하는 별도 로직을 만들지 않는다.
 function calculate() {
+  // g/kg 모드에서는 총 배치량을 원료 중량 합계로 먼저 맞춘 뒤 계산해야, 이후 getMixRows()가
+  // 정확한 %로 환산한다(% 모드에서는 총 배치량이 사용자가 정하는 기준값이라 그대로 둔다).
+  syncTotalGFromRows();
   const rows     = getMixRows();
   const ptype    = document.getElementById('sb-ptype').value;
   const species  = document.getElementById('sb-species')?.value || '개';
