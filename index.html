@@ -7647,17 +7647,29 @@ function isKeepLoginOn() { return localStorage.getItem(KEEP_LOGIN_KEY) !== 'fals
 // Supabase 세션 저장소를 "로그인 유지하기" 체크 여부에 따라 localStorage(브라우저를 꺼도 유지)
 // 또는 sessionStorage(현재 탭을 닫으면 삭제)로 분기하는 커스텀 스토리지 어댑터.
 // setItem이 호출되는 시점(로그인 성공 시)마다 그때그때의 체크 상태를 반영한다.
+// Supabase 공식 커스텀 스토리지 예제와 동일하게 async 함수로 구현한다 — supabase-js가 내부적으로
+// storage 메서드를 Promise로 취급하는 경로가 있어, 동기 함수로 두면 버전에 따라 세션 하이드레이션이
+// 조용히 실패할 수 있다(새로고침마다 로그인 화면으로 돌아가는 문제의 원인이 될 수 있음).
 const authStorage = {
-  getItem: (key) => localStorage.getItem(key) ?? sessionStorage.getItem(key),
-  setItem: (key, value) => {
+  getItem: async (key) => localStorage.getItem(key) ?? sessionStorage.getItem(key),
+  setItem: async (key, value) => {
     if (isKeepLoginOn()) { localStorage.setItem(key, value); sessionStorage.removeItem(key); }
     else { sessionStorage.setItem(key, value); localStorage.removeItem(key); }
   },
-  removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); },
+  removeItem: async (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); },
 };
 
 const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
-  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { storage: authStorage } })
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        storage: authStorage,
+        // CDN 스크립트가 메이저 버전(@2)만 고정돼 있어 마이너/패치 버전이 바뀌면 기본값이
+        // 달라질 수 있다 — 새로고침 시 세션 유지에 필요한 옵션들을 명시적으로 켜 둔다.
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   : null;
 
 let currentUser = null;   // 로그인된 Supabase 사용자 — 로그아웃 상태면 null
@@ -8251,7 +8263,8 @@ async function initAuthGate() {
 
   // Supabase JS SDK가 세션(리프레시 토큰)을 자체적으로 localStorage에 저장·복원하므로,
   // 새로고침해도 로그인 상태가 유지된다(요구사항 9).
-  const { data: { session } } = await supabaseClient.auth.getSession();
+  const { data: { session }, error: sessionErr } = await supabaseClient.auth.getSession();
+  if (sessionErr) console.warn('getSession() 실패 — 저장된 세션을 복원하지 못했습니다:', sessionErr.message);
   if (isRecoveryLink) {
     document.getElementById('login-overlay').classList.remove('hidden');
     showAuthView('reset');
