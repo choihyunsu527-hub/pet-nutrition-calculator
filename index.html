@@ -7644,6 +7644,10 @@ const KEEP_LOGIN_KEY = 'feedcalc_v4_keep_login';
 const REMEMBER_EMAIL_KEY = 'feedcalc_v4_remember_email';
 function isKeepLoginOn() { return localStorage.getItem(KEEP_LOGIN_KEY) !== 'false'; } // 기본값: 유지함
 
+// 새로고침 후 로그인 화면으로 돌아가는 문제의 원인을 콘솔에서 바로 확인하기 위한 디버그 로그.
+// 토큰 원문은 절대 출력하지 않고, 존재 여부·만료 시각 등 진단에 필요한 메타데이터만 남긴다.
+function authLog(...args) { console.log('%c[AUTH]', 'color:#5a6b7a;font-weight:700', ...args); }
+
 // Supabase 세션 저장소를 "로그인 유지하기" 체크 여부에 따라 localStorage(브라우저를 꺼도 유지)
 // 또는 sessionStorage(현재 탭을 닫으면 삭제)로 분기하는 커스텀 스토리지 어댑터.
 // setItem이 호출되는 시점(로그인 성공 시)마다 그때그때의 체크 상태를 반영한다.
@@ -7651,12 +7655,22 @@ function isKeepLoginOn() { return localStorage.getItem(KEEP_LOGIN_KEY) !== 'fals
 // storage 메서드를 Promise로 취급하는 경로가 있어, 동기 함수로 두면 버전에 따라 세션 하이드레이션이
 // 조용히 실패할 수 있다(새로고침마다 로그인 화면으로 돌아가는 문제의 원인이 될 수 있음).
 const authStorage = {
-  getItem: async (key) => localStorage.getItem(key) ?? sessionStorage.getItem(key),
+  getItem: async (key) => {
+    const fromLocal   = localStorage.getItem(key);
+    const fromSession = sessionStorage.getItem(key);
+    const found = fromLocal ?? fromSession;
+    authLog('storage.getItem', key, '→', found ? `found (${fromLocal !== null ? 'localStorage' : 'sessionStorage'}, ${found.length}자)` : 'NOT FOUND');
+    return found;
+  },
   setItem: async (key, value) => {
     if (isKeepLoginOn()) { localStorage.setItem(key, value); sessionStorage.removeItem(key); }
     else { sessionStorage.setItem(key, value); localStorage.removeItem(key); }
+    authLog('storage.setItem', key, '→', isKeepLoginOn() ? 'localStorage' : 'sessionStorage', `(${value.length}자)`);
   },
-  removeItem: async (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); },
+  removeItem: async (key) => {
+    localStorage.removeItem(key); sessionStorage.removeItem(key);
+    authLog('storage.removeItem', key);
+  },
 };
 
 const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
@@ -7726,6 +7740,7 @@ async function tryLogin() {
   if (rememberEl.checked) localStorage.setItem(REMEMBER_EMAIL_KEY, email);
   else localStorage.removeItem(REMEMBER_EMAIL_KEY);
 
+  authLog('6. 메인 화면 표시 이유: signInWithPassword() 로그인 성공 → enterApp() 호출');
   enterApp(data.session);
 }
 
@@ -8127,6 +8142,7 @@ async function deleteUserAccount(row) {
 }
 
 async function enterApp(session) {
+  authLog('enterApp() 실행 — 로그인 오버레이 숨기고 메인 화면 표시', { userEmail: session?.user?.email ?? null, appAlreadyStarted: appStarted });
   currentUser = session ? session.user : null;
   document.getElementById('login-overlay').classList.add('hidden');
   document.getElementById('login-err').textContent = '';
@@ -8228,6 +8244,13 @@ document.addEventListener('keydown', (e) => {
 });
 
 async function initAuthGate() {
+  // 1. 앱 시작
+  authLog('1. 앱 시작 — initAuthGate() 진입', {
+    url: window.location.href,
+    keepLoginOn: isKeepLoginOn(),
+    supabaseClientReady: !!supabaseClient,
+  });
+
   // 저장된 "아이디 저장"/"로그인 유지하기" 설정을 로그인 화면에 반영
   const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
   if (savedEmail) {
@@ -8242,6 +8265,8 @@ async function initAuthGate() {
   document.getElementById('reset-pw2').addEventListener('keydown', e => { if (e.key === 'Enter') trySetNewPassword(); });
 
   if (!supabaseClient) {
+    // 5. 로그인 화면을 표시한 이유
+    authLog('5. 로그인 화면 표시 이유: supabaseClient가 초기화되지 않음(CDN 로드 실패 등)');
     document.getElementById('login-err').textContent = friendlyAuthError();
     return;
   }
@@ -8250,27 +8275,49 @@ async function initAuthGate() {
   // 이 경우는 세션이 있어도(임시 세션) 계산기로 바로 들여보내지 않고 새 비밀번호 설정 화면을 보여준다.
   const isRecoveryLink = /type=recovery/.test(window.location.hash) || /type=recovery/.test(window.location.search);
 
+  // 4. 현재 auth state — onAuthStateChange가 발생시키는 모든 이벤트를 그대로 로그로 남긴다.
+  // (v2 SDK는 초기화 시 INITIAL_SESSION을 포함해 여러 이벤트를 이 콜백으로 보낸다.)
   supabaseClient.auth.onAuthStateChange((event, session) => {
+    authLog('4. auth state 변경', { event, hasSession: !!session, userEmail: session?.user?.email ?? null });
     if (event === 'PASSWORD_RECOVERY') {
+      authLog('5. 로그인 화면 표시 이유: PASSWORD_RECOVERY 이벤트(비밀번호 재설정 링크로 진입)');
       document.getElementById('login-overlay').classList.remove('hidden');
       showAuthView('reset');
     } else if (event === 'SIGNED_OUT') {
       // 다른 탭에서 로그아웃된 경우까지 포함해 항상 안전하게 새로고침으로 초기 상태로 되돌림
-      if (appStarted) location.reload();
-      else document.getElementById('login-overlay').classList.remove('hidden');
+      if (appStarted) {
+        authLog('5. 로그인 화면 표시 이유: SIGNED_OUT 이벤트 수신 + 앱이 이미 시작된 상태 → 새로고침으로 초기화');
+        location.reload();
+      } else {
+        authLog('5. 로그인 화면 표시 이유: SIGNED_OUT 이벤트 수신(앱 시작 전) — 로그인 오버레이 노출 유지');
+        document.getElementById('login-overlay').classList.remove('hidden');
+      }
     }
   });
 
+  // 2. getSession() 호출
+  authLog('2. getSession() 호출');
   // Supabase JS SDK가 세션(리프레시 토큰)을 자체적으로 localStorage에 저장·복원하므로,
   // 새로고침해도 로그인 상태가 유지된다(요구사항 9).
   const { data: { session }, error: sessionErr } = await supabaseClient.auth.getSession();
+  // 3. getSession() 결과(session 존재 여부)
+  authLog('3. getSession() 결과', {
+    hasSession: !!session,
+    userEmail: session?.user?.email ?? null,
+    expiresAt: session?.expires_at ? new Date(session.expires_at * 1000).toISOString() : null,
+    error: sessionErr ? sessionErr.message : null,
+  });
   if (sessionErr) console.warn('getSession() 실패 — 저장된 세션을 복원하지 못했습니다:', sessionErr.message);
+
   if (isRecoveryLink) {
+    authLog('5. 로그인 화면 표시 이유: URL에 비밀번호 재설정 링크(type=recovery) 포함');
     document.getElementById('login-overlay').classList.remove('hidden');
     showAuthView('reset');
   } else if (session) {
+    authLog('6. 메인 화면 표시 이유: getSession()이 유효한 세션을 반환함 → enterApp() 호출');
     enterApp(session);
   } else {
+    authLog('5. 로그인 화면 표시 이유: getSession()이 세션을 찾지 못함(session=null) → 로그인 폼 유지');
     document.getElementById('login-email').focus();
   }
 }
