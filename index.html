@@ -7420,87 +7420,27 @@ function exportExcel() {
 // ════════════════════════════════════════════════════════════════════════════
 // 초기화
 // ════════════════════════════════════════════════════════════════════════════
+// 현재 작업(레시피 배합·반려동물 정보 등)은 더 이상 세션 간에 저장·복원하지 않는다 —
+// 프로그램을 새로 실행하면 항상 빈 상태로 시작한다. 원료DB(ING_DB)는 사용자가 직접
+// 추가·수정한 참고용 라이브러리이므로 예외적으로 계속 저장하며, "원료DB 초기화" 버튼으로만
+// 되돌릴 수 있다. saveToStorage()는 호출될 때마다 dirty 플래그를 세워 종료 확인창의 근거로 쓴다.
 function saveToStorage() {
-  const data = {
-    name:       document.getElementById('sb-name').value,
-    maker:      document.getElementById('sb-maker').value,
-    ptype:      document.getElementById('sb-ptype').value,
-    species:    document.getElementById('sb-species')?.value,
-    target:     document.getElementById('sb-target').value,
-    moisture:   document.getElementById('sb-moist').value,
-    bw:         document.getElementById('sb-bw').value,
-    totalG:     getMixTotalG(),
-    vitk:       document.getElementById('vitk-inp')?.value,
-    rows:       getMixRows(),
-    amino:      getAminoManual(),
-    customIngs: customIngs,
-    ingDB: ING_DB,
-    pet:        collectPetProfileData(),
-  };
-  localStorage.setItem('feedcalc_v4', JSON.stringify(data));
+  markDirty();
   localStorage.setItem('feedcalc_v4_ingdb', JSON.stringify(ING_DB));
 }
 
-function loadFromStorage() {
+// 저장된 원료DB(라이브러리)만 복원한다 — 레시피 작업 상태는 절대 복원하지 않는다.
+function loadIngDBFromStorage() {
   try {
-    const raw = localStorage.getItem('feedcalc_v4');
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-
-    if (data.name)     document.getElementById('sb-name').value    = data.name;
-    syncMixRecipeNameField();
-    if (data.maker)    document.getElementById('sb-maker').value   = data.maker;
-    // applyRecipeData()와 동일하게 옛 건식/습식 값은 "주식"으로 대체(간식만 그대로 이어받음)
-    if (data.ptype)    document.getElementById('sb-ptype').value   = data.ptype==='간식' ? '간식' : '주식';
-    if (data.species && document.getElementById('sb-species')) {
-      document.getElementById('sb-species').value = data.species;
-      onSpeciesChange();
-    }
-    if (data.target)   document.getElementById('sb-target').value  = data.target;
-    if (data.moisture) document.getElementById('sb-moist').value   = data.moisture;
-    if (data.bw)       document.getElementById('sb-bw').value      = data.bw;
-    if (data.totalG)   document.getElementById('mix-total-g').value = data.totalG;
-    if (data.vitk && document.getElementById('vitk-inp')) document.getElementById('vitk-inp').value = data.vitk;
-
-    applyPetProfileData(data.pet);
-    if (!data.pet || !data.pet.petTargetBw) {
-      document.getElementById('pet-target-bw').value = data.bw || 15;
-    }
-
-    if (data.customIngs && data.customIngs.length > 0) {
-      customIngs = data.customIngs;
-    }
-
     const savedIngDB = localStorage.getItem('feedcalc_v4_ingdb');
-    if (savedIngDB) {
-      const parsed = JSON.parse(savedIngDB);
-      if (parsed && parsed.length > 0) {
-        ING_DB.length = 0;
-        parsed.forEach(ing => ING_DB.push(ing));
-      }
+    if (!savedIngDB) return;
+    const parsed = JSON.parse(savedIngDB);
+    if (parsed && parsed.length > 0) {
+      ING_DB.length = 0;
+      parsed.forEach(ing => ING_DB.push(ing));
     }
-
-    if (data.rows && data.rows.length > 0) {
-      document.getElementById('mix-body').innerHTML = '';
-      mixRows = [];
-      const rowCount = Math.max(data.rows.length, 6);
-      for (let i = 0; i < rowCount; i++) {
-        const [nm, ratio] = data.rows[i] || ['', 0];
-        addMixRow(nm, ratio);
-      }
-    }
-
-    if (data.amino) {
-      Object.entries(data.amino).forEach(([nm, v]) => {
-        const el = document.getElementById(`amino-${nm}`);
-        if (el) el.value = v;
-      });
-    }
-
-    return true;
   } catch(e) {
-    console.warn('저장 데이터 불러오기 실패:', e);
-    return false;
+    console.warn('원료DB 불러오기 실패:', e);
   }
 }
 
@@ -7541,6 +7481,12 @@ const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
 
 let currentUser = null;   // 로그인된 Supabase 사용자 — 로그아웃 상태면 null
 let appStarted  = false;  // init()이 이미 실행됐는지(세션 확인·로그인 이벤트가 겹쳐도 init()은 1회만 실행)
+
+// 현재 작업(레시피 배합) 변경 여부 — true면 창을 닫거나 새로고침할 때 확인창을 띄운다.
+// init()이 끝나기 전까지의 초기 렌더링(calculate() 등)으로 인한 오탐을 막기 위해 appReady로 감싼다.
+let isDirty  = false;
+let appReady = false;
+function markDirty() { if (appReady) isDirty = true; }
 
 // Supabase가 반환하는 원본(영문) 에러 메시지를 이해하기 쉬운 한국어 메시지로 변환
 function friendlyAuthError(err) {
@@ -8149,10 +8095,11 @@ function init() {
   renderGlossary();
   renderNotifList();
 
-  const loaded = loadFromStorage();
-  if (!loaded) {
-    for (let i = 0; i < 6; i++) addMixRow();
-  }
+  // 이전 버전에서 남아있을 수 있는 레시피 작업 자동 저장분을 정리한다 —
+  // 레시피 작업 상태는 더 이상 세션 간에 저장하지 않으므로, 새로 실행하면 항상 빈 상태로 시작한다.
+  localStorage.removeItem('feedcalc_v4');
+  loadIngDBFromStorage();
+  for (let i = 0; i < 6; i++) addMixRow();
 
   buildIngTable(getSortedIngs(allIngs()));
   updateUnitHint();
@@ -8162,7 +8109,8 @@ function init() {
   const savedTab = sessionStorage.getItem('feedcalc_v4_tab');
   if (savedTab && document.getElementById('tab-'+savedTab)) goTab(savedTab);
 
-  // 변경 시마다 자동 저장
+  // 변경 시마다 dirty 플래그를 세운다(원료DB 갱신 목적의 저장은 saveToStorage()가 계속 담당).
+  // 레시피 작업 자체는 더 이상 localStorage에 자동 저장하지 않는다 — 새로고침/재실행 시 항상 새 작업으로 시작한다.
   document.getElementById('sb-name').addEventListener('input', () => { calculate(); saveToStorage(); });
   document.getElementById('sb-maker').addEventListener('input', () => { calculate(); saveToStorage(); });
   document.getElementById('sb-ptype').addEventListener('change', saveToStorage);
@@ -8175,7 +8123,21 @@ function init() {
   document.getElementById('pet-weight-goal')?.addEventListener('change', saveToStorage);
   document.getElementById('pet-bcs')?.addEventListener('change', saveToStorage);
   document.getElementById('pet-activity')?.addEventListener('change', saveToStorage);
+
+  // 초기 렌더링 중 calculate() 등이 saveToStorage()를 호출해 생긴 오탐을 걷어내고,
+  // 이 시점부터는 실제 사용자 입력만 dirty로 반영한다.
+  isDirty  = false;
+  appReady = true;
 }
+
+// 수정 중인 내용이 있는 상태로 탭을 닫거나 새로고침하면(=프로그램 종료) 브라우저 기본 확인창을 띄운다.
+// 취소하면 그대로 페이지에 남고(=프로그램으로 복귀), 종료를 선택하면 현재 작업은 저장되지 않은 채
+// 그대로 사라진다 — 레시피 작업 상태를 애초에 localStorage에 쓰지 않으므로 별도로 지울 것이 없다.
+window.addEventListener('beforeunload', (e) => {
+  if (!isDirty) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 
 initAuthGate();
 </script>
