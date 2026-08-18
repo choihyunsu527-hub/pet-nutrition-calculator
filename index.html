@@ -2322,21 +2322,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           원래 순서
         </button>
         <button onclick="openAddIng()">원료 추가</button>
-        <button onclick="exportIngDB()"
-          style="background:var(--hdr)">
-          원료DB 백업
-        </button>
-        <button onclick="importIngDB()"
-          style="background:var(--hdr)">
-          원료DB 불러오기
-        </button>
-        <input type="file" id="ing-import-file" accept=".json" style="display:none" onchange="onImportIngDB(this)">
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
           <span style="font-size:10px;color:var(--sub)" id="ing-count"></span>
-          <button onclick="resetIngDB()"
-            style="background:#B03A2E">
-            원료DB 초기화
-          </button>
           <button onclick="deleteSelectedIng()"
             style="background:#B03A2E">
             선택 삭제
@@ -6037,76 +6024,6 @@ function buildIngTable(data) {
   document.getElementById('ing-count').textContent = `총 ${data.length}개 원료`;
 }
 
-function resetIngDB() {
-  if (!confirm('원료DB를 초기 상태로 되돌리시겠습니까?\n추가·수정한 원료가 모두 삭제됩니다.')) return;
-  localStorage.removeItem('feedcalc_v4_ingdb');
-  localStorage.removeItem('feedcalc_v4_custom_ings');
-  location.reload();
-}
-
-async function exportIngDB() {
-  const jsonStr = JSON.stringify(ING_DB, null, 2);
-
-  // 브라우저가 지원하면(예: 데스크톱 Chrome/Edge, http(s) 또는 localhost) 저장 위치를 직접 선택
-  if (window.isSecureContext && 'showSaveFilePicker' in window) {
-    try {
-      const handle = await window.showSaveFilePicker({
-        suggestedName: '원료DB_백업.json',
-        types: [{ description: 'JSON 파일', accept: { 'application/json': ['.json'] } }]
-      });
-      const writable = await handle.createWritable();
-      await writable.write(jsonStr);
-      await writable.close();
-      return;
-    } catch (err) {
-      if (err.name === 'AbortError') return; // 사용자가 저장을 취소함
-      // 미지원/오류 시 기본 다운로드 방식으로 대체
-    }
-  }
-
-  const blob = new Blob([jsonStr], {type: 'application/json'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = '원료DB_백업.json';
-  a.click();
-}
-
-function importIngDB() {
-  document.getElementById('ing-import-file').click();
-}
-
-function onImportIngDB(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      if (!Array.isArray(data)) throw new Error('형식 오류');
-      if (!confirm(`백업 파일에서 ${data.length}개 원료를 불러옵니다.\n현재 원료DB를 덮어씁니다. 계속하시겠습니까?`)) return;
-
-      ING_DB.length = 0;
-      data.forEach(ing => ING_DB.push(ing));
-
-      document.querySelectorAll('#mix-body select').forEach(sel => {
-        const cur = sel.value;
-        sel.innerHTML = buildIngOptions();
-        sel.value = cur;
-        syncIngDisplayFromSelect(sel);
-      });
-      filterIng();
-      calculate();
-      saveToStorage();
-      alert('원료DB를 불러왔습니다.');
-    } catch (err) {
-      alert('올바른 원료DB 백업 파일이 아닙니다.');
-    } finally {
-      input.value = '';
-    }
-  };
-  reader.readAsText(file);
-}
-
 let isSorted = true;
 
 function toggleSort() {
@@ -7800,8 +7717,8 @@ function exportExcel() {
 // ════════════════════════════════════════════════════════════════════════════
 // 현재 작업(레시피 배합·반려동물 정보 등)은 더 이상 세션 간에 저장·복원하지 않는다 —
 // 프로그램을 새로 실행하면 항상 빈 상태로 시작한다. 원료DB(ING_DB + customIngs)는 사용자가
-// 직접 추가·수정한 참고용 라이브러리이므로 예외적으로 계속 저장하며, "원료DB 초기화" 버튼으로만
-// 되돌릴 수 있다. saveToStorage()는 호출될 때마다 dirty 플래그를 세워 종료 확인창의 근거로 쓴다.
+// 직접 추가·수정한 참고용 라이브러리이므로 예외적으로 계속 저장한다.
+// saveToStorage()는 호출될 때마다 dirty 플래그를 세워 종료 확인창의 근거로 쓴다.
 //
 // customIngs(원료 추가 모달로 새로 만든 원료)는 ING_DB(내장 원료)와 별도의 배열이라, 예전에는
 // ING_DB만 localStorage에 저장하고 customIngs는 저장하지 않아 새로고침하면 새로 추가한 원료가
