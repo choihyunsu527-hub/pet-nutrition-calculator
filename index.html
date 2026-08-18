@@ -577,9 +577,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-display .mix-ing-display-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mix-ing-display.placeholder .mix-ing-display-txt { color: var(--sub); }
 .mix-ing-display .mix-ing-arrow { flex-shrink: 0; font-size: 9px; color: var(--sub); }
-.mix-ing-list { display: none; position: fixed; overflow: hidden; background: var(--inp);
+/* 사이드바 아코디언(.nav-group-body, 0fr→1fr grid-template-rows)과 같은 방식의 "펼쳐짐" 느낌을
+   내기 위해, display:none/block 토글 대신 max-height(0→JS가 계산한 값)+opacity를 트랜지션한다.
+   position:fixed라 레이아웃에 영향이 없으므로 항상 DOM/flex 상태를 유지해도 안전하다. */
+.mix-ing-list { position: fixed; overflow: hidden; background: var(--inp);
                  border: 1px solid var(--border); border-radius: 4px;
-                 box-shadow: var(--sh-md); z-index: 500; flex-direction: column; }
+                 box-shadow: var(--sh-md); z-index: 500; display: flex; flex-direction: column;
+                 max-height: 0; opacity: 0; pointer-events: none;
+                 transition: max-height .22s ease, opacity .18s ease; }
+.mix-ing-list.open { opacity: 1; pointer-events: auto; }
 .mix-ing-search-wrap { flex-shrink: 0; padding: 6px; border-bottom: 1px solid var(--border); }
 .mix-ing-search-input { width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px;
                  border: 1px solid var(--border); border-radius: 4px; background: var(--side2);
@@ -4116,7 +4122,7 @@ function getMixIngListEl() {
     mixIngListEl.className = 'mix-ing-list';
     mixIngListEl.innerHTML = `
       <div class="mix-ing-search-wrap">
-        <input type="text" class="mix-ing-search-input" placeholder="🔍 원료 검색..." autocomplete="off">
+        <input type="text" class="mix-ing-search-input" placeholder="원료 검색..." autocomplete="off">
       </div>
       <div class="mix-ing-options"></div>
     `;
@@ -4155,22 +4161,37 @@ function getMixIngListEl() {
   return mixIngListEl;
 }
 
+// 이 앱은 body 전체에 zoom:1.1이 걸려 있다. getBoundingClientRect()는 이미 그 배율이
+// 반영된 실제 화면 좌표를 돌려주지만, 우리가 만드는 드롭다운 패널도 body의 자손이라
+// 같은 zoom 배율이 한 번 더 적용된다 — 그 실제 좌표를 그대로 top/left에 대입하면 배율이
+// 중복 적용돼(예: 270px 대상이 270×1.1=297px로 렌더링) 원본 위치에서 점점 벗어나
+// 대각선으로 밀려나 보였다. 대입 전에 배율만큼 나눠 상쇄한다.
+function getBodyZoom() {
+  const z = parseFloat(getComputedStyle(document.body).zoom);
+  return Number.isFinite(z) && z > 0 ? z : 1;
+}
+
+// 위치를 계산해 반영하고, 열림 애니메이션이 목표로 삼을 최대 높이(px)를 반환한다.
 function positionIngList(list, trigger) {
+  const zoom = getBodyZoom();
   const r = trigger.getBoundingClientRect();
   const width = Math.max(r.width, 200);
-  list.style.width = width + 'px';
-  list.style.left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) + 'px';
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+  list.style.width = (width / zoom) + 'px';
+  list.style.left = (left / zoom) + 'px';
   const spaceBelow = window.innerHeight - r.bottom;
   const spaceAbove = r.top;
+  let targetMaxHeight;
   if (spaceBelow < 200 && spaceAbove > spaceBelow) {
     list.style.top = '';
-    list.style.bottom = (window.innerHeight - r.top) + 'px';
-    list.style.maxHeight = Math.max(160, spaceAbove - 12) + 'px';
+    list.style.bottom = ((window.innerHeight - r.top) / zoom) + 'px';
+    targetMaxHeight = Math.max(160, spaceAbove - 12) / zoom;
   } else {
     list.style.bottom = '';
-    list.style.top = r.bottom + 'px';
-    list.style.maxHeight = Math.max(160, spaceBelow - 12) + 'px';
+    list.style.top = (r.bottom / zoom) + 'px';
+    targetMaxHeight = Math.max(160, spaceBelow - 12) / zoom;
   }
+  return targetMaxHeight;
 }
 
 function setIngComboValue(wrap, name) {
@@ -4200,13 +4221,26 @@ function openIngDropdown(wrap) {
   mixIngOpenWrap = wrap;
   searchInput.value = '';
   optionsEl.innerHTML = ingListItemsHTML('');
-  positionIngList(list, display);
-  list.style.display = 'flex';
+
+  // 사이드바 아코디언과 같은 방식(높이를 0에서 목표값으로 트랜지션)으로 펼쳐지도록,
+  // 위치 계산 직후 일단 0으로 접어둔 채 시작하고, 다음 프레임에 목표 높이로 올려
+  // max-height 트랜지션이 실제로 발생하게 한다(같은 프레임에 두 값을 바로 바꾸면
+  // 브라우저가 시작값을 무시하고 트랜지션 없이 바로 최종값을 그려버린다).
+  list.classList.remove('open');
+  list.style.maxHeight = '0px';
+  const targetMaxHeight = positionIngList(list, display);
+  requestAnimationFrame(() => {
+    list.classList.add('open');
+    list.style.maxHeight = targetMaxHeight + 'px';
+  });
   searchInput.focus();
 }
 
 function closeIngDropdown() {
-  if (mixIngListEl) mixIngListEl.style.display = 'none';
+  if (mixIngListEl) {
+    mixIngListEl.classList.remove('open');
+    mixIngListEl.style.maxHeight = '0px';
+  }
   mixIngOpenWrap = null;
 }
 
