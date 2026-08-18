@@ -569,6 +569,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                    line-height: 34px; color: var(--sub); flex-shrink: 0; }
 .mix-row select { flex: 0 0 200px; border: none; border-right: 1px solid var(--border); background: transparent;
                   font-size: 11px; height: 34px; padding: 0 4px; font-family: inherit; outline: none; color: var(--text); }
+.mix-ing-wrap { position: relative; flex: 0 0 200px; border-right: 1px solid var(--border); height: 34px; box-sizing: border-box; }
+.mix-ing-input { width: 100%; height: 34px; border: none; background: transparent; font-size: 11px;
+                  padding: 0 4px; font-family: inherit; outline: none; color: var(--text); box-sizing: border-box; }
+.mix-ing-list { display: none; position: fixed; overflow-y: auto; background: var(--inp);
+                 border: 1px solid var(--border); border-radius: 4px;
+                 box-shadow: var(--sh-md); z-index: 500; }
+.mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
+.mix-ing-opt:hover { background: var(--hover-tint); }
+.mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); }
 .mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
                                font-size: 11px; height: 34px; padding: 0 6px;
                                font-family: inherit; text-align: right; color: var(--text);
@@ -4060,10 +4069,93 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
 // ════════════════════════════════════════════════════════════════════════════
 let mixRows = [];
 
+function getSortedIngNames(query) {
+  let names = allIngs().map(i => i[0]).sort((a, b) => a.localeCompare(b, 'ko'));
+  const q = (query || '').trim().toLowerCase();
+  if (q) names = names.filter(n => n.toLowerCase().includes(q));
+  return names;
+}
+
 function buildIngOptions() {
-  const names = allIngs().map(i => i[0]);
+  const names = getSortedIngNames();
   return '<option value="">-- 원료 선택 --</option>' +
          names.map(n => `<option value="${n}">${n}</option>`).join('');
+}
+
+function ingListItemsHTML(query) {
+  const names = getSortedIngNames(query);
+  if (names.length === 0) return '<div class="mix-ing-empty">검색 결과가 없습니다</div>';
+  return names.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
+}
+
+// 재료 검색 드롭다운 패널은 배합 테이블(스크롤 컨테이너) 안에서 잘리지 않도록
+// 행마다 만들지 않고 body에 하나만 붙여 재사용하며, 열릴 때마다 대상 입력창
+// 위치에 맞춰 fixed로 배치한다.
+let mixIngListEl = null;
+function getMixIngListEl() {
+  if (!mixIngListEl) {
+    mixIngListEl = document.createElement('div');
+    mixIngListEl.className = 'mix-ing-list';
+    document.body.appendChild(mixIngListEl);
+    const closeList = () => { mixIngListEl.style.display = 'none'; };
+    document.getElementById('mix-body')?.addEventListener('scroll', closeList, true);
+    document.querySelector('.mix-table-wrap')?.addEventListener('scroll', closeList, true);
+    window.addEventListener('resize', closeList);
+  }
+  return mixIngListEl;
+}
+
+function positionIngList(list, input) {
+  const r = input.getBoundingClientRect();
+  const width = Math.max(r.width, 180);
+  list.style.width = width + 'px';
+  list.style.left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) + 'px';
+  const spaceBelow = window.innerHeight - r.bottom;
+  const spaceAbove = r.top;
+  if (spaceBelow < 160 && spaceAbove > spaceBelow) {
+    list.style.top = '';
+    list.style.bottom = (window.innerHeight - r.top) + 'px';
+    list.style.maxHeight = Math.max(120, spaceAbove - 12) + 'px';
+  } else {
+    list.style.bottom = '';
+    list.style.top = r.bottom + 'px';
+    list.style.maxHeight = Math.max(120, spaceBelow - 12) + 'px';
+  }
+}
+
+function initIngCombo(wrap) {
+  const input = wrap.querySelector('.mix-ing-input');
+  const select = wrap.querySelector('select');
+
+  function openList(query) {
+    const list = getMixIngListEl();
+    list.innerHTML = ingListItemsHTML(query);
+    positionIngList(list, input);
+    list.style.display = 'block';
+    list.onmousedown = (e) => {
+      const opt = e.target.closest('.mix-ing-opt');
+      if (!opt) return;
+      e.preventDefault();
+      const name = opt.dataset.name;
+      input.value = name;
+      select.value = name;
+      list.style.display = 'none';
+      onMixChange();
+    };
+  }
+  function closeList() { if (mixIngListEl) mixIngListEl.style.display = 'none'; }
+
+  input.addEventListener('focus', () => openList(''));
+  input.addEventListener('input', () => openList(input.value));
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      closeList();
+      if (input.value !== select.value) input.value = select.value;
+    }, 150);
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') input.blur();
+  });
 }
 
 const MIX_HDR = [
@@ -4142,15 +4234,19 @@ function addMixRow(name='', ratio=0) {
       <input type="checkbox" class="mix-chk">
     </span>
     <span class="mix-no">${idx+1}</span>
-    <select onchange="onMixChange()" style="background:${bg}">
-      ${buildIngOptions()}
-    </select>
+    <span class="mix-ing-wrap" style="background:${bg}">
+      <input type="text" class="mix-ing-input" placeholder="원료 검색/선택" autocomplete="off" value="${name}">
+      <select onchange="onMixChange()" style="display:none">
+        ${buildIngOptions()}
+      </select>
+    </span>
     <input type="number" value="${ratio}" min="0" step="0.5"
            oninput="onMixChange()" style="width:100px">
     <span class="mix-actual-g" style="width:90px;flex-shrink:0;color:var(--sub)">─</span>
     ${MIX_HDR.map((h, i) => `<span class="mix-val" data-idx="${i}" style="width:${h.w}px${MIX_HDR_GROUP_END.has(i) ? ';border-right:2px solid var(--border)' : ''}">─</span>`).join('')}
   `;
   if (name) div.querySelector('select').value = name;
+  initIngCombo(div.querySelector('.mix-ing-wrap'));
   document.getElementById('mix-body').appendChild(div);
   mixRows.push(div);
 }
