@@ -250,8 +250,9 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                      border-radius: 8px; cursor: pointer; text-align: left; font: inherit;
                      transition: background-color .2s ease; }
 #sidebar-home-btn:hover { background: rgba(255,255,255,0.07); }
-#sidebar-logo img { width: 44px; height: 44px; display: block; flex-shrink: 0; }
-#sidebar-wordmark { font-size: 13px; font-weight: 700; line-height: 1.05; letter-spacing: 0.5px;
+#sidebar-logo img { width: 54px; height: 54px; display: block; flex-shrink: 0; }
+#sidebar-brand-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+#sidebar-wordmark { font-size: 16px; font-weight: 700; line-height: 1.05; letter-spacing: 0.5px;
                      color: #FFFFFF; white-space: normal; }
 #sidebar-collapse-btn { width: 28px; height: 28px; flex-shrink: 0; border-radius: 6px; border: none;
                          background: transparent; color: #b7c0ca; cursor: pointer; padding: 0;
@@ -261,9 +262,9 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #sidebar-collapse-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
                              stroke-linecap: round; stroke-linejoin: round; }
 #sidebar-tagline { font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: #8b96a3;
-                    text-transform: uppercase; white-space: nowrap; text-align: center;
+                    text-transform: uppercase; white-space: normal; line-height: 1.35; display: block;
                     cursor: pointer; border-radius: 6px;
-                    padding: 2px 6px; margin: 4px -6px -2px; box-sizing: border-box;
+                    padding: 2px 4px; margin: 2px -4px 0; box-sizing: border-box;
                     transition: background-color .2s ease; }
 #sidebar-tagline:hover { background: rgba(255,255,255,0.07); }
 #sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
@@ -276,8 +277,7 @@ html.sidebar-collapsed #sidebar-logo-row { flex-direction: column; gap: 8px; }
 html.sidebar-collapsed #sidebar-home-btn { flex: none; }
 html.sidebar-collapsed #sidebar-logo img { width: 44px; height: 44px;
                                             object-fit: cover; object-position: left center; border-radius: 6px; }
-html.sidebar-collapsed #sidebar-wordmark,
-html.sidebar-collapsed #sidebar-tagline,
+html.sidebar-collapsed #sidebar-brand-text,
 html.sidebar-collapsed #sidebar-foot { display: none; }
 html.sidebar-collapsed #sidebar-nav { gap: 4px; }
 html.sidebar-collapsed .nav-item,
@@ -1173,13 +1173,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="sidebar-logo-row">
     <button id="sidebar-home-btn" onclick="goTab('dash')" title="대시보드로 이동">
     <img id="top-logo" src="logo.png" alt="Nutri-Circulator" style="flex-shrink:0;display:block;">
-    <span id="sidebar-wordmark">NUTRI<br>CIRCULATOR</span>
+    <span id="sidebar-brand-text">
+      <span id="sidebar-wordmark">NUTRI<br>CIRCULATOR</span>
+      <span id="sidebar-tagline">Advanced Clinical Nutrition Systems</span>
+    </span>
     </button>
       <button id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="사이드바 접기/펼치기">
         <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
       </button>
     </div>
-    <div id="sidebar-tagline" onclick="goTab('dash')" title="대시보드로 이동">Advanced Clinical Nutrition Systems</div>
   </div>
   <div id="sidebar-nav">
     <div class="nav-item active" data-tab="dash" data-label="대시보드" onclick="showTab('dash', this)">
