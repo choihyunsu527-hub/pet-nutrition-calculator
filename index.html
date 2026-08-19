@@ -119,10 +119,14 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #login-overlay, #app { position: relative; z-index: 1; }
 
 /* ── 전체 상단 헤더 ── */
+/* 창이 좁아져도 검색창/버튼이 찌그러지거나 화면 밖으로 밀려 잘리지 않도록, #top-row1에 최소
+   폭을 고정해두고 그보다 좁아지면 #top-bar 자체에서만 가로 스크롤이 생기게 한다(사이드바/본문
+   레이아웃에는 영향 없음). */
 #top-bar { background: var(--side2); border-bottom: 1px solid var(--border);
-           flex-shrink: 0; transition: background .25s ease; }
+           flex-shrink: 0; transition: background .25s ease;
+           overflow-x: auto; overflow-y: hidden; }
 #top-row1 { height: 60px; display: flex; align-items: center; position: relative;
-             padding: 0 24px; gap: 16px; }
+             padding: 0 24px; gap: 16px; min-width: 1280px; }
 #top-title { display: none; }
 #top-view-title { font-size: 17px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
 #top-nav { display: none; }
@@ -130,7 +134,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 /* ── 헤더 중앙 전역 검색(UI만 — 검색 기능은 아직 없음) — #top-row1의 position:relative를 기준으로
    좌/우 콘텐츠 폭과 무관하게 항상 정중앙에 오도록 절대 배치한다. ── */
 #top-search-wrap { position: absolute; left: 38%; top: 50%; transform: translate(-50%, -50%);
-                    display: flex; align-items: center; gap: 10px;
+                    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
                     width: 360px; max-width: 400px; height: 40px; box-sizing: border-box;
                     background: var(--side2); border: 1px solid var(--border); border-radius: 10px;
                     padding: 0 14px; transition: border-color .2s ease, box-shadow .2s ease; }
