@@ -756,6 +756,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .btn-save { background: var(--acc); color: #fff; }
 .btn-cancel { background: var(--side); color: var(--text); border: 1px solid var(--border) !important; }
 
+/* 상단 툴바 버튼(#top-recipe-save-btn / .top-recipe-btn-sub)과 톤을 맞춘 크기·폰트·여백 —
+   색상 구분(편집=중립/삭제=경고/등록=강조)은 .btn-cancel·.btn-save와 개별 경고색으로 유지한다. */
+#stdverify-custom-bar button { font-size: 11px; font-weight: 700; border-radius: 5px;
+                                 padding: 6px 12px; font-family: inherit; white-space: nowrap;
+                                 cursor: pointer; transition: filter .2s ease; }
+#stdverify-custom-bar button:hover { filter: brightness(1.08); }
+#stdverify-custom-bar button:active { transform: scale(0.97); }
+#stdverify-custom-bar button:disabled { opacity: .5; cursor: not-allowed; }
+#stdverify-custom-edit-btn { font-weight: 600; }
+#stdverify-custom-del-btn { font-weight: 600; color: #B03A2E; border-color: #B03A2E !important; }
+
 .pw-field { margin-bottom: 14px; text-align: left; }
 .pw-field label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
 .pw-field input, .pw-field select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 5px;
@@ -1968,9 +1979,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               <div id="stdverify-custom-bar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap">
                 <select id="stdverify-custom-select" onchange="setStdVerifyCustomId(this.value)"
                         style="padding:6px 8px;border:1px solid var(--border);border-radius:6px;background:var(--side2);color:var(--text);font-size:11px;font-family:inherit"></select>
-                <button type="button" class="btn-cancel" style="padding:6px 12px;border-radius:6px" id="stdverify-custom-edit-btn" onclick="openStdVerifyCustomModal(true)">✏ 편집</button>
-                <button type="button" class="btn-cancel" style="padding:6px 12px;border-radius:6px" id="stdverify-custom-del-btn" onclick="deleteStdVerifyCustomStandard()">🗑 삭제</button>
-                <button type="button" class="btn-save" style="padding:6px 12px;border-radius:6px" onclick="openStdVerifyCustomModal(false)">＋ 새 기준 등록</button>
+                <button type="button" class="btn-cancel" id="stdverify-custom-edit-btn" onclick="openStdVerifyCustomModal(true)">✏ 편집</button>
+                <button type="button" class="btn-cancel" id="stdverify-custom-del-btn" onclick="deleteStdVerifyCustomStandard()">🗑 삭제</button>
+                <button type="button" class="btn-save" onclick="openStdVerifyCustomModal(false)">＋ 새 기준 등록</button>
               </div>
             </div>
           </div>
