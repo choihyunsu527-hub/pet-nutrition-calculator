@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nutri Circulator | NRC · AAFCO · FEDIAF</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="css/variables.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 (function () {
@@ -32,86 +33,9 @@
 html { visibility: hidden; }
 html.fonts-ready { visibility: visible; }
 
-/* ── 기본 리셋 & 변수 ── */
+/* ── 기본 리셋 ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --bg:       transparent;
-  --side:     #eef1f3;
-  --side2:    #FFFFFF;
-  --hdr:      #1e2733;
-  --acc:      #2f9188;
-  --acc2:     #256f68;
-  --acc-grad: #FFFFFF;
-  --panel-grad: #FFFFFF;
-  --gray-grad: #FFFFFF;
-  --text:     #1e2733;
-  --sub:      #7a8694;
-  --border:   #e1e5e9;
-  --inp:      #f5f6f8;
-  --calc:     rgba(47,145,136,0.16);
-  --sec:      #FFFFFF;
-  --odd:      var(--side2);
-  --even:     var(--side2);
-  --th-bg:    #FFFFFF;
-  --pass-bg:  rgba(46,160,67,0.12);  --pass-t:  #1E7E34;
-  --fail-bg:  rgba(211,47,47,0.12);  --fail-t:  #C0392B;
-  --warn-bg:  rgba(217,142,15,0.15); --warn-t:  #966600;
-  --orange:   rgba(245,199,110,0.18);
-  --gray-l:   rgba(30,39,51,0.03);
-  --gray-m:   #8b96a3;
-  --nrc-bg:   rgba(21,101,192,0.16);   --nrc-t: #1565C0;
-  --aa-bg:    rgba(0,121,107,0.16);    --aa-t:  #00695C;
-  --fed-bg:   rgba(173,20,87,0.16);    --fed-t: #AD1457;
-  --sh:       none;
-  --sh-md:    none;
-  --body-bg:    #eef1f3;
-  --topbar-bg:  #1e2733;
-  --panel-bg:   #eef1f3;
-  --panel-border: rgba(0,0,0,0.06);
-  --hover-tint: rgba(0,0,0,0.06);
-  --pill-bg:    #2f9188;
-  --pill-text:  #FFFFFF;
-  --scrollbar-thumb:       rgba(0,0,0,0.2);
-  --scrollbar-thumb-hover: rgba(0,0,0,0.35);
-}
-html[data-theme="dark"] {
-  --side:     #1e2733;
-  --side2:    #26313f;
-  --hdr:      #FFFFFF;
-  --acc:      #4fb3a6;
-  --acc2:     #6fada3;
-  --acc-grad: linear-gradient(135deg, #2e3946 0%, #1e2733 100%);
-  --panel-grad: linear-gradient(180deg, #2e3946 0%, #1e2733 100%);
-  --gray-grad: linear-gradient(135deg, #2e3946 0%, #1e2733 100%);
-  --text:     #E5E5EA;
-  --sub:      #aab3bd;
-  --border:   rgba(255,255,255,0.14);
-  --inp:      rgba(255,255,255,0.06);
-  --calc:     rgba(79,179,166,0.22);
-  --sec:      rgba(255,255,255,0.05);
-  --odd:      rgba(255,255,255,0.03);
-  --th-bg:    #26313f;
-  --pass-bg:  rgba(143,191,160,0.18); --pass-t:  #9FD4B4;
-  --fail-bg:  rgba(224,140,140,0.2);  --fail-t:  #E0A0A0;
-  --warn-bg:  rgba(232,201,138,0.2);  --warn-t:  #E8C98A;
-  --orange:   rgba(245,199,110,0.16);
-  --gray-l:   rgba(255,255,255,0.04);
-  --gray-m:   #8b96a3;
-  --nrc-bg:   rgba(100,181,246,0.2);  --nrc-t: #90CAF9;
-  --aa-bg:    rgba(77,182,172,0.2);   --aa-t:  #80CBC4;
-  --fed-bg:   rgba(240,98,146,0.2);   --fed-t: #F48FB1;
-  --sh:       none;
-  --sh-md:    none;
-  --body-bg:    #1e2733;
-  --topbar-bg:  #1e2733;
-  --panel-bg:   #1e2733;
-  --panel-border: rgba(255,255,255,0.08);
-  --hover-tint: rgba(255,255,255,0.08);
-  --pill-bg:    #4fb3a6;
-  --pill-text:  #FFFFFF;
-  --scrollbar-thumb:       rgba(255,255,255,0.15);
-  --scrollbar-thumb-hover: rgba(255,255,255,0.28);
-}
+/* CSS 변수(디자인 토큰)는 css/variables.css로 분리됨 — <head>의 <link>로 로드 */
 body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-serif;
        background: var(--body-bg); color: var(--text); font-size: 13px; height: calc(100vh / 1.1);
        display: flex; flex-direction: column; overflow-x: auto; overflow-y: hidden; position: relative;
