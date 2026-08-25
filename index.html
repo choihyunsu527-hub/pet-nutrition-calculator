@@ -844,39 +844,50 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   border-color: var(--acc) !important; color: var(--acc) !important; background: var(--hover-tint) !important;
 }
 
-/* ── 모달 ── */
+/* ── 모달 ── — 6개 모달(원료 추가/비밀번호 변경/개인정보/사용자 편집/제품유형 근거/기준 등록)이
+   전부 이 한 세트(.modal-overlay/.modal/.modal-hdr/.modal-body/.modal-footer/.btn-save/.btn-cancel)를
+   공유하므로, 여기 한 곳만 다듬으면 모든 모달에 동일하게 적용된다. */
 .modal-overlay { display: none; position: fixed; inset: 0;
                  background: rgba(0,0,0,0.75); z-index: 1000;
                  align-items: center; justify-content: center; }
 .modal-overlay.open { display: flex; }
+/* 배경(overlay)과의 대비를 --sh-md 하나에만 의존하지 않도록, 옅은 흰 테두리 링을 겹쳐 다크
+   테마에서도 모달 가장자리가 배경과 또렷이 분리돼 보이게 한다(새 색상 아님, 반투명 흰색 1px). */
 .modal { background: var(--panel-grad); border: 1px solid var(--panel-border); border-radius: var(--radius-lg); width: 560px; max-height: 80vh;
-         overflow-y: auto; box-shadow: var(--sh-md); }
-.modal-hdr { background: var(--gray-l); color: var(--hdr); padding: 14px 18px;
-             font-size: 12px; font-weight: bold; display: flex;
-             justify-content: space-between; align-items: center;
+         overflow-y: auto; box-shadow: var(--sh-md), 0 0 0 1px rgba(255,255,255,0.06); }
+.modal-hdr { background: var(--gray-l); color: var(--hdr); padding: 18px 24px;
+             font-size: 14px; font-weight: 800; display: flex;
+             justify-content: space-between; align-items: center; gap: 12px;
              border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: 1px solid var(--border);
              position: sticky; top: 0; z-index: 2; }
-.modal-hdr button { background: none; border: none; color: var(--hdr);
-                    font-size: 16px; cursor: pointer; transition: color .35s ease; opacity: 0.6; }
-.modal-hdr button:hover { opacity: 1; }
-.modal-body { padding: 16px 18px; word-break: keep-all; overflow-wrap: break-word; }
-.modal-row { display: flex; align-items: center; margin-bottom: 7px; }
+/* 닫기(✕) 버튼 — 헤더의 알림·폴더 아이콘 버튼과 같은 "둥근 아이콘 버튼" 톤으로 통일 */
+.modal-hdr button { width: 28px; height: 28px; flex-shrink: 0; padding: 0;
+                    display: flex; align-items: center; justify-content: center;
+                    background: none; border: none; border-radius: 8px; color: var(--sub);
+                    font-size: 14px; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.modal-hdr button:hover { background: var(--hover-tint); color: var(--hdr); }
+.modal-body { padding: 20px 24px; word-break: keep-all; overflow-wrap: break-word; }
+.modal-row { display: flex; align-items: center; margin-bottom: 9px; }
 .modal-row label { width: 180px; font-size: 11px; color: var(--sub); flex-shrink: 0; font-weight: 600; }
-.modal-row input { flex: 1; padding: 5px 8px; border: 1px solid var(--border);
-                   font-size: 11px; font-family: inherit; color: var(--text);
-                   background: var(--side2); outline: none; border-radius: 4px; }
-.modal-row input:focus { border-color: var(--acc); }
-.modal-footer { padding: 12px 18px; background: var(--gray-l);
+.modal-row input { flex: 1; padding: 7px 10px; border: 1px solid var(--border);
+                   font-size: 12px; font-family: inherit; color: var(--text);
+                   background: var(--side2); outline: none; border-radius: 6px;
+                   transition: border-color .15s ease, box-shadow .15s ease; }
+.modal-row input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.modal-footer { padding: 16px 24px; background: var(--gray-l);
                 display: flex; justify-content: flex-end; gap: 8px;
                 border-top: 1px solid var(--border); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
                 position: sticky; bottom: 0; z-index: 2; }
-.modal-footer button { padding: 7px 22px; border: none; border-radius: 999px;
-                        font-size: 11px; font-weight: bold; cursor: pointer;
-                        font-family: inherit; transition: filter .35s ease, transform .18s ease; }
+/* 확인/저장(.btn-save)=주요 동작(포인트 컬러 채움), 취소/닫기(.btn-cancel)=보조 동작(아웃라인) —
+   나머지 화면(헤더 툴바·원료DB 툴바 등)과 같은 사각형 소형 radius로 통일(기존 999px 알약형 제거) */
+.modal-footer button { padding: 0 20px; height: 34px; border: none; border-radius: 6px;
+                        font-size: 12px; font-weight: 700; cursor: pointer;
+                        font-family: inherit; transition: filter .2s ease, background-color .15s ease, transform .18s ease; }
 .modal-footer button:hover { filter: brightness(1.05); }
 .modal-footer button:active { transform: scale(0.97); }
 .btn-save { background: var(--acc); color: #fff; }
-.btn-cancel { background: var(--side); color: var(--text); border: 1px solid var(--border) !important; }
+.btn-cancel { background: transparent; color: var(--text); border: 1px solid var(--border) !important; }
+.btn-cancel:hover { background: var(--hover-tint); filter: none; }
 
 /* 상단 툴바 버튼(#top-recipe-save-btn / .top-recipe-btn-sub)과 톤을 맞춘 크기·폰트·여백 —
    색상 구분(편집=중립/삭제=경고/등록=강조)은 .btn-cancel·.btn-save와 개별 경고색으로 유지한다. */
@@ -891,10 +902,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 .pw-field { margin-bottom: 14px; text-align: left; }
 .pw-field label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
-.pw-field input, .pw-field select { width: 100%; padding: 9px 12px; border: 1px solid var(--border); border-radius: 5px;
+.pw-field input, .pw-field select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
                    font-size: 12px; font-family: inherit; outline: none;
-                   background: var(--side2); color: var(--text); box-sizing: border-box; }
-.pw-field input:focus, .pw-field select:focus { border-color: var(--acc); }
+                   background: var(--side2); color: var(--text); box-sizing: border-box;
+                   transition: border-color .15s ease, box-shadow .15s ease; }
+.pw-field input:focus, .pw-field select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .pw-field input:disabled, .pw-field select:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── 대시보드 ── */
@@ -946,9 +958,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .stdverify-deficit-group-label { font-size: 10.5px; font-weight: 700; margin: 6px 0 4px; }
 .stdverify-cust-cat { font-size: 10px; font-weight: 700; color: var(--sub); margin: 10px 0 4px; }
 .stdverify-cust-row { display: grid; grid-template-columns: 1fr 90px 90px; gap: 6px; align-items: center; margin-bottom: 5px; }
-.stdverify-cust-row input { padding: 5px 8px; border: 1px solid var(--border); font-size: 11px;
-             font-family: inherit; color: var(--text); background: var(--side2); outline: none; border-radius: 4px; }
-.stdverify-cust-row input:focus { border-color: var(--acc); }
+.stdverify-cust-row input { padding: 6px 8px; border: 1px solid var(--border); font-size: 11px;
+             font-family: inherit; color: var(--text); background: var(--side2); outline: none; border-radius: 6px;
+             transition: border-color .15s ease, box-shadow .15s ease; }
+.stdverify-cust-row input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .dash-compliance { display: flex; flex-direction: column; gap: 6px; }
 .dash-section > .accent-card { flex: 1; display: flex; flex-direction: column; }
 .dash-section > .accent-card > .settings-actions { margin-top: auto; }
@@ -2673,7 +2686,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <span id="pw-change-modal-title">비밀번호 변경</span>
       <button onclick="closeModal('pw-change-modal')" aria-label="닫기">✕</button>
     </div>
-    <div class="modal-body" style="padding:22px 28px">
+    <div class="modal-body">
       <div class="pw-field">
         <label for="pw-current">현재 비밀번호</label>
         <input type="password" id="pw-current" autocomplete="off">
@@ -2702,7 +2715,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <span id="my-info-modal-title">개인정보</span>
       <button onclick="closeModal('my-info-modal')" aria-label="닫기">✕</button>
     </div>
-    <div class="modal-body" style="padding:22px 28px">
+    <div class="modal-body">
       <div class="pw-field">
         <label for="my-info-email">이메일</label>
         <input type="text" id="my-info-email" readonly disabled>
@@ -2731,7 +2744,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <span id="admin-edit-modal-title">사용자 편집</span>
       <button onclick="closeModal('admin-edit-modal')" aria-label="닫기">✕</button>
     </div>
-    <div class="modal-body" style="padding:22px 28px">
+    <div class="modal-body">
       <div class="pw-field">
         <label for="edit-user-email">이메일</label>
         <input type="text" id="edit-user-email" readonly disabled>
