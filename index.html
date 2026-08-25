@@ -382,10 +382,10 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .allergy-item .rm-btn:hover { color: #C0392B; }
 .settings-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
 .settings-actions button { padding: 7px 16px; font-size: 11px; font-weight: 600;
-                            font-family: inherit; border-radius: 999px; cursor: pointer;
+                            font-family: inherit; border-radius: 6px; cursor: pointer;
                             border: 1px solid var(--border); background: var(--side2); color: var(--text);
-                            transition: background-color .35s ease, filter .35s ease, transform .18s ease; }
-.settings-actions button:hover { filter: brightness(0.96); }
+                            transition: background-color .15s ease, border-color .15s ease, transform .18s ease; }
+.settings-actions button:hover { background: var(--hover-tint); border-color: var(--acc); }
 .settings-actions button:active { transform: scale(0.97); }
 .settings-actions .btn-blue { background: var(--side2); color: var(--text); }
 .settings-actions .btn-green { background: var(--side2); color: var(--text); }
@@ -410,19 +410,14 @@ html.sidebar-collapsed .nav-group-body { display: none; }
                   transition: filter .35s ease, transform .18s ease; }
 .hdr-bar button:hover { filter: brightness(1.1); }
 .hdr-bar button:active { transform: scale(0.97); }
-/* 대시보드 전용 페이지 제목 — 다른 탭의 hdr-bar(가운데 정렬, 단일 텍스트)는 그대로 두고
-   대시보드만 좌측 정렬 + 제목/설명 두 단계 굵기·크기로 나눠 SaaS 대시보드의
-   "페이지 헤더" 톤을 준다. */
-#tab-dash .hdr-bar.dash-hdr-bar { justify-content: flex-start; padding: 10px 24px; }
-.dash-hdr-title { font-size: 13px; font-weight: 800; color: var(--hdr); }
-.dash-hdr-desc { font-size: 11px; color: var(--sub); font-weight: 500; }
-.dash-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
-
-/* 배합 설계 전용 페이지 제목 — 대시보드와 같은 제목/설명 2단 타이포 패턴을 재사용한다. */
-#tab-mix .hdr-bar.mix-hdr-bar { justify-content: flex-start; }
-.mix-hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
-.mix-hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
-.mix-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
+/* ── 페이지 헤더 제목/설명 2단 타이포 — 모든 탭이 공유하는 한 벌의 패턴 ──
+   이전에는 탭마다 dash-hdr-title/mix-hdr-title/ing-hdr-title/std-hdr-title처럼 같은 규칙을
+   이름만 바꿔 중복 정의했다. 지금은 .hdr-title/.hdr-desc 하나로 통합하고, 각 탭 hdr-bar에는
+   좌측 정렬용 .hdr-bar-left만 붙인다(가운데 정렬이 필요한 곳은 기존 .hdr-bar 기본값 그대로 유지 가능). */
+.hdr-bar.hdr-bar-left { justify-content: flex-start; }
+.hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
+.hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
+.hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
 /* 배합 설계 액션 버튼 hierarchy — 원료DB 툴바(.ing-toolbar button/.ing-btn-primary)와
    같은 언어(중립 아웃라인 = 기본, 포인트 컬러 = 주요 동작, 기존 위험색(#B03A2E) = 파괴적 동작)를
    그대로 재사용해 화면 간 툴바 스타일을 통일한다. */
@@ -434,15 +429,6 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 #tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
 #tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
 
-/* 원료 DB(관리 화면) / 영양기준 DB(참조 화면) 전용 페이지 제목 — 같은 제목/설명 2단 타이포 패턴 재사용 */
-#tab-ing .hdr-bar.ing-hdr-bar { justify-content: flex-start; }
-.ing-hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
-.ing-hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
-.ing-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
-#tab-std .hdr-bar.std-hdr-bar { justify-content: flex-start; }
-.std-hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
-.std-hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
-.std-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
 
 /* ── 카드 ── */
 .cards { display: flex; gap: 6px; padding: 8px 12px; flex-shrink: 0;
@@ -469,6 +455,12 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
    1행은 top:0, 2행은 1행 높이만큼 내려서 각자 제자리에 고정되도록 함 */
 #ana-table thead tr:first-child th { height: 27px; }
 #ana-table thead tr:nth-child(2) th { top: 27px; }
+/* 영양소/경고 분석 표 — 원료DB·영양기준 DB 표에 쓴 것과 같은 방식으로 진한 테두리(var(--border))만
+   옅게 만든 파생값을 덮어써서 격자선 노이즈를 줄인다(그룹 헤더의 색상 배경 등은 그대로 유지). */
+#ana-table, #warn-table { border-color: color-mix(in srgb, var(--border) 65%, transparent); }
+#ana-table th, #warn-table th,
+#ana-table td, #warn-table td { border-color: color-mix(in srgb, var(--border) 65%, transparent); }
+#ana-table td, #warn-table td { padding: 5px 8px; }
 th { background: var(--th-bg); color: var(--hdr); padding: 6px 6px;
      text-align: center; position: sticky; top: 0; z-index: 10;
      white-space: nowrap; font-size: 10px; border: 1px solid var(--border);
@@ -659,9 +651,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               padding: 8px 14px; font-size: 10px; flex-shrink: 0; }
 .amino-section { padding: 10px 12px; flex-shrink: 0; }
 .amino-section h3 { font-size: 11px; color: var(--hdr); margin-bottom: 8px; font-weight: bold; }
+/* 다른 데이터 표(원료DB/영양기준 DB/영양소·경고 분석)와 같은 톤으로, gap이 만드는 격자선 색을
+   진한 --border 그대로가 아니라 옅게 섞은 값으로 바꿔 과도한 테두리 느낌을 줄인다. */
 .amino-grid { display: grid; grid-template-columns: 170px 70px 110px 100px 65px 82px 82px 75px 78px 90px;
               gap: 1px; font-size: 10px; width: max-content; margin: 0 auto;
-              background: var(--border); border: 1px solid var(--border); }
+              background: color-mix(in srgb, var(--border) 65%, transparent);
+              border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); }
 .amino-grid .ag-hdr { background: var(--th-bg); color: var(--hdr); padding: 5px 6px;
                        text-align: center; font-weight: bold; white-space: nowrap; }
 .amino-grid .ag-cell { padding: 4px 6px; text-align: right; background: var(--side2); }
@@ -1233,13 +1228,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .auth-view { display: none; }
 .auth-view.show { display: block; }
 .auth-sub { font-size: 11px; color: var(--sub); margin-bottom: 18px; }
-.auth-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 5px;
+.auth-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
             font-size: 12px; font-family: inherit; outline: none; text-align: center;
-            margin-bottom: 10px; background: var(--side2); color: var(--text); box-sizing: border-box; }
-.auth-input:focus { border-color: var(--acc); }
-.auth-btn { width: 100%; padding: 8px; border: none; border-radius: 999px; background: var(--acc);
+            margin-bottom: 10px; background: var(--side2); color: var(--text); box-sizing: border-box;
+            transition: border-color .15s ease, box-shadow .15s ease; }
+.auth-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.auth-btn { width: 100%; height: 36px; border: none; border-radius: 6px; background: var(--acc);
              color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
-             transition: filter .35s ease, transform .18s ease; }
+             transition: filter .2s ease, transform .18s ease; }
 .auth-btn:hover { filter: brightness(1.1); }
 .auth-btn:active { transform: scale(0.97); }
 .auth-btn:disabled { opacity: .6; cursor: default; }
@@ -1258,7 +1254,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 <body>
 <div id="login-overlay">
   <div id="login-box">
-    <div id="login-title">Nutrition Calculator</div>
+    <div id="login-title">Nutri Circulator</div>
 
     <div id="auth-view-login" class="auth-view show">
       <div class="auth-sub">관리자가 발급한 계정으로 로그인하세요.</div>
@@ -1465,9 +1461,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 0: 대시보드 ── -->
     <div class="tab-pane active" id="tab-dash">
-      <div class="hdr-bar dash-hdr-bar">
-        <span class="dash-hdr-title">대시보드</span>
-        <span class="dash-hdr-desc">영양 설계 현황 요약</span>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">대시보드</span>
+        <span class="hdr-desc">영양 설계 현황 요약</span>
       </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel">
@@ -1667,7 +1663,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 제품 ── -->
     <div class="tab-pane" id="tab-product">
-      <div class="hdr-bar">제품 / 정보 — 제품 정보 및 설정</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">제품 / 정보</span>
+        <span class="hdr-desc">제품 정보 및 설정</span>
+      </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel">
         <div class="dash-grid">
@@ -1761,9 +1760,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 1: 배합 설계 ── -->
     <div class="tab-pane" id="tab-mix">
-      <div class="hdr-bar mix-hdr-bar">
-        <span class="mix-hdr-title">배합 설계</span>
-        <span class="mix-hdr-desc">원료 선택 후 배합비(%) 입력</span>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">배합 설계</span>
+        <span class="hdr-desc">원료 선택 후 배합비(%) 입력</span>
         <div class="hdr-btns">
           <button class="mix-btn-primary" onclick="addMixRow()">행 추가</button>
           <button class="mix-btn-danger" onclick="deleteSelectedMix()">선택 삭제</button>
@@ -1812,7 +1811,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 분석 현황 ── -->
     <div class="tab-pane" id="tab-analysis">
-      <div class="hdr-bar">분석 현황 — 영양 설계 상세 지표</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">분석 현황</span>
+        <span class="hdr-desc">영양 설계 상세 지표</span>
+      </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel">
         <div class="dash-grid">
@@ -1955,7 +1957,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 2: 영양 분석 ── -->
     <div class="tab-pane" id="tab-ana">
-      <div class="hdr-bar">영양성분 분석 — DMB 환산 + NRC / AAFCO / FEDIAF 기준 비교</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">영양성분 분석</span>
+        <span class="hdr-desc">DMB 환산 + NRC / AAFCO / FEDIAF 기준 비교</span>
+      </div>
       <div class="ptype-banner" id="ana-ptype-banner"></div>
       <div class="tab-panel">
       <div class="ana-split">
@@ -2051,7 +2056,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 에너지 분석 ── -->
     <div class="tab-pane" id="tab-ana-energy">
-      <div class="hdr-bar">에너지 분석 — ME(대사에너지) · RER/MER 급여량 · 칼로리 조성 · AAFCO 열량 밀도 보정</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">에너지 분석</span>
+        <span class="hdr-desc">ME(대사에너지) · RER/MER 급여량 · 칼로리 조성 · AAFCO 열량 밀도 보정</span>
+      </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
 
@@ -2122,7 +2130,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 기준 검증 ── -->
     <div class="tab-pane" id="tab-std-verify">
-      <div class="hdr-bar">기준 검증 — 배합이 선택한 영양 기준(AAFCO/NRC/사용자 등록 기준)을 충족하는지 검증하고 수정 방향을 확인합니다</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">기준 검증</span>
+        <span class="hdr-desc">배합이 선택한 영양 기준(AAFCO/NRC/사용자 등록 기준)을 충족하는지 검증하고 수정 방향을 확인합니다</span>
+      </div>
       <div class="ptype-banner" id="stdverify-ptype-banner"></div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
@@ -2187,7 +2198,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 3: 아미노산·VitK ── -->
     <div class="tab-pane" id="tab-amino">
-      <div class="hdr-bar">필수아미노산 11종 — 원료DB 자동계산 + 직접 보정 가능</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">필수아미노산 11종</span>
+        <span class="hdr-desc">원료DB 자동계산 + 직접 보정 가능</span>
+      </div>
       <div class="ptype-banner" id="amino-ptype-banner"></div>
       <div class="tab-panel">
       <div class="amino-info" style="text-align:center">
@@ -2226,7 +2240,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 4: 경고 패널 ── -->
     <div class="tab-pane" id="tab-warn">
-      <div class="hdr-bar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> 경고 & 위험 대시보드 — AAFCO 2023 최대값 기준</div>
+      <div class="hdr-bar hdr-bar-left">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--hdr)"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <span class="hdr-title">경고 & 위험 대시보드</span>
+        <span class="hdr-desc">AAFCO 2023 최대값 기준</span>
+      </div>
       <div class="ptype-banner" id="warn-ptype-banner"></div>
       <div class="tab-panel">
       <div id="cap-card" style="text-align:center">Ca:P 비율: 계산 대기중</div>
@@ -2255,9 +2273,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 5: 기준 DB ── -->
     <div class="tab-pane" id="tab-std">
-      <div class="hdr-bar std-hdr-bar">
-        <span class="std-hdr-title">NRC · AAFCO · FEDIAF 영양소 기준 DB</span>
-        <span class="std-hdr-desc">출처: NRC 2006 / AAFCO 2023 / FEDIAF 2025</span>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">NRC · AAFCO · FEDIAF 영양소 기준 DB</span>
+        <span class="hdr-desc">출처: NRC 2006 / AAFCO 2023 / FEDIAF 2025</span>
       </div>
       <div class="tab-panel">
       <div class="tbl-wrap">
@@ -2285,7 +2303,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 전문 용어 ── -->
     <div class="tab-pane" id="tab-glossary">
-      <div class="hdr-bar">전문 용어 사전 — 이 계산기가 쓰는 수의영양학 · AAFCO 용어 모음</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">전문 용어 사전</span>
+        <span class="hdr-desc">이 계산기가 쓰는 수의영양학 · AAFCO 용어 모음</span>
+      </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
 
@@ -2305,7 +2326,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 계산 기준 ── -->
     <div class="tab-pane" id="tab-calcbasis">
-      <div class="hdr-bar">계산 기준 — 이 계산기가 사용하는 공식·기준·판정 로직 레퍼런스</div>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">계산 기준</span>
+        <span class="hdr-desc">이 계산기가 사용하는 공식·기준·판정 로직 레퍼런스</span>
+      </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
 
@@ -2462,9 +2486,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 6: 원료 DB ── -->
     <div class="tab-pane" id="tab-ing">
-      <div class="hdr-bar ing-hdr-bar">
-        <span class="ing-hdr-title">원료 DB</span>
-        <span class="ing-hdr-desc">USDA FoodData Central 기반, per 100g as-is</span>
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">원료 DB</span>
+        <span class="hdr-desc">USDA FoodData Central 기반, per 100g as-is</span>
       </div>
       <div class="ing-toolbar">
         <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="filterIng()">
@@ -2542,7 +2566,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 설정 ── -->
     <div class="tab-pane" id="tab-settings">
-      <div class="hdr-bar">설정</div>
+      <div class="hdr-bar hdr-bar-left"><span class="hdr-title">설정</span></div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel">
         <div style="display:flex;flex-direction:column;gap:16px;max-width:480px">
@@ -2580,7 +2604,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB: 관리자 (super_admin 전용 — data-requires-role로 showTab()이 접근을 차단) ── -->
     <div class="tab-pane" id="tab-admin" data-requires-role="super_admin">
-      <div class="hdr-bar">관리자</div>
+      <div class="hdr-bar hdr-bar-left"><span class="hdr-title">관리자</span></div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel">
         <div style="display:flex;flex-direction:column;gap:16px;max-width:640px">
