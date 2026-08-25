@@ -7568,9 +7568,16 @@ async function saveRecipe() {
     currentRecipeFileHandle = null;
     isDirty = false;
     if (!recipeDirHandle) {
+      // 폴더 직접 저장 API(File System Access) 자체를 지원하지 않는 브라우저(Chrome/Edge 외)에서는
+      // 폴더 연결을 안내해도 chooseRecipeFolder()가 다시 안내 alert만 띄우므로, 원인이 "아직 연결
+      // 안 함"이 아니라 "이 브라우저는 지원 안 함"임을 여기서 바로 알려준다(별도 팝업 추가 없이
+      // 기존 다운로드 완료 Toast의 안내 문구만 브라우저 지원 여부에 따라 다르게 표시).
+      const tip = window.showDirectoryPicker
+        ? '(우측 상단 📂로 폴더를 연결하면 그 폴더에 바로 덮어써 저장됩니다.)'
+        : '(Chrome 또는 Edge 브라우저에서는 폴더에 직접 저장할 수 있습니다.)';
       showToast(
         (isUpdate ? '연결된 폴더가 없어 같은 파일명으로 다시 다운로드했습니다: ' : '연결된 폴더가 없어 다운로드로 저장했습니다: ')
-        + filename + '\n(우측 상단 📂로 폴더를 연결하면 그 폴더에 바로 덮어써 저장됩니다.)'
+        + filename + '\n' + tip
       );
     }
   } catch(e) {
