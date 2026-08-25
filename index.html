@@ -596,6 +596,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-display .mix-ing-display-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mix-ing-display.placeholder .mix-ing-display-txt { color: var(--sub); }
 .mix-ing-display .mix-ing-arrow { flex-shrink: 0; font-size: 9px; color: var(--sub); }
+/* 알레르기 원료 경고 — 등록된 알레르기 원료가 배합 행에 선택되면 즉시 빨간 강조 + ⚠️ 표시 */
+.mix-ing-wrap.mix-ing-allergy { background: rgba(192,57,43,0.12) !important; }
+.mix-ing-wrap.mix-ing-allergy .mix-ing-display { color: #C0392B; font-weight: 700; }
+.mix-ing-allergy-badge { flex-shrink: 0; }
 /* 사이드바 아코디언(.nav-group-body, 0fr→1fr grid-template-rows)과 같은 방식의 "펼쳐짐" 느낌을
    내기 위해, display:none/block 토글 대신 max-height(0→JS가 계산한 값)+opacity를 트랜지션한다.
    position:fixed라 레이아웃에 영향이 없으므로 항상 DOM/flex 상태를 유지해도 안전하다. */
@@ -1496,9 +1500,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               <div class="sf-item full-width">
                 <label>알레르기</label>
                 <div class="allergy-control" data-for="pet-allergy">
-                  <select id="allergy-select">
-                    <option value="">원료 선택…</option>
-                  </select>
+                  <span class="mix-ing-wrap" id="allergy-combo-wrap" style="flex:1 1 40%;border:1px solid var(--border);border-radius:6px;background:var(--inp)">
+                    <button type="button" class="mix-ing-display placeholder">
+                      <span class="mix-ing-display-txt">원료 선택…</span>
+                      <span class="mix-ing-arrow">▼</span>
+                    </button>
+                    <select style="display:none"></select>
+                  </span>
                   <div class="allergy-list" id="allergy-list"></div>
                 </div>
                 <input id="pet-allergy" type="hidden" onchange="saveToStorage()">
@@ -4173,6 +4181,7 @@ function ingListItemsHTML(query) {
 // 닫혀버리는 경쟁 상태가 있었다 — 이게 클릭 시 드롭다운이 열렸다가 바로 사라지던 원인.)
 let mixIngListEl = null;
 let mixIngOpenWrap = null;
+let mixIngSelectCallback = null;
 
 function getMixIngListEl() {
   if (!mixIngListEl) {
@@ -4194,9 +4203,16 @@ function getMixIngListEl() {
     optionsEl.addEventListener('click', (e) => {
       const opt = e.target.closest('.mix-ing-opt');
       if (!opt || !mixIngOpenWrap) return;
-      setIngComboValue(mixIngOpenWrap, opt.dataset.name);
+      // 배합 설계 행(기본 동작)은 선택한 원료를 그 행에 그대로 반영하고 재계산하지만,
+      // 알레르기 등록처럼 다른 용도로 이 컴포넌트를 재사용하는 곳은 openIngDropdown()에
+      // 넘긴 onSelect 콜백만 실행한다(디자인·동작은 100% 재사용, 결과 처리만 분기).
+      if (mixIngSelectCallback) {
+        mixIngSelectCallback(opt.dataset.name);
+      } else {
+        setIngComboValue(mixIngOpenWrap, opt.dataset.name);
+        onMixChange();
+      }
       closeIngDropdown();
-      onMixChange();
     });
     searchInput.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeIngDropdown();
@@ -4270,13 +4286,14 @@ function syncIngDisplayFromSelect(select) {
   display.classList.toggle('placeholder', !select.value);
 }
 
-function openIngDropdown(wrap) {
+function openIngDropdown(wrap, onSelect) {
   const display = wrap.querySelector('.mix-ing-display');
   const list = getMixIngListEl();
   const searchInput = list.querySelector('.mix-ing-search-input');
   const optionsEl = list.querySelector('.mix-ing-options');
 
   mixIngOpenWrap = wrap;
+  mixIngSelectCallback = onSelect || null;
   searchInput.value = '';
   optionsEl.innerHTML = ingListItemsHTML('');
 
@@ -4300,13 +4317,16 @@ function closeIngDropdown() {
     mixIngListEl.style.maxHeight = '0px';
   }
   mixIngOpenWrap = null;
+  mixIngSelectCallback = null;
 }
 
-function initIngCombo(wrap) {
+// onSelect를 넘기면 배합 설계 행 대신 그 콜백만 호출한다(예: 알레르기 원료 등록) —
+// 드롭다운 디자인·검색·위치 계산 로직은 그대로 재사용하고 선택 결과 처리만 바꾼다.
+function initIngCombo(wrap, onSelect) {
   const display = wrap.querySelector('.mix-ing-display');
   display.addEventListener('click', () => {
     if (mixIngOpenWrap === wrap) { closeIngDropdown(); return; }
-    openIngDropdown(wrap);
+    openIngDropdown(wrap, onSelect);
   });
 }
 
@@ -4461,6 +4481,37 @@ function getMixRows() {
     if (unit === 'g')  val = val * 100 / totalG;         // g 기준: 총 totalG(g) 대비 %
     if (unit === 'kg') val = val * 1000 * 100 / totalG;  // kg 기준: 총 totalG(g) 대비 %
     return [nm, val];
+  });
+}
+
+// 배합 설계 각 행의 원료가 등록된 알레르기 원료와 겹치는지 확인해, 원료 선택 영역(mix-ing-wrap)에
+// 빨간 강조 + ⚠️ 배지를 즉시 반영한다. calculate()가 실행될 때(원료 변경/삭제/배합비 입력)와
+// 알레르기 목록 자체가 바뀔 때(syncAllergyControl) 모두 호출되어 항상 최신 상태로 갱신된다.
+function getMixAllergyMatches() {
+  const allergySet = new Set(getAllergyList());
+  return mixRows
+    .map(row => row.querySelector('select')?.value || '')
+    .filter(name => name && allergySet.has(name));
+}
+function updateMixAllergyWarnings() {
+  const allergySet = new Set(getAllergyList());
+  mixRows.forEach(row => {
+    const wrap = row.querySelector('.mix-ing-wrap');
+    const select = row.querySelector('select');
+    if (!wrap || !select) return;
+    const display = wrap.querySelector('.mix-ing-display');
+    const isAllergy = !!select.value && allergySet.has(select.value);
+    wrap.classList.toggle('mix-ing-allergy', isAllergy);
+    let badge = display.querySelector('.mix-ing-allergy-badge');
+    if (isAllergy && !badge) {
+      badge = document.createElement('span');
+      badge.className = 'mix-ing-allergy-badge';
+      badge.title = '등록된 알레르기 원료입니다';
+      badge.textContent = '⚠️';
+      display.insertBefore(badge, display.firstChild);
+    } else if (!isAllergy && badge) {
+      badge.remove();
+    }
   });
 }
 
@@ -5248,6 +5299,7 @@ function calculate() {
   lastProductClass = productClass;
 
   updateMixRowVals(rows);
+  updateMixAllergyWarnings();
   updateTotBar(result, rows);
   updateCards(result, productClass);
   updateAnaTable(result, productClass);
@@ -6712,10 +6764,12 @@ function updateDashboard(result, pc) {
     overallFill.style.background = 'var(--sub)';
   }
 
-  const warnCritical = lastWarnItems.filter(w => w.cls === 'fail').length;
-  const warnWarning  = lastWarnItems.filter(w => w.cls === 'over').length;
-  document.getElementById('ds-warn-total').textContent = (warnCritical + warnWarning) + '개';
-  document.getElementById('ds-warn-breakdown').textContent = `위험 ${warnCritical}건 · 주의 ${warnWarning}건`;
+  const warnCritical  = lastWarnItems.filter(w => w.cls === 'fail').length;
+  const warnWarning   = lastWarnItems.filter(w => w.cls === 'over').length;
+  const allergyCount  = getMixAllergyMatches().length;
+  document.getElementById('ds-warn-total').textContent = (warnCritical + warnWarning + allergyCount) + '개';
+  document.getElementById('ds-warn-breakdown').textContent =
+    `위험 ${warnCritical}건 · 주의 ${warnWarning}건` + (allergyCount ? ` · 알레르기 ${allergyCount}건` : '');
 
   document.getElementById('ds-me-val').textContent = result.meAsis.toLocaleString('ko', {maximumFractionDigits:0});
   document.getElementById('ds-me-dmb').textContent = result.meDmb.toLocaleString('ko', {maximumFractionDigits:0});
@@ -7392,18 +7446,27 @@ function initBcsGauge() {
   syncBcsGauge();
 }
 
-// ── 알레르기/제외 원료 — select로 고르면 옆 목록 상자에 추가, ✕ 클릭 시 제거.
-// 실제 값은 숨겨진 input(#pet-allergy)에 콤마 구분 문자열로 그대로 저장되어
-// 기존 저장/불러오기(PET_PROFILE_FIELDS) 로직을 그대로 재사용한다.
+// ── 알레르기/제외 원료 — 배합 설계 행과 동일한 원료 검색 드롭다운(mix-ing-wrap/initIngCombo)으로
+// 고르면 옆 목록 상자에 추가되고, ✕ 클릭 시 제거된다. 실제 값은 숨겨진 input(#pet-allergy)에
+// 문자열로 그대로 저장되어 기존 저장/불러오기(PET_PROFILE_FIELDS) 로직을 그대로 재사용한다.
+//
+// 구분자는 쉼표(,)가 아니라 '|'를 쓴다 — 원료명 자체에 쉼표가 들어간 항목이 많아
+// (예: "닭고기(가슴,생것)") 쉼표로 join/split하면 그 이름이 둘로 쪼개지는 문제가 있었다.
+// 예전에 쉼표로 저장된 값도 그대로 읽을 수 있도록, '|'가 없으면 쉼표를 기준으로 한 번 더 시도한다.
 function getAllergyList() {
   const target = document.getElementById('pet-allergy');
   if (!target || !target.value) return [];
-  return target.value.split(',').map(s => s.trim()).filter(Boolean);
+  const raw = target.value;
+  // '|'가 있으면 새 방식(파이프 구분)으로 나눈다. 없으면 예전 방식("이름, 이름" — 쉼표+공백 구분)을
+  // 시도한다 — 원료명 안에 들어간 쉼표는 뒤에 공백이 없어(예: "닭고기(가슴,생것)") 예전 구분자
+  // ", "와 겹치지 않으므로, 항목이 1개뿐이라 '|'가 안 붙은 경우에도 이름이 안 쪼개진다.
+  const parts = raw.includes('|') ? raw.split('|') : raw.split(', ');
+  return parts.map(s => s.trim()).filter(Boolean);
 }
 function setAllergyList(list) {
   const target = document.getElementById('pet-allergy');
   if (!target) return;
-  target.value = list.join(', ');
+  target.value = list.join('|');
   target.dispatchEvent(new Event('change', { bubbles: true }));
   syncAllergyControl();
 }
@@ -7425,52 +7488,34 @@ function syncAllergyControl() {
   box.innerHTML = '';
   if (list.length === 0) {
     box.innerHTML = '<div class="allergy-list-empty">선택된 원료가 없습니다</div>';
-    return;
+  } else {
+    list.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'allergy-item';
+      const label = document.createElement('span');
+      label.textContent = name;
+      const rmBtn = document.createElement('button');
+      rmBtn.type = 'button';
+      rmBtn.className = 'rm-btn';
+      rmBtn.textContent = '✕';
+      rmBtn.onclick = () => removeAllergyItem(name);
+      row.appendChild(label);
+      row.appendChild(rmBtn);
+      box.appendChild(row);
+    });
   }
-  list.forEach(name => {
-    const row = document.createElement('div');
-    row.className = 'allergy-item';
-    const label = document.createElement('span');
-    label.textContent = name;
-    const rmBtn = document.createElement('button');
-    rmBtn.type = 'button';
-    rmBtn.className = 'rm-btn';
-    rmBtn.textContent = '✕';
-    rmBtn.onclick = () => removeAllergyItem(name);
-    row.appendChild(label);
-    row.appendChild(rmBtn);
-    box.appendChild(row);
-  });
+  // 알레르기 목록이 바뀔 때마다 배합 설계 탭의 원료 선택 영역 경고 표시와 대시보드
+  // "경고 항목" 집계(알레르기 건수 포함)를 함께 즉시 갱신한다. calculate()가 이미
+  // updateMixAllergyWarnings()/updateDashboard()를 모두 호출하므로 여기서 그대로 재사용한다.
+  calculate();
 }
-// 원료 DB(ING_DB + customIngs)와 동기화해 옵션 목록을 채운다. DB는 원료 DB 탭에서
-// 얼마든지 추가/삭제될 수 있으므로, select가 열리기 직전(focus)마다 다시 채운다.
-function populateAllergySelect() {
-  const select = document.getElementById('allergy-select');
-  if (!select) return;
-  const current = select.value;
-  const names = [...new Set(allIngs().map(ing => ing[0]))].sort((a, b) => a.localeCompare(b, 'ko'));
-  select.innerHTML = '';
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = '원료 선택…';
-  select.appendChild(placeholder);
-  names.forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-  select.value = names.includes(current) ? current : '';
-}
+// 알레르기 등록 UI는 배합 설계 행과 똑같은 원료 검색 드롭다운 컴포넌트를 그대로 재사용한다
+// (별도 드롭다운을 새로 만들지 않음) — 다만 고른 원료는 그 자리에 남기지 않고 목록에
+// 추가한 뒤 바로 placeholder로 되돌린다(여러 개를 연달아 고를 수 있어야 하므로).
 function initAllergyControl() {
-  const select = document.getElementById('allergy-select');
-  if (!select) return;
-  populateAllergySelect();
-  select.addEventListener('focus', populateAllergySelect);
-  select.addEventListener('change', () => {
-    addAllergyItem(select.value);
-    select.value = '';
-  });
+  const wrap = document.getElementById('allergy-combo-wrap');
+  if (!wrap) return;
+  initIngCombo(wrap, (name) => addAllergyItem(name));
   syncAllergyControl();
 }
 
