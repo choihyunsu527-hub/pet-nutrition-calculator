@@ -636,19 +636,47 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             flex-shrink: 0; margin: 10px; border-radius: 12px; box-shadow: var(--sh); }
 
 /* ── 원료DB ── */
-.ing-toolbar { display: flex; align-items: center; gap: 10px;
-               padding: 8px 12px; flex-shrink: 0; background: var(--side);
+.ing-toolbar { display: flex; align-items: center; gap: 8px;
+               padding: 6px 12px; flex-shrink: 0; background: var(--side);
                border-bottom: 1px solid var(--border); }
 .ing-toolbar input { padding: 5px 10px; border: 1px solid var(--border);
                      font-size: 11px; font-family: inherit; color: var(--text); background: var(--inp);
-                     width: 200px; outline: none; border-radius: 4px; }
-.ing-toolbar input:focus { border-color: var(--acc); }
-.ing-toolbar button { padding: 5px 14px; background: var(--acc2); color: white;
-                       border: none; font-size: 11px; font-weight: bold;
-                       cursor: pointer; font-family: inherit; border-radius: 4px;
-                       transition: filter .35s ease, transform .18s ease; }
-.ing-toolbar button:hover { filter: brightness(1.1); }
+                     width: 200px; outline: none; border-radius: 4px;
+                     box-shadow: 0 0 0 0 transparent;
+                     transition: border-color .15s ease, box-shadow .15s ease; }
+.ing-toolbar input:hover { border-color: var(--sub); }
+.ing-toolbar input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+/* 기본(세컨더리) 버튼 — 편집/원래 순서 같은 중립 동작. "원료 추가"만 .ing-btn-primary로
+   포인트 컬러를 얹고, "선택 삭제"는 기존 위험색(#B03A2E) 인라인 스타일을 그대로 유지한다. */
+.ing-toolbar button { padding: 5px 12px; background: var(--side2); color: var(--text);
+                       border: 1px solid var(--border); font-size: 11px; font-weight: 600;
+                       cursor: pointer; font-family: inherit; border-radius: 5px;
+                       transition: border-color .15s ease, background-color .15s ease, transform .18s ease; }
+.ing-toolbar button:hover { border-color: var(--acc); background: var(--hover-tint); }
 .ing-toolbar button:active { transform: scale(0.97); }
+.ing-toolbar button.ing-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
+.ing-toolbar button.ing-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
+/* 선택 삭제 — 기존 위험색(#B03A2E, 인라인 style로 이미 지정됨)은 그대로 두고 테두리만 맞춰준다 */
+.ing-toolbar button[onclick="deleteSelectedIng()"] { border-color: #B03A2E; color: #fff; }
+.ing-toolbar button[onclick="deleteSelectedIng()"]:hover { filter: brightness(1.08); background: #B03A2E; }
+
+/* ── 원료 DB · 영양기준 DB 테이블 정돈(3단계) — 배합 설계에서 쓴 --mix-line과 같은 방식으로
+   기존 --border 토큰을 color-mix()로 옅게 만든 --table-line만 이 두 테이블 안에서 재사용한다.
+   다른 탭이 쓰는 공용 table/th/td 규칙(400번대)은 건드리지 않고, ID 선택자로만 겹쳐 쓴다. */
+/* --table-hdr-bg: --gray-l과 같은 "은은한 헤더 틴트" 느낌이지만, --gray-l 자체는 반투명이라
+   #ing-table의 sticky 헤더 셀(아래쪽 참고)에 그대로 쓰면 스크롤된 뒤 내용이 다시 비쳐 보인다.
+   그래서 같은 톤을 --th-bg 위에 완전 불투명하게 섞어(color-mix) sticky/일반 헤더 셀 모두에서
+   동일하게 쓴다(새 색상이 아니라 기존 --th-bg·--sub의 혼합값). */
+#ing-table, #std-table { --table-line: color-mix(in srgb, var(--border) 65%, transparent);
+                          --table-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%);
+                          border-color: var(--table-line); }
+#ing-table th, #std-table th { border-color: var(--table-line); background: var(--table-hdr-bg);
+                                 font-weight: 700; padding: 5px 6px; }
+#ing-table td, #std-table td { border-color: var(--table-line); padding: 3px 6px; }
+#ing-table tr.cat-row td, #std-table tr.cat-row td { border-bottom: 1px solid var(--table-line); }
+#ing-table tbody tr:not(.cat-row):hover td, #std-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
+/* 단위 컬럼은 값보다 한 단계 옅게 — 숫자와 단위의 시각적 위계 정리(값 자체는 변경 없음) */
+#std-table td:nth-child(3) { color: var(--sub); }
 
 /* 원료 DB 테이블 — 원료명 제외 전 컬럼 폭 통일 */
 /* .tbl-wrap의 좌측 padding 때문에 고정 열이 진짜 왼쪽 끝(x=0)이 아니라 안쪽에서
@@ -664,17 +692,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 }
 /* 상단 헤더행 고정(세로 스크롤) + 앞 2열(체크박스·원료명) 고정(가로 스크롤)
    ※ 카테고리 구분줄(.cat-row)은 colspan 단일 셀이라 nth-child(1)로 걸리지 않게 제외
-   ※ th는 헤더행 배경(--th-bg), td는 본문 배경(--side)을 각각 불투명하게 채워서
-     모서리(좌상단 코너)에서 뒤쪽 내용이 비치지 않도록 함 */
+   ※ th는 헤더행 배경(--table-hdr-bg — 위 공통 규칙과 같은 불투명 톤), td는 본문 배경(--side2)을
+     각각 불투명하게 채워서 모서리(좌상단 코너)에서 뒤쪽 내용이 비치지 않도록 함 */
 /* will-change: transform → 크로미움에서 sticky 셀 + border-collapse:separate 조합 시
    가로 스크롤 중 이전 프레임 잔상(고스팅)이 남는 렌더링 버그 방지 (합성 레이어 강제 생성) */
 /* 오른쪽 경계는 흐릿한 그림자만으로는 배율/렌더링에 따라 1~2px 틈이 남을 수 있어,
    같은 배경색의 불투명한 solid shadow를 겹쳐 그 틈까지 확실히 덮음 */
 #ing-table th:nth-child(1), #ing-table th:nth-child(2) {
-  position: sticky; z-index: 11; background: var(--th-bg); will-change: transform;
+  position: sticky; z-index: 11; background: var(--table-hdr-bg); will-change: transform;
 }
-#ing-table th:nth-child(1) { left: 0; box-shadow: 3px 0 0 var(--th-bg); }
-#ing-table th:nth-child(2) { left: 32px; box-shadow: 3px 0 0 var(--th-bg); }
+#ing-table th:nth-child(1) { left: 0; box-shadow: 3px 0 0 var(--table-hdr-bg); }
+#ing-table th:nth-child(2) { left: 32px; box-shadow: 3px 0 0 var(--table-hdr-bg); }
 
 #ing-table tbody tr:not(.cat-row) td:nth-child(1) {
   position: sticky; left: 0; z-index: 6; background: var(--side2); will-change: transform;
@@ -684,20 +712,31 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   position: sticky; left: 32px; z-index: 6; background: var(--side2); will-change: transform;
   box-shadow: 3px 0 0 var(--side2);
 }
-/* hover 시 공통 규칙(tr:hover td { background: rgba(...) !important })이 고정열의 불투명
-   배경을 반투명 색으로 덮어써서, 가로 스크롤로 뒤에 겹쳐진 다른 열 내용이 비쳐 보이는 문제 방지 →
-   고정열은 hover에서도 불투명하도록 틴트를 var(--side) 위에 섞은 단색을 사용.
-   (background-image가 아니라 background-color 값이라 다른 셀과 같은 .3s 트랜지션 속도로 맞춰짐) */
+/* hover 시 공통 규칙이 고정열의 불투명 배경을 반투명 색으로 덮어써서, 가로 스크롤로 뒤에
+   겹쳐진 다른 열 내용이 비쳐 보이는 문제 방지 → 고정열은 hover에서도 불투명하도록
+   --hover-tint와 같은 톤(중립 --sub)을 var(--side2) 위에 섞은 단색을 사용한다(새 색상 아님).
+   (background-image가 아니라 background-color 값이라 다른 셀과 같은 .15s 트랜지션 속도로 맞춰짐) */
 #ing-table tbody tr:not(.cat-row):hover td:nth-child(1),
 #ing-table tbody tr:not(.cat-row):hover td:nth-child(2) {
-  background-color: color-mix(in srgb, var(--side2), rgb(59,130,246) 14%) !important;
+  background-color: color-mix(in srgb, var(--side2), var(--sub) 12%) !important;
 }
 /* 카테고리 구분줄(육류·어류 등)은 colspan 단일 셀이라 셀 자체는 테이블 전체 너비라 sticky 여유(slack)가
    없어 좌측 고정이 안 됨 → 셀 안의 라벨 텍스트만 별도 inline-block으로 감싸 그것을 좌측 고정시킴 */
 #ing-table tr.cat-row td { padding: 0; }
 #ing-table .cat-row-label {
   display: inline-block; position: sticky; left: 0; z-index: 7;
-  padding: 5px 10px; will-change: transform;
+  padding: 4px 10px; will-change: transform;
+}
+/* 행마다 JS(buildIngTable)가 인라인 style로 그려 넣는 "편집" 버튼 — JS/onclick은 그대로 두고
+   외부 CSS의 !important로 인라인 스타일만 중립(편집=중립 컨벤션)으로 덮어써 톤을 맞춘다. */
+#ing-table td button[onclick^="openEditIng"] {
+  background: var(--side2) !important; color: var(--text) !important;
+  border: 1px solid var(--border) !important; border-radius: 4px !important;
+  padding: 2px 8px !important; font-weight: 600 !important;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+}
+#ing-table td button[onclick^="openEditIng"]:hover {
+  border-color: var(--acc) !important; color: var(--acc) !important; background: var(--hover-tint) !important;
 }
 
 /* ── 모달 ── */
@@ -2286,11 +2325,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <div class="ing-toolbar">
         <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="filterIng()">
         <button id="sort-btn" onclick="toggleSort()"
-          style="background:var(--acc2);color:white;border:none;border-radius:3px;
+          style="background:var(--acc2);color:white;border:none;border-radius:5px;
                  padding:5px 12px;cursor:pointer;font-size:11px;font-family:inherit">
           원래 순서
         </button>
-        <button onclick="openAddIng()">원료 추가</button>
+        <button class="ing-btn-primary" onclick="openAddIng()">원료 추가</button>
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
           <span style="font-size:10px;color:var(--sub)" id="ing-count"></span>
           <button onclick="deleteSelectedIng()"
