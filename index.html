@@ -224,7 +224,9 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                     transition: background-color .2s ease; }
 #sidebar-tagline:hover { background: rgba(255,255,255,0.07); }
 #sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
-#sidebar-foot { padding-top: 14px; font-size: 9px; color: #8b96a3; opacity: 0.55; }
+/* 메뉴 영역과 분리 — .nav-divider와 같은 톤(rgba(255,255,255,0.045))의 얇은 보더로 구분 */
+#sidebar-foot { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.045);
+                font-size: 9px; color: #8b96a3; opacity: 0.55; flex-shrink: 0; }
 #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
 /* ── 사이드바 접힘 상태(76px) — 레이아웃/색상/아이콘/메뉴 순서는 그대로 두고 텍스트만 숨긴다 ── */
@@ -246,14 +248,22 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 
 /* ── 사이드바 네비게이션 ── */
 .nav-item { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box;
-            padding: 11px 12px;
+            padding: 11px 12px; position: relative;
             font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
             border-radius: 8px;
-            transition: color .2s ease, background-color .2s ease, padding .2s ease;
+            transition: color .2s ease, background-color .2s ease;
             user-select: none; white-space: nowrap; text-align: left; }
-.nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
-.nav-item.active { color: var(--pill-text); background: var(--pill-bg); font-weight: 700;
-                    padding: 9px 8px; border-radius: 5px; }
+.nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
+/* 활성 메뉴 — 사이드바 전체를 채우던 진한 틸 필 대신, 얇은 좌측 인디케이터 + 아주 은은한
+   배경 틴트 + 포인트 컬러(--acc) 텍스트로 표시한다. 아이콘은 stroke:currentColor라 텍스트
+   색을 그대로 물려받아 아이콘을 따로 바꿀 필요가 없다. 패딩은 기본 .nav-item과 동일하게
+   맞춰(예전엔 9px 8px로 더 작았음) 활성/비활성 전환 시 아이콘·텍스트 위치가 흔들리지 않는다. */
+.nav-item.active { color: var(--acc); background: rgba(255,255,255,0.07); font-weight: 700; }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+  background: var(--acc); border-radius: 0 3px 3px 0;
+}
+.nav-item.active:hover { background: rgba(255,255,255,0.1); color: var(--acc); }
 
 /* Lucide 라인 아이콘 — stroke는 currentColor를 상속해 텍스트와 같은 색/상태로 움직인다 */
 .nav-icon { width: 18px; height: 18px; flex-shrink: 0; display: block;
@@ -280,7 +290,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
                  border-radius: 8px;
                  transition: color .2s ease, background-color .2s ease;
                  user-select: none; white-space: nowrap; text-align: left; }
-.nav-group-hdr:hover { color: #FFFFFF; background: rgba(255,255,255,0.12); }
+.nav-group-hdr:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
 .nav-group.has-active > .nav-group-hdr { color: #FFFFFF; }
 
 .nav-group-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
