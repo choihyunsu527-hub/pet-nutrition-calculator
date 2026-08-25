@@ -49,18 +49,19 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-bar { background: var(--side2); border-bottom: 1px solid var(--border);
            flex-shrink: 0; transition: background .25s ease;
            overflow-x: auto; overflow-y: hidden; }
-#top-row1 { height: 60px; display: flex; align-items: center; position: relative;
-             padding: 0 24px; gap: 16px; min-width: 1280px; }
+#top-row1 { height: 64px; display: flex; align-items: center; position: relative;
+             padding: 0 28px; gap: 16px; min-width: 1280px; }
 #top-title { display: none; }
 #top-view-title { font-size: 17px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
 #top-nav { display: none; }
 
-/* ── 헤더 중앙 전역 통합 검색 — #top-row1의 position:relative를 기준으로
-   좌/우 콘텐츠 폭과 무관하게 항상 정중앙에 오도록 절대 배치한다. ── */
+/* ── 헤더 중앙 전역 통합 검색 — 헤더의 핵심 요소이므로 다른 컨트롤보다 한 단계 넓게,
+   #top-row1의 position:relative를 기준으로 좌/우 콘텐츠 폭과 무관하게 항상 정중앙 부근에
+   오도록 절대 배치한다(기존 메커니즘 그대로 — 드롭다운은 JS가 실제 렌더 좌표로 다시 계산). ── */
 #top-search-wrap { position: absolute; left: 38%; top: 50%; transform: translate(-50%, -50%);
                     display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-                    width: 360px; max-width: 400px; height: 40px; box-sizing: border-box;
-                    background: var(--side2); border: 1px solid var(--border); border-radius: 10px;
+                    width: 420px; max-width: 460px; height: 38px; box-sizing: border-box;
+                    background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                     padding: 0 14px; transition: border-color .2s ease, box-shadow .2s ease,
                     border-radius .15s ease; z-index: 501; }
 #top-search-wrap:hover { border-color: var(--sub); }
@@ -73,8 +74,8 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-search-input::placeholder { color: var(--sub); }
 #top-search-results { position: fixed; box-sizing: border-box; background: var(--side2);
                        border: 1px solid var(--border); border-top: none;
-                       border-radius: 0 0 10px 10px;
-                       box-shadow: 0 12px 24px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08);
+                       border-radius: 0 0 var(--radius-md) var(--radius-md);
+                       box-shadow: var(--sh-md);
                        max-height: 360px; overflow-y: auto; z-index: 500; display: none; }
 #top-search-results.open { display: block; }
 .tsr-item { display: flex; align-items: center; justify-content: space-between; gap: 14px;
@@ -88,25 +89,44 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 .search-hit-flash { animation: search-hit-flash-anim 1.6s ease; }
 @keyframes search-hit-flash-anim { 0%, 100% { background: transparent; } 15%, 60% { background: var(--calc); } }
 
-#top-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* ── 우측 액션 클러스터 — 레시피 저장 계열 / 폴더 위치 / 계정·알림, 세 그룹으로 나눠 보이도록
+   그룹 사이에만 얇은 구분선을 두고, "저장"만 포인트 컬러(주요 동작)로 남기고 나머지는 모두
+   테두리만 있는 아웃라인 톤(보조 동작)으로 통일한다 — 배경을 채우던 --inp를 걷어내
+   불필요하게 박스처럼 보이던 장식을 줄임. 높이도 32px로 통일해 프로필/알림 아이콘과 정렬. */
+#top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 #top-recipe { font-size: 11px; font-weight: 600; color: var(--sub); white-space: nowrap; }
-#top-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: var(--inp);
-                      border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px;
-                      max-width: 200px; cursor: pointer; font-family: inherit; outline: none; }
-#top-recipe-folder-btn { font-size: 13px; background: var(--inp); border: 1px solid var(--border);
-                          border-radius: 5px; padding: 5px 8px; cursor: pointer; color: var(--text);
-                          line-height: 1; display: inline-flex; align-items: center; justify-content: center; }
-#top-recipe-folder-btn:hover, #top-recipe-select:hover { border-color: var(--acc); }
+#top-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
+                      border: 1px solid var(--border); border-radius: 6px; padding: 0 8px;
+                      height: 32px; box-sizing: border-box; max-width: 160px;
+                      cursor: pointer; font-family: inherit; outline: none;
+                      transition: border-color .15s ease, background-color .15s ease; }
+#top-recipe-folder-btn { width: 32px; height: 32px; padding: 0; flex-shrink: 0;
+                          background: transparent; border: 1px solid var(--border); border-radius: 8px;
+                          cursor: pointer; color: var(--sub);
+                          display: inline-flex; align-items: center; justify-content: center;
+                          position: relative;
+                          transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+#top-recipe-folder-btn:hover, #top-recipe-select:hover { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
+/* 폴더 위치 그룹(select+폴더 버튼)과 계정/알림 그룹을 나누는 구분선 — 폴더 버튼 오른쪽에 둔다 */
+#top-recipe-folder-btn { margin-right: 6px; }
+#top-recipe-folder-btn::after { content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+                                 width: 1px; height: 18px; background: var(--border); }
 #top-recipe-save-btn { font-size: 11px; font-weight: 700; color: #fff; background: var(--acc);
-                        border: none; border-radius: 5px; padding: 6px 12px; cursor: pointer;
-                        font-family: inherit; white-space: nowrap; transition: filter .2s ease; }
+                        border: none; border-radius: 6px; padding: 0 14px; height: 32px; box-sizing: border-box;
+                        cursor: pointer; font-family: inherit; white-space: nowrap; transition: filter .2s ease; }
 #top-recipe-save-btn:hover { filter: brightness(1.08); }
 #top-recipe-save-btn:active { transform: scale(0.97); }
-.top-recipe-btn-sub { font-size: 11px; font-weight: 600; color: var(--text); background: var(--inp);
-                       border: 1px solid var(--border); border-radius: 5px; padding: 6px 10px;
-                       cursor: pointer; font-family: inherit; white-space: nowrap; }
-.top-recipe-btn-sub:hover { border-color: var(--acc); }
+.top-recipe-btn-sub { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
+                       border: 1px solid var(--border); border-radius: 6px; padding: 0 12px;
+                       height: 32px; box-sizing: border-box;
+                       cursor: pointer; font-family: inherit; white-space: nowrap;
+                       transition: border-color .15s ease, background-color .15s ease; }
+.top-recipe-btn-sub:hover { border-color: var(--acc); background: var(--hover-tint); }
 .top-recipe-btn-sub:active { transform: scale(0.97); }
+/* "새 레시피" 뒤에만 구분선을 둬 "레시피 저장 계열"과 "폴더 위치" 그룹을 시각적으로 나눈다 */
+button.top-recipe-btn-sub[onclick="newRecipe()"] { position: relative; margin-right: 6px; }
+button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position: absolute; right: -9px; top: 50%;
+                                 transform: translateY(-50%); width: 1px; height: 18px; background: var(--border); }
 
 /* ── 프로필(우측 상단) ── */
 #profile-menu-wrap { position: relative; flex-shrink: 0; }
