@@ -249,6 +249,15 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                     transition: opacity .15s ease; }
 #sidebar-tooltip.show { opacity: 1; }
 
+/* ── 공통 Toast — 저장/수정/추가/불러오기 완료 안내(alert 대체). position:fixed라 body
+   zoom:1.1의 영향을 그대로 받아 시각적으로 일관되게 확대되므로 별도 좌표 보정이 필요 없다 ── */
+#app-toast { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(6px);
+             max-width: min(420px, calc(100vw - 40px)); background: var(--acc); color: #fff;
+             font-size: 13px; font-weight: 600; line-height: 1.5; text-align: center;
+             padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+             z-index: 3000; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
+#app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
 @media (max-width: 480px) {
   /* vw 대신 left:0으로 폭을 맞춘다 — 이 앱은 body에 zoom:1.1이 걸려 있어 100vw 같은 뷰포트
      단위 폭 계산이 실제 화면보다 커지는 오차가 생긴다(edge-anchoring은 이 오차의 영향을 받지 않는다). */
@@ -2505,6 +2514,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 <!-- 사이드바 접힘 상태 Tooltip — 같은 이유로 #app 형제(body 레벨)에 둔다 -->
 <div id="sidebar-tooltip"></div>
 
+<!-- 공통 Toast — showToast()가 텍스트를 채우고 보였다 사라지게 한다 -->
+<div id="app-toast"></div>
+
 <!-- 헤더 통합 검색 결과 — #top-bar가 overflow-y:hidden이라 그 안에 두면 잘리므로,
      같은 이유로 body 레벨에 두고 좌표는 JS로 계산해 띄운다 -->
 <div id="top-search-results"></div>
@@ -2670,6 +2682,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+// ════════════════════════════════════════════════════════════════════════════
+// 공통 Toast — 저장/수정/추가/불러오기 완료 같은 성공·안내 메시지를 alert() 대신
+// 화면 하단에 잠깐 띄웠다 자동으로 사라지게 한다(삭제/초기화 등 확인이 필요한
+// confirm()은 대상이 아니며 그대로 둔다).
+// ════════════════════════════════════════════════════════════════════════════
+let toastHideTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('app-toast');
+  if (!el) return;
+  el.innerHTML = escHtml(msg).replace(/\n/g, '<br>');
+  el.classList.add('show');
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // 데이터 DB
 // ════════════════════════════════════════════════════════════════════════════
@@ -6258,7 +6285,7 @@ function saveNewIng() {
   closeModal('add-ing-modal');
   calculate();
   saveToStorage();
-  alert(isEdit ? `원료가 수정되었습니다.` : `'${vals[0]}' 원료가 추가되었습니다.`);
+  showToast(isEdit ? `원료가 수정되었습니다.` : `'${vals[0]}' 원료가 추가되었습니다.`);
 }
 
 function closeModal(id) {
@@ -7472,7 +7499,7 @@ async function saveRecipe() {
         await writable.close();
         document.getElementById('recipe-name').textContent = '📄 ' + currentRecipeFilename;
         isDirty = false;
-        alert('레시피를 업데이트했습니다: ' + currentRecipeFilename);
+        showToast('레시피를 업데이트했습니다: ' + currentRecipeFilename);
         return;
       } catch(e) {
         alert('열려 있던 파일에 저장하지 못해 새로 저장합니다.\n' + e.message);
@@ -7494,7 +7521,7 @@ async function saveRecipe() {
         const sel = document.getElementById('top-recipe-select');
         if (sel) sel.value = currentRecipeFilename;
         isDirty = false;
-        alert('레시피를 업데이트했습니다: ' + currentRecipeFilename);
+        showToast('레시피를 업데이트했습니다: ' + currentRecipeFilename);
         return;
       } catch(e) {
         alert('연결된 폴더에 저장하지 못해 파일 다운로드로 대체합니다.\n' + e.message);
@@ -7518,7 +7545,7 @@ async function saveRecipe() {
         currentRecipeFilename   = filename;
         currentRecipeFileHandle = null;
         isDirty = false;
-        alert('레시피를 폴더에 저장했습니다: ' + filename);
+        showToast('레시피를 폴더에 저장했습니다: ' + filename);
         return;
       } catch(e) {
         alert('연결된 폴더에 저장하지 못해 파일 다운로드로 대체합니다.\n' + e.message);
@@ -7541,7 +7568,7 @@ async function saveRecipe() {
     currentRecipeFileHandle = null;
     isDirty = false;
     if (!recipeDirHandle) {
-      alert(
+      showToast(
         (isUpdate ? '연결된 폴더가 없어 같은 파일명으로 다시 다운로드했습니다: ' : '연결된 폴더가 없어 다운로드로 저장했습니다: ')
         + filename + '\n(우측 상단 📂로 폴더를 연결하면 그 폴더에 바로 덮어써 저장됩니다.)'
       );
@@ -7646,7 +7673,7 @@ async function loadRecipe() {
       const file = await fh.getFile();
       const data = JSON.parse(await file.text());
       applyRecipeData(data, file.name, fh);
-      alert('레시피를 열었습니다.');
+      showToast('레시피를 열었습니다.');
     } catch(e) {
       if (e.name !== 'AbortError') alert('파일을 읽을 수 없습니다: ' + e.message);
     }
@@ -7663,7 +7690,7 @@ async function loadRecipe() {
       try {
         const data = JSON.parse(ev.target.result);
         applyRecipeData(data, file.name, null);
-        alert('레시피를 열었습니다.');
+        showToast('레시피를 열었습니다.');
       } catch(err) {
         alert('파일을 읽을 수 없습니다: '+err.message);
       }
@@ -8161,7 +8188,7 @@ async function savePasswordChange() {
   if (updateErr) { err.textContent = friendlyAuthError(updateErr); return; }
 
   closeModal('pw-change-modal');
-  alert('비밀번호가 변경되었습니다.');
+  showToast('비밀번호가 변경되었습니다.');
 }
 
 // ── 프로필 드롭다운 "개인정보" — 이메일 확인 + 비밀번호 변경 전용 화면.
@@ -8204,7 +8231,7 @@ async function saveMyInfoPassword() {
 
   pwInput.value = ''; pw2Input.value = '';
   closeModal('my-info-modal');
-  alert('비밀번호가 변경되었습니다.');
+  showToast('비밀번호가 변경되었습니다.');
 }
 
 // 로그인 성공(또는 페이지 로드시 기존 세션 복원) 시 로그인 화면을 닫고 계산기 본체를 연다.
