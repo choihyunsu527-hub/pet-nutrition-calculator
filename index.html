@@ -603,7 +603,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 사이드바 아코디언(.nav-group-body, 0fr→1fr grid-template-rows)과 같은 방식의 "펼쳐짐" 느낌을
    내기 위해, display:none/block 토글 대신 max-height(0→JS가 계산한 값)+opacity를 트랜지션한다.
    position:fixed라 레이아웃에 영향이 없으므로 항상 DOM/flex 상태를 유지해도 안전하다. */
-.mix-ing-list { position: fixed; overflow: hidden; background: var(--inp);
+/* 배경은 반투명 입력창 톤(--inp)이 아니라 카드/패널에 쓰는 완전 불투명한 --side2를 써야 한다 —
+   --inp은 다크 테마에서 rgba(255,255,255,0.06)로 정의돼 있어(입력창처럼 이미 불투명한 카드 위에
+   얹힐 때만 문제없음), body 위에 곧바로 뜨는 이 패널에 그대로 쓰면 뒤 콘텐츠가 비쳐 보였다.
+   이 클래스는 배합 설계 원료 선택·알레르기 원료 등록 등 모든 원료 검색 드롭다운이 공유하므로,
+   여기 한 곳만 고치면 전부에 적용된다. */
+.mix-ing-list { position: fixed; overflow: hidden; background: var(--side2);
                  border: 1px solid var(--border); border-radius: 4px;
                  box-shadow: var(--sh-md); z-index: 500; display: flex; flex-direction: column;
                  max-height: 0; opacity: 0; pointer-events: none;
