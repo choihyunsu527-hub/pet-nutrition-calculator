@@ -414,6 +414,16 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 #tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
 #tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
 
+/* 원료 DB(관리 화면) / 영양기준 DB(참조 화면) 전용 페이지 제목 — 같은 제목/설명 2단 타이포 패턴 재사용 */
+#tab-ing .hdr-bar.ing-hdr-bar { justify-content: flex-start; }
+.ing-hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
+.ing-hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
+.ing-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
+#tab-std .hdr-bar.std-hdr-bar { justify-content: flex-start; }
+.std-hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
+.std-hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
+.std-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
+
 /* ── 카드 ── */
 .cards { display: flex; gap: 6px; padding: 8px 12px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
@@ -708,6 +718,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 선택 삭제 — 기존 위험색(#B03A2E, 인라인 style로 이미 지정됨)은 그대로 두고 테두리만 맞춰준다 */
 .ing-toolbar button[onclick="deleteSelectedIng()"] { border-color: #B03A2E; color: #fff; }
 .ing-toolbar button[onclick="deleteSelectedIng()"]:hover { filter: brightness(1.08); background: #B03A2E; }
+/* 정렬 토글("원래 순서"/"가나다순 정렬")은 주요 동작이 아니라 "현재 어떤 정렬 모드인지" 보여주는
+   상태 표시라, "원료 추가"의 꽉 찬 포인트 컬러(.ing-btn-primary)와는 구분되게 옅은 틴트 칩으로
+   표시한다 — 새 색상이 아니라 포커스 링에 쓰는 기존 --calc(accent 16% 톤)를 재사용. */
+.ing-toolbar button.active { background: var(--calc); color: var(--acc); border-color: var(--acc); }
+.ing-toolbar button.active:hover { filter: brightness(1.05); background: var(--calc); }
+/* 검색+정렬(필터 영역)과 추가/삭제(액션 영역) 사이만 얇은 구분선으로 그룹을 나눈다 */
+#sort-btn { position: relative; margin-right: 12px; }
+#sort-btn::after { content: ''; position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+                    width: 1px; height: 18px; background: var(--border); }
+/* 체크박스로 선택된 행 — JS 변경 없이 :has()로만 강조(선택 삭제 대상이 뭔지 한눈에 보이게) */
+#ing-table tbody tr:not(.cat-row):has(.ing-chk:checked) td {
+  background-color: color-mix(in srgb, var(--acc) 14%, var(--side2)) !important;
+}
 
 /* ── 원료 DB · 영양기준 DB 테이블 정돈(3단계) — 배합 설계에서 쓴 --mix-line과 같은 방식으로
    기존 --border 토큰을 color-mix()로 옅게 만든 --table-line만 이 두 테이블 안에서 재사용한다.
@@ -726,6 +749,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #ing-table tbody tr:not(.cat-row):hover td, #std-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
 /* 단위 컬럼은 값보다 한 단계 옅게 — 숫자와 단위의 시각적 위계 정리(값 자체는 변경 없음) */
 #std-table td:nth-child(3) { color: var(--sub); }
+
+/* 영양기준 DB는 "값을 입력·편집하는 화면"이 아니라 "기준값을 빠르게 훑어보는 화면"이라
+   원료 DB보다 한 단계 여유 있게(패딩↑, 글자 살짝↑) — 위 3px/6px 밀도 규칙을 이 표에서만 덮어쓴다. */
+#tab-std .tbl-wrap { padding: 28px; }
+#std-table th, #std-table td { padding: 8px 10px; font-size: 11px; }
+#std-table tr.cat-row td { padding: 7px 10px; font-size: 11px; }
+/* 헤더 아래 색 띠로 NRC/AAFCO/FEDIAF 칼럼 그룹을 표시 — 각 칼럼의 값 배경(--nrc-bg/--aa-bg/--fed-bg)과
+   짝을 이루는 글자색 토큰(--nrc-t/--aa-t/--fed-t)을 그대로 재사용해 "어디까지가 한 기준인지"를
+   스캔하기 쉽게 만든다(새 색상 없음, 값 자체는 미변경). */
+#std-table th:nth-child(4), #std-table th:nth-child(5) { border-bottom: 2px solid var(--nrc-t); }
+#std-table th:nth-child(6), #std-table th:nth-child(7),
+#std-table th:nth-child(8), #std-table th:nth-child(9) { border-bottom: 2px solid var(--aa-t); }
+#std-table th:nth-child(10), #std-table th:nth-child(11) { border-bottom: 2px solid var(--fed-t); }
 
 /* 원료 DB 테이블 — 원료명 제외 전 컬럼 폭 통일 */
 /* .tbl-wrap의 좌측 padding 때문에 고정 열이 진짜 왼쪽 끝(x=0)이 아니라 안쪽에서
@@ -2186,7 +2222,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 5: 기준 DB ── -->
     <div class="tab-pane" id="tab-std">
-      <div class="hdr-bar">NRC·AAFCO·FEDIAF 영양소 기준 DB — 출처: NRC 2006 / AAFCO 2023 / FEDIAF 2025</div>
+      <div class="hdr-bar std-hdr-bar">
+        <span class="std-hdr-title">NRC · AAFCO · FEDIAF 영양소 기준 DB</span>
+        <span class="std-hdr-desc">출처: NRC 2006 / AAFCO 2023 / FEDIAF 2025</span>
+      </div>
       <div class="tab-panel">
       <div class="tbl-wrap">
         <table id="std-table">
@@ -2390,14 +2429,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 6: 원료 DB ── -->
     <div class="tab-pane" id="tab-ing">
-      <div class="hdr-bar">원료 DB — USDA FoodData Central 기반, per 100g as-is</div>
+      <div class="hdr-bar ing-hdr-bar">
+        <span class="ing-hdr-title">원료 DB</span>
+        <span class="ing-hdr-desc">USDA FoodData Central 기반, per 100g as-is</span>
+      </div>
       <div class="ing-toolbar">
         <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="filterIng()">
-        <button id="sort-btn" onclick="toggleSort()"
-          style="background:var(--acc2);color:white;border:none;border-radius:5px;
-                 padding:5px 12px;cursor:pointer;font-size:11px;font-family:inherit">
-          원래 순서
-        </button>
+        <button id="sort-btn" class="active" onclick="toggleSort()">원래 순서</button>
         <button class="ing-btn-primary" onclick="openAddIng()">원료 추가</button>
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
           <span style="font-size:10px;color:var(--sub)" id="ing-count"></span>
@@ -6262,7 +6300,7 @@ function toggleSort() {
   isSorted = !isSorted;
   const btn = document.getElementById('sort-btn');
   btn.textContent = isSorted ? '원래 순서' : '가나다순 정렬';
-  btn.style.background = isSorted ? 'var(--acc2)' : 'var(--gray-m)';
+  btn.classList.toggle('active', isSorted);
   filterIng();
 }
 
