@@ -398,6 +398,22 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .dash-hdr-desc { font-size: 11px; color: var(--sub); font-weight: 500; }
 .dash-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
 
+/* 배합 설계 전용 페이지 제목 — 대시보드와 같은 제목/설명 2단 타이포 패턴을 재사용한다. */
+#tab-mix .hdr-bar.mix-hdr-bar { justify-content: flex-start; }
+.mix-hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
+.mix-hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
+.mix-hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
+/* 배합 설계 액션 버튼 hierarchy — 원료DB 툴바(.ing-toolbar button/.ing-btn-primary)와
+   같은 언어(중립 아웃라인 = 기본, 포인트 컬러 = 주요 동작, 기존 위험색(#B03A2E) = 파괴적 동작)를
+   그대로 재사용해 화면 간 툴바 스타일을 통일한다. */
+#tab-mix .hdr-btns button { background: var(--side2); color: var(--text); border: 1px solid var(--border);
+                             padding: 5px 12px; font-size: 11px; font-weight: 600; border-radius: 5px; }
+#tab-mix .hdr-btns button:hover { filter: none; border-color: var(--acc); background: var(--hover-tint); }
+#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
+#tab-mix .hdr-btns button.mix-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
+#tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
+#tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
+
 /* ── 카드 ── */
 .cards { display: flex; gap: 6px; padding: 8px 12px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
@@ -501,10 +517,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #ana-contrib-heatmap td.left:hover { color: var(--acc); }
 
 /* ── 배합 설계 탭 ── */
-.mix-unit-bar { display: flex; align-items: center; gap: 24px; padding: 10px 16px;
-                 background: var(--side); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+/* 원료 선택 영역(테이블)과 뚜렷이 구분되는 "설정 패널"처럼 보이도록 아래쪽에 은은한 그림자를
+   덧붙인다(테두리 색은 그대로, 새 색상 없음). 라벨도 데이터 그리드 헤더와 같은 대문자·자간 톤으로 통일. */
+.mix-unit-bar { display: flex; align-items: center; gap: 24px; padding: 12px 16px;
+                 background: var(--side); border-bottom: 1px solid var(--border); flex-shrink: 0;
+                 box-shadow: 0 1px 0 var(--border); position: relative; z-index: 1; }
 .mix-unit-item { display: flex; flex-direction: column; gap: 4px; }
-.mix-unit-item label { font-size: 10px; color: var(--sub); font-weight: bold; }
+.mix-unit-item label { font-size: 9.5px; color: var(--sub); font-weight: 700;
+                        text-transform: uppercase; letter-spacing: .4px; }
 .mix-unit-item select, .mix-unit-item input { font-size: 12px; padding: 6px 10px;
                  border: 1px solid var(--border); border-radius: 4px;
                  background: var(--inp); color: var(--text); font-family: inherit; }
@@ -515,30 +535,37 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    --mix-line: 기존 --border 토큰을 그대로 쓰되 color-mix()로 살짝 옅게 만든 파생값 —
    새 색상을 만들지 않고 행/열 구분선의 시각적 노이즈만 줄인다(다른 곳엔 영향 없음, 이 안에서만 사용). */
 .mix-table-wrap { flex: 1; overflow-x: auto; display: flex; flex-direction: column; min-height: 0; background: var(--bg);
-                   --mix-line: color-mix(in srgb, var(--border) 65%, transparent); }
-#mix-hdr { display: flex; background: var(--gray-l); flex-shrink: 0; min-width: max-content;
+                   --mix-line: color-mix(in srgb, var(--border) 65%, transparent);
+                   /* 원료DB·영양기준DB 테이블(#ing-table/#std-table)과 같은 방식으로 파생한
+                      불투명 헤더 틴트 — 새 색상이 아니라 기존 --th-bg/--sub의 조합이다. */
+                   --mix-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%); }
+#mix-hdr { display: flex; background: var(--mix-hdr-bg); flex-shrink: 0; min-width: max-content;
            border-bottom: 1px solid var(--border); padding-right: 20px; }
 #mix-hdr > * { display: flex; align-items: center; justify-content: center;
-                padding: 6px 4px; color: var(--hdr); font-size: 10px;
+                padding: 7px 4px; color: var(--hdr); font-size: 9.5px;
                 font-weight: 700; text-align: center; flex-shrink: 0;
+                text-transform: uppercase; letter-spacing: .3px;
                 border-right: 1px solid var(--mix-line); box-sizing: border-box; }
+/* 원료명(선택 영역) 칼럼과 배합비/실제중량(입력 영역) 칼럼 사이만 진한 구분선을 둬서
+   "무엇을 배합하는지"와 "얼마나 배합하는지"를 한눈에 나눠 보이게 한다. */
+#mix-hdr span[style*="width:200px"] { border-right-color: var(--border); }
 #mix-body { flex: 1; overflow-y: auto; min-width: max-content; }
-.mix-row { display: flex; align-items: center; min-height: 30px; border-bottom: 1px solid var(--mix-line);
+.mix-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--mix-line);
            transition: background-color .15s ease; padding-right: 20px; }
 .mix-row:nth-child(even) { background: var(--even); }
 .mix-row:nth-child(odd)  { background: var(--odd); }
 .mix-row:hover { background: var(--hover-tint) !important; }
 .mix-row > * { border-right: 1px solid var(--mix-line); box-sizing: border-box; }
 .mix-row .mix-no { width: 32px; text-align: center; font-size: 10px;
-                   line-height: 30px; color: var(--sub); flex-shrink: 0; }
-.mix-row select { flex: 0 0 200px; border: none; border-right: 1px solid var(--mix-line); background: transparent;
-                  font-size: 11px; height: 30px; padding: 0 4px; font-family: inherit; outline: none; color: var(--text); }
-.mix-ing-wrap { position: relative; flex: 0 0 200px; border-right: 1px solid var(--mix-line); height: 30px; box-sizing: border-box;
+                   line-height: 34px; color: var(--sub); flex-shrink: 0; }
+.mix-row select { flex: 0 0 200px; border: none; border-right: 1px solid var(--border); background: transparent;
+                  font-size: 11px; height: 34px; padding: 0 4px; font-family: inherit; outline: none; color: var(--text); }
+.mix-ing-wrap { position: relative; flex: 0 0 200px; border-right: 1px solid var(--border); height: 34px; box-sizing: border-box;
                 box-shadow: inset 0 0 0 1px transparent; transition: box-shadow .15s ease; }
 .mix-ing-wrap:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
 .mix-ing-wrap:focus-within { box-shadow: inset 0 0 0 1px var(--acc); }
-.mix-ing-display { width: 100%; height: 30px; border: none; background: transparent; font-size: 11px;
-                  padding: 0 8px; font-family: inherit; outline: none; color: var(--text); box-sizing: border-box;
+.mix-ing-display { width: 100%; height: 34px; border: none; background: transparent; font-size: 11.5px;
+                  font-weight: 600; padding: 0 8px; font-family: inherit; outline: none; color: var(--hdr); box-sizing: border-box;
                   display: flex; align-items: center; justify-content: space-between; gap: 6px;
                   cursor: pointer; text-align: left; }
 .mix-ing-display .mix-ing-display-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -572,9 +599,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
 .mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
 .mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); }
+/* 배합비(%) 입력은 이 행에서 실제로 "입력"하는 유일한 값이라 실제중량(자동 계산, 보조 정보)보다
+   또렷하게 — font-weight/크기만 올리고 색은 그대로(계산 로직·값 자체는 미변경). */
 .mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
-                               font-size: 11px; height: 30px; padding: 0 6px;
-                               font-family: inherit; text-align: right; color: var(--text);
+                               font-size: 12px; font-weight: 700; height: 34px; padding: 0 6px;
+                               font-family: inherit; text-align: right; color: var(--hdr);
                                outline: none; box-sizing: border-box;
                                box-shadow: inset 0 0 0 1px transparent;
                                transition: box-shadow .15s ease, background-color .15s ease; }
@@ -583,11 +612,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-row .mix-val, .mix-row .mix-actual-g { display: flex; align-items: center; justify-content: flex-end; align-self: stretch;
                      font-size: 10px; color: var(--sub); padding: 0 4px; flex-shrink: 0; box-sizing: border-box; }
 .mix-row .mix-unit { margin-left: 1px; }
-#tot-bar { background: var(--side); color: var(--sub); padding: 7px 16px;
+/* 합계/상태 바 — updateTotBar()가 이미 배합비 합계 상태(정확히 100% / ±5% 이내 / 크게 벗어남)에
+   따라 background·borderTopColor·글자색을 pass/warn/fail 토큰으로 인라인 설정해준다(로직 그대로).
+   여기서는 그 신호가 잘 보이도록 캔버스(패딩/보더 두께/글자 크기)만 키운다. */
+#tot-bar { background: var(--side); color: var(--sub); padding: 9px 20px;
            font-size: 11px; display: flex; gap: 0; flex-shrink: 0;
-           border-top: 1px solid var(--border);
-           align-items: center; transition: border-color .35s ease; }
-#tot-ratio { font-weight: 700; font-size: 12px; color: var(--text);
+           border-top: 2px solid var(--border);
+           align-items: center; transition: border-color .35s ease, background-color .35s ease; }
+#tot-ratio { font-weight: 800; font-size: 13px; color: var(--text);
              padding-right: 16px; margin-right: 16px;
              border-right: 1px solid var(--border); }
 #tot-me { font-size: 10.5px; color: var(--sub); font-weight: 400; }
@@ -1660,12 +1692,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <!-- ── TAB 1: 배합 설계 ── -->
     <div class="tab-pane" id="tab-mix">
-      <div class="hdr-bar">
-        <span style="flex:1;text-align:center">배합 설계 — 원료 선택 후 배합비(%) 입력</span>
+      <div class="hdr-bar mix-hdr-bar">
+        <span class="mix-hdr-title">배합 설계</span>
+        <span class="mix-hdr-desc">원료 선택 후 배합비(%) 입력</span>
         <div class="hdr-btns">
-          <button style="background:var(--acc2)" onclick="addMixRow()">행 추가</button>
-          <button style="background:#B03A2E" onclick="deleteSelectedMix()">선택 삭제</button>
-          <button style="background:#5a6b7a" onclick="loadRecipe()">레시피 불러오기</button>
+          <button class="mix-btn-primary" onclick="addMixRow()">행 추가</button>
+          <button class="mix-btn-danger" onclick="deleteSelectedMix()">선택 삭제</button>
+          <button onclick="loadRecipe()">레시피 불러오기</button>
         </div>
       </div>
       <div class="mix-unit-bar">
