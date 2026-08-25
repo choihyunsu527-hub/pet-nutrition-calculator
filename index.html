@@ -1631,7 +1631,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="mix-unit-item">
           <label>총 배치량</label>
           <div style="display:flex;align-items:center;gap:4px">
-            <input type="number" id="mix-total-g" value="1000" min="1" step="10" oninput="onTotalGChange()" onchange="onTotalGChange()">
+            <input type="number" id="mix-total-g" value="1000" min="1" step="10" oninput="debouncedTotalGChange()" onchange="onTotalGChange()">
             <span style="font-size:11px;color:var(--sub)">g</span>
           </div>
         </div>
@@ -4345,7 +4345,7 @@ function addMixRow(name='', ratio=0) {
       </select>
     </span>
     <input type="number" value="${ratio}" min="0" step="0.5"
-           oninput="onMixChange()" style="width:100px">
+           oninput="debouncedMixChange()" style="width:100px">
     <span class="mix-actual-g" style="width:90px">─</span>
     ${MIX_HDR.map((h, i) => `<span class="mix-val" data-idx="${i}" style="width:${h.w}px${MIX_HDR_GROUP_END.has(i) ? ';border-right:2px solid var(--border)' : ''}">─</span>`).join('')}
   `;
@@ -4413,7 +4413,17 @@ function getMixRows() {
   });
 }
 
+function debounce(fn, delay) {
+  let t;
+  return function(...args) {
+    clearTimeout(t);
+    t = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
 function onMixChange() { calculate(); }
+const debouncedMixChange = debounce(onMixChange, 300);
+const debouncedCalculate = debounce(calculate, 300);
 
 function updateUnitHint() {
   const unit = document.getElementById('unit-select')?.value || 'pct';
@@ -4463,6 +4473,7 @@ function onTotalGChange() {
   calculate();
   saveToStorage();
 }
+const debouncedTotalGChange = debounce(onTotalGChange, 300);
 
 function updateMixRowVals(rows) {
   // rows는 항상 %(배합비) 기준으로 정규화되어 들어온다 — 실제 중량(g)은 입력 단위(%/g/kg)와
@@ -4522,7 +4533,7 @@ function buildAminoGrid() {
       <div class="ag-cell" id="amino-auto-${nm}" style="background:var(--calc);color:var(--pass-t);font-weight:bold">─</div>
       <div class="ag-cell inp" title="자동계산값 보정 시만 입력">
         <input type="number" id="amino-${nm}" value="${preserved[nm]||''}" min="0" step="0.01"
-               placeholder="보정값" oninput="calculate()">
+               placeholder="보정값" oninput="debouncedCalculate()">
       </div>
       <div class="ag-cell" style="font-size:10px">${mr||'─'}</div>
       <div class="ag-cell" style="font-size:10px">${aa||'─'}</div>
@@ -8509,8 +8520,8 @@ function init() {
 
   // 변경 시마다 dirty 플래그를 세운다(원료DB 갱신 목적의 저장은 saveToStorage()가 계속 담당).
   // 레시피 작업 자체는 더 이상 localStorage에 자동 저장하지 않는다 — 새로고침/재실행 시 항상 새 작업으로 시작한다.
-  document.getElementById('sb-name').addEventListener('input', () => { calculate(); saveToStorage(); });
-  document.getElementById('sb-maker').addEventListener('input', () => { calculate(); saveToStorage(); });
+  document.getElementById('sb-name').addEventListener('input', debounce(() => { calculate(); saveToStorage(); }, 300));
+  document.getElementById('sb-maker').addEventListener('input', debounce(() => { calculate(); saveToStorage(); }, 300));
   document.getElementById('sb-ptype').addEventListener('change', saveToStorage);
   document.getElementById('sb-species')?.addEventListener('change', saveToStorage);
   document.getElementById('sb-target').addEventListener('change', saveToStorage);
