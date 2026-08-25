@@ -131,7 +131,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-view-title { font-size: 17px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
 #top-nav { display: none; }
 
-/* ── 헤더 중앙 전역 검색(UI만 — 검색 기능은 아직 없음) — #top-row1의 position:relative를 기준으로
+/* ── 헤더 중앙 전역 통합 검색 — #top-row1의 position:relative를 기준으로
    좌/우 콘텐츠 폭과 무관하게 항상 정중앙에 오도록 절대 배치한다. ── */
 #top-search-wrap { position: absolute; left: 38%; top: 50%; transform: translate(-50%, -50%);
                     display: flex; align-items: center; gap: 10px; flex-shrink: 0;
@@ -145,6 +145,19 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-search-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
                      font-size: 13px; font-family: inherit; color: var(--text); }
 #top-search-input::placeholder { color: var(--sub); }
+#top-search-results { position: fixed; background: var(--inp); border: 1px solid var(--border);
+                       border-radius: 10px; box-shadow: var(--sh-md); max-height: 360px;
+                       overflow-y: auto; z-index: 500; display: none; }
+#top-search-results.open { display: block; }
+.tsr-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 8px 14px; font-size: 12px; color: var(--text); cursor: pointer; }
+.tsr-item:hover { background: var(--hover-tint); }
+.tsr-item + .tsr-item { border-top: 1px solid var(--border); }
+.tsr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tsr-src { font-size: 10px; color: var(--sub); flex-shrink: 0; white-space: nowrap; }
+.tsr-empty { padding: 14px; font-size: 12px; color: var(--sub); text-align: center; }
+.search-hit-flash { animation: search-hit-flash-anim 1.6s ease; }
+@keyframes search-hit-flash-anim { 0%, 100% { background: transparent; } 15%, 60% { background: var(--calc); } }
 
 #top-right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 #top-recipe { font-size: 11px; font-weight: 600; color: var(--sub); white-space: nowrap; }
@@ -1275,7 +1288,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <div id="top-view-title">대시보드</div>
       <div id="top-search-wrap">
         <svg id="top-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
-        <input id="top-search-input" type="text" placeholder="원료, 제품, 레시피 검색..." autocomplete="off">
+        <input id="top-search-input" type="text" placeholder="원료, 제품, 레시피 검색..." autocomplete="off" oninput="onGlobalSearchInput()">
       </div>
       <div id="top-right">
         <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 업데이트합니다(아직 저장한 적이 없으면 새로 저장)">저장</button>
@@ -2484,6 +2497,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 <!-- 사이드바 접힘 상태 Tooltip — 같은 이유로 #app 형제(body 레벨)에 둔다 -->
 <div id="sidebar-tooltip"></div>
+
+<!-- 헤더 통합 검색 결과 — #top-bar가 overflow-y:hidden이라 그 안에 두면 잘리므로,
+     같은 이유로 body 레벨에 두고 좌표는 JS로 계산해 띄운다 -->
+<div id="top-search-results"></div>
 
 <!-- ══ 플로팅 액션 버튼 ══ -->
 <div class="fab" id="fab">
@@ -5962,7 +5979,7 @@ function buildStdTable() {
       html += `<tr class="cat-row"><td colspan="11">── ${cat} ──</td></tr>`;
     }
     const bg = i%2===0 ? '' : 'style="background:var(--even)"';
-    html += `<tr ${bg}>
+    html += `<tr ${bg} data-std-name="${String(nm).replace(/"/g,'&quot;')}">
       <td class="left" style="font-size:10px;color:var(--sub)">${cat}</td>
       <td class="left">${nm}</td>
       <td style="font-size:10px">${unit}</td>
@@ -6038,7 +6055,7 @@ function buildIngTable(data) {
       const vals = ING_SHOW.map(j => ing[j]);
       const escName = ing[0].replace(/"/g, '&quot;');
       const bg = rowIdx % 2 === 0 ? '' : 'style="background:var(--even)"';
-      html += `<tr ${bg}><td class="center"><input type="checkbox" class="ing-chk" data-name="${escName}"></td>${vals.map((v, vi) =>
+      html += `<tr ${bg} data-ing-name="${escName}"><td class="center"><input type="checkbox" class="ing-chk" data-name="${escName}"></td>${vals.map((v, vi) =>
         `<td class="${vi === 0 ? 'left' : 'num'}" style="font-size:11px">${v}</td>`
       ).join('')}
       <td class="center">
@@ -6521,7 +6538,7 @@ function renderGlossary() {
       <div class="gl-cat-hdr">${cat}</div>
       <div class="gl-group-items">
         ${filtered.filter(t => t.cat === cat).map(t => `
-          <div class="gl-entry">
+          <div class="gl-entry" data-term="${t.term.replace(/"/g,'&quot;')}">
             <div class="gl-entry-hdr">
               <span class="gl-term">${t.term}</span>
               ${t.abbr ? `<span class="gl-abbr">${t.abbr}</span>` : ''}
@@ -6994,6 +7011,138 @@ const TAB_LABELS = {
   std:'영양 기준 DB', glossary:'전문 용어', calcbasis:'계산 기준',
   ing:'원료 DB', settings:'설정', admin:'관리자',
 };
+
+// ════════════════════════════════════════════════════════════════════════════
+// 헤더 상단 통합 검색 — 원료 DB, 영양기준 DB, 레시피/제품, 전문 용어, 메뉴를
+// 한 번에 검색해 드롭다운으로 보여주고, 클릭 시 해당 화면으로 이동한다.
+// ════════════════════════════════════════════════════════════════════════════
+let lastSearchResults = [];
+const SEARCH_MAX_PER_GROUP = 8;
+
+function escHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function collectGlobalSearchResults(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const results = [];
+
+  let n = 0;
+  for (const ing of allIngs()) {
+    if (n >= SEARCH_MAX_PER_GROUP) break;
+    if (ing[0].toLowerCase().includes(q)) { results.push({ type:'ing', name: ing[0], src:'원료 DB' }); n++; }
+  }
+
+  n = 0;
+  const seenStd = new Set();
+  for (const std of [...STANDARDS, ...STANDARDS_CAT]) {
+    if (n >= SEARCH_MAX_PER_GROUP) break;
+    const nm = std[0];
+    if (seenStd.has(nm) || !nm.toLowerCase().includes(q)) continue;
+    seenStd.add(nm);
+    results.push({ type:'std', name: nm, src:'영양기준 DB' });
+    n++;
+  }
+
+  n = 0;
+  document.querySelectorAll('#top-recipe-select option').forEach(opt => {
+    if (n >= SEARCH_MAX_PER_GROUP) return;
+    if (['__none__','__change__','__reconnect__'].includes(opt.value)) return;
+    if (opt.textContent.toLowerCase().includes(q)) { results.push({ type:'recipe', name: opt.textContent, src:'레시피 > 제품', value: opt.value }); n++; }
+  });
+
+  n = 0;
+  for (const t of GLOSSARY_TERMS) {
+    if (n >= SEARCH_MAX_PER_GROUP) break;
+    const hay = (t.term + ' ' + (t.abbr||'')).toLowerCase();
+    if (hay.includes(q)) { results.push({ type:'glossary', name: t.term, src:'전문 용어', term: t.term, tab: t.tab }); n++; }
+  }
+
+  n = 0;
+  for (const [id, label] of Object.entries(TAB_LABELS)) {
+    if (n >= SEARCH_MAX_PER_GROUP) break;
+    if (label.toLowerCase().includes(q)) { results.push({ type:'tab', name: label, src:'메뉴 · 기능', tabId: id }); n++; }
+  }
+
+  return results;
+}
+
+function renderGlobalSearchResults(results) {
+  const box = document.getElementById('top-search-results');
+  const wrap = document.getElementById('top-search-wrap');
+  if (!box || !wrap) return;
+  box.innerHTML = !results.length
+    ? '<div class="tsr-empty">검색 결과가 없습니다</div>'
+    : results.map((r, i) => `
+        <div class="tsr-item" data-idx="${i}">
+          <span class="tsr-name">${escHtml(r.name)}</span>
+          <span class="tsr-src">${escHtml(r.src)}</span>
+        </div>`).join('');
+  const r = wrap.getBoundingClientRect();
+  box.style.left = r.left + 'px';
+  box.style.top = (r.bottom + 6) + 'px';
+  box.style.width = r.width + 'px';
+  box.classList.add('open');
+}
+
+function onGlobalSearchInput() {
+  const q = document.getElementById('top-search-input').value;
+  if (!q.trim()) { closeGlobalSearch(); return; }
+  lastSearchResults = collectGlobalSearchResults(q);
+  renderGlobalSearchResults(lastSearchResults);
+}
+
+function closeGlobalSearch() {
+  const box = document.getElementById('top-search-results');
+  if (box) { box.classList.remove('open'); box.innerHTML = ''; }
+  lastSearchResults = [];
+}
+
+function highlightSearchTarget(selector) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+  el.classList.remove('search-hit-flash');
+  void el.offsetWidth; // 애니메이션 재시작을 위해 리플로우를 강제한다
+  el.classList.add('search-hit-flash');
+  setTimeout(() => el.classList.remove('search-hit-flash'), 1600);
+}
+
+function goToGlobalSearchResult(r) {
+  closeGlobalSearch();
+  document.getElementById('top-search-input').value = '';
+  if (r.type === 'ing') {
+    goTab('ing');
+    setTimeout(() => highlightSearchTarget(`#ing-body tr[data-ing-name="${CSS.escape(r.name)}"]`), 50);
+  } else if (r.type === 'std') {
+    goTab('std');
+    setTimeout(() => highlightSearchTarget(`#std-body tr[data-std-name="${CSS.escape(r.name)}"]`), 50);
+  } else if (r.type === 'recipe') {
+    const sel = document.getElementById('top-recipe-select');
+    if (sel) sel.value = r.value;
+    onTopRecipeChange(r.value);
+    goTab('product');
+  } else if (r.type === 'glossary') {
+    goTab(r.tab || 'glossary');
+    if (!r.tab) setTimeout(() => highlightSearchTarget(`.gl-entry[data-term="${CSS.escape(r.term)}"]`), 50);
+  } else if (r.type === 'tab') {
+    goTab(r.tabId);
+  }
+}
+
+document.getElementById('top-search-results').addEventListener('click', (e) => {
+  const item = e.target.closest('.tsr-item');
+  if (!item) return;
+  const r = lastSearchResults[Number(item.dataset.idx)];
+  if (r) goToGlobalSearchResult(r);
+});
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('top-search-wrap');
+  const box = document.getElementById('top-search-results');
+  if (wrap && box && !wrap.contains(e.target) && !box.contains(e.target)) closeGlobalSearch();
+});
 
 // 사이드바 아코디언 그룹 펼침/접힘 — 그룹 헤더 클릭 시 호출된다.
 function toggleNavGroup(groupEl) {
