@@ -1191,13 +1191,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <span id="sidebar-tagline">Advanced Clinical Nutrition Systems</span>
     </span>
     </button>
-      <button id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="사이드바 접기/펼치기">
+      <button id="sidebar-collapse-btn" onclick="toggleSidebarCollapse()" title="사이드바 접기/펼치기" aria-label="사이드바 접기/펼치기">
         <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
       </button>
     </div>
   </div>
-  <div id="sidebar-nav">
-    <div class="nav-item active" data-tab="dash" data-label="대시보드" onclick="showTab('dash', this)">
+  <div id="sidebar-nav" role="navigation" aria-label="주 메뉴">
+    <div class="nav-item active" data-tab="dash" data-label="대시보드" onclick="showTab('dash', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
       <span>대시보드</span>
     </div>
@@ -1205,7 +1205,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <div class="nav-section-label">작업</div>
     <div class="nav-group" data-group="product-mgmt">
-      <div class="nav-group-hdr" data-label="제품 관리" onclick="toggleNavGroup(this.parentElement)">
+      <div class="nav-group-hdr" data-label="제품 관리" onclick="toggleNavGroup(this.parentElement)" role="button" tabindex="0">
         <span class="nav-label">
           <svg class="nav-icon" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/></svg>
           <span>제품 관리</span>
@@ -1213,12 +1213,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
-        <div class="nav-item nav-subitem" data-tab="product" onclick="showTab('product', this)">제품 / 정보</div>
+        <div class="nav-item nav-subitem" data-tab="product" onclick="showTab('product', this)" role="button" tabindex="0">제품 / 정보</div>
       </div></div>
     </div>
 
     <div class="nav-group" data-group="dev">
-      <div class="nav-group-hdr" data-label="개발" onclick="toggleNavGroup(this.parentElement)">
+      <div class="nav-group-hdr" data-label="개발" onclick="toggleNavGroup(this.parentElement)" role="button" tabindex="0">
         <span class="nav-label">
           <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
           <span>개발</span>
@@ -1226,19 +1226,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
-        <div class="nav-item nav-subitem" data-tab="mix" onclick="showTab('mix', this)">배합 설계</div>
+        <div class="nav-item nav-subitem" data-tab="mix" onclick="showTab('mix', this)" role="button" tabindex="0">배합 설계</div>
       </div></div>
     </div>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">분석</div>
-    <div class="nav-item" data-tab="analysis" data-label="분석 현황" onclick="showTab('analysis', this)">
+    <div class="nav-item" data-tab="analysis" data-label="분석 현황" onclick="showTab('analysis', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
       <span>분석 현황</span>
     </div>
 
     <div class="nav-group" data-group="nutri-analysis">
-      <div class="nav-group-hdr" data-label="영양 분석" onclick="toggleNavGroup(this.parentElement)">
+      <div class="nav-group-hdr" data-label="영양 분석" onclick="toggleNavGroup(this.parentElement)" role="button" tabindex="0">
         <span class="nav-label">
           <svg class="nav-icon" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
           <span>영양 분석</span>
@@ -1246,50 +1246,50 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <svg class="nav-chevron nav-group-arrow" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
       </div>
       <div class="nav-group-body"><div class="nav-group-inner">
-        <div class="nav-item nav-subitem" data-tab="ana" onclick="showTab('ana', this)">영양소 분석</div>
-        <div class="nav-item nav-subitem" data-tab="ana-energy" onclick="showTab('ana-energy', this)">에너지 분석</div>
-        <div class="nav-item nav-subitem" data-tab="std-verify" onclick="showTab('std-verify', this)">기준 검증</div>
+        <div class="nav-item nav-subitem" data-tab="ana" onclick="showTab('ana', this)" role="button" tabindex="0">영양소 분석</div>
+        <div class="nav-item nav-subitem" data-tab="ana-energy" onclick="showTab('ana-energy', this)" role="button" tabindex="0">에너지 분석</div>
+        <div class="nav-item nav-subitem" data-tab="std-verify" onclick="showTab('std-verify', this)" role="button" tabindex="0">기준 검증</div>
       </div></div>
     </div>
 
-    <div class="nav-item" data-tab="amino" data-label="아미노산 분석" onclick="showTab('amino', this)">
+    <div class="nav-item" data-tab="amino" data-label="아미노산 분석" onclick="showTab('amino', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>
       <span>아미노산 분석</span>
     </div>
-    <div class="nav-item" data-tab="warn" data-label="경고 패널" onclick="showTab('warn', this)">
+    <div class="nav-item" data-tab="warn" data-label="경고 패널" onclick="showTab('warn', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
       <span>경고 패널</span>
     </div>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">데이터</div>
-    <div class="nav-item" data-tab="ing" data-label="원료 DB" onclick="showTab('ing', this)">
+    <div class="nav-item" data-tab="ing" data-label="원료 DB" onclick="showTab('ing', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
       <span>원료 DB</span>
     </div>
 
-    <div class="nav-item" data-tab="std" data-label="영양기준 DB" onclick="showTab('std', this)">
+    <div class="nav-item" data-tab="std" data-label="영양기준 DB" onclick="showTab('std', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg>
       <span>영양기준 DB</span>
     </div>
 
-    <div class="nav-item" data-tab="calcbasis" data-label="계산 기준" onclick="showTab('calcbasis', this)">
+    <div class="nav-item" data-tab="calcbasis" data-label="계산 기준" onclick="showTab('calcbasis', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
       <span>계산 기준</span>
     </div>
 
-    <div class="nav-item" data-tab="glossary" data-label="용어" onclick="showTab('glossary', this)">
+    <div class="nav-item" data-tab="glossary" data-label="용어" onclick="showTab('glossary', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/><path d="M8 11h8"/><path d="M8 7h6"/></svg>
       <span>용어</span>
     </div>
 
     <div class="nav-divider" style="margin-top:auto"></div>
     <div class="nav-section-label">시스템</div>
-    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" data-label="관리자" onclick="showTab('admin', this)" style="display:none">
+    <div class="nav-item" data-tab="admin" data-requires-role="super_admin" data-label="관리자" onclick="showTab('admin', this)" style="display:none" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M6.376 18.91a6 6 0 0 1 11.249.003"/><circle cx="12" cy="11" r="4"/></svg>
       <span>관리자</span>
     </div>
-    <div class="nav-item" data-tab="settings" data-label="설정" onclick="showTab('settings', this)">
+    <div class="nav-item" data-tab="settings" data-label="설정" onclick="showTab('settings', this)" role="button" tabindex="0">
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
       <span>설정</span>
     </div>
@@ -1303,8 +1303,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="top-row1">
       <div id="top-view-title">대시보드</div>
       <div id="top-search-wrap">
-        <svg id="top-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
-        <input id="top-search-input" type="text" placeholder="원료, 제품, 레시피 검색..." autocomplete="off" oninput="onGlobalSearchInput()">
+        <svg id="top-search-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
+        <input id="top-search-input" type="text" aria-label="원료, 제품, 레시피 통합 검색" placeholder="원료, 제품, 레시피 검색..." autocomplete="off" oninput="onGlobalSearchInput()">
       </div>
       <div id="top-right">
         <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 업데이트합니다(아직 저장한 적이 없으면 새로 저장)">저장</button>
@@ -1313,19 +1313,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <select id="top-recipe-select" onchange="onTopRecipeChange(this.value)" title="같은 폴더에 저장된 레시피 목록">
           <option value="__none__">레시피 없음</option>
         </select>
-        <button id="top-recipe-folder-btn" onclick="chooseRecipeFolder()" title="레시피 폴더 선택/변경">📂</button>
+        <button id="top-recipe-folder-btn" onclick="chooseRecipeFolder()" title="레시피 폴더 선택/변경" aria-label="레시피 폴더 선택/변경">📂</button>
         <div id="profile-menu-wrap">
-          <button id="profile-btn" onclick="toggleProfileMenu(event)" title="계정">
+          <button id="profile-btn" onclick="toggleProfileMenu(event)" title="계정" aria-label="계정 메뉴">
             <span id="profile-initial">?</span>
           </button>
           <div id="profile-dropdown" class="profile-dropdown">
             <div id="profile-dropdown-email">─</div>
-            <div class="profile-dropdown-item" onclick="closeProfileMenu(); openMyInfoModal()">개인정보</div>
-            <div class="profile-dropdown-item" onclick="closeProfileMenu(); goTab('settings')">⚙ 환경설정</div>
-            <div class="profile-dropdown-item" style="border-top:1px solid var(--border)" onclick="closeProfileMenu(); logout()">로그아웃</div>
+            <div class="profile-dropdown-item" onclick="closeProfileMenu(); openMyInfoModal()" role="button" tabindex="0">개인정보</div>
+            <div class="profile-dropdown-item" onclick="closeProfileMenu(); goTab('settings')" role="button" tabindex="0">⚙ 환경설정</div>
+            <div class="profile-dropdown-item" style="border-top:1px solid var(--border)" onclick="closeProfileMenu(); logout()" role="button" tabindex="0">로그아웃</div>
           </div>
         </div>
-        <button id="notif-btn" onclick="toggleNotifDrawer()" title="알림">
+        <button id="notif-btn" onclick="toggleNotifDrawer()" title="알림" aria-label="알림">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10.268 21a2 2 0 0 0 3.464 0"/>
             <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/>
@@ -1391,7 +1391,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <div class="accent-card">
             <div class="settings-grid">
               <div class="sf-item">
-                <label>이름</label>
+                <label for="pet-name">이름</label>
                 <input id="pet-name" type="text" placeholder="반려동물 이름" onchange="saveToStorage()">
               </div>
               <div class="sf-item">
@@ -1405,7 +1405,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                 </select>
               </div>
               <div class="sf-item">
-                <label>품종</label>
+                <label for="pet-breed">품종</label>
                 <input id="pet-breed" type="text" placeholder="품종 입력" onchange="saveToStorage()">
               </div>
               <div class="sf-item">
@@ -1429,11 +1429,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                 </select>
               </div>
               <div class="sf-item">
-                <label>생년월일 / 나이</label>
+                <label for="pet-age">생년월일 / 나이</label>
                 <input id="pet-age" type="text" placeholder="예: 2022-05-01 또는 3세" onchange="saveToStorage()">
               </div>
               <div class="sf-item">
-                <label>현재 체중 (kg)</label>
+                <label for="sb-bw">현재 체중 (kg)</label>
                 <input id="sb-bw" type="number" value="15" min="1" max="80" step="0.5" onchange="calculate()">
               </div>
             </div>
@@ -1458,7 +1458,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                   </select>
                 </div>
                 <div class="sf-item" style="flex:1 1 0;min-width:0;margin-bottom:0">
-                  <label>현재 건강 상태</label>
+                  <label for="pet-health">현재 건강 상태</label>
                   <input id="pet-health" type="text" placeholder="예: 양호, 신장질환 관리중" onchange="saveToStorage()" style="width:100%;box-sizing:border-box">
                 </div>
               </div>
@@ -1599,15 +1599,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <div class="accent-card">
             <div class="settings-grid">
               <div class="sf-item">
-                <label>제품명</label>
+                <label for="sb-name">제품명</label>
                 <input id="sb-name" type="text" placeholder="제품명 입력">
               </div>
               <div class="sf-item">
-                <label>제조사</label>
+                <label for="sb-maker">제조사</label>
                 <input id="sb-maker" type="text" placeholder="제조사 입력">
               </div>
               <div class="sf-item">
-                <label>제품유형</label>
+                <label for="sb-ptype">제품유형</label>
                 <select id="sb-ptype" onchange="calculate()">
                   <option>주식</option><option>보조식</option><option>간식</option>
                 </select>
@@ -1646,11 +1646,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
       <div class="mix-unit-bar">
         <div class="mix-unit-item" style="min-width:220px">
-          <label>레시피명</label>
+          <label for="mix-recipe-name">레시피명</label>
           <input type="text" id="mix-recipe-name" placeholder="레시피 이름 입력" oninput="onMixRecipeNameInput(this.value)" style="width:100%;text-align:left">
         </div>
         <div class="mix-unit-item">
-          <label>입력 단위</label>
+          <label for="unit-select">입력 단위</label>
           <select id="unit-select" onchange="onUnitChange()">
             <option value="pct">배합 (%)</option>
             <option value="g">중량 (g)</option>
@@ -1658,7 +1658,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </select>
         </div>
         <div class="mix-unit-item">
-          <label>총 배치량</label>
+          <label for="mix-total-g">총 배치량</label>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="number" id="mix-total-g" value="1000" min="1" step="10" oninput="debouncedTotalGChange()" onchange="onTotalGChange()">
             <span style="font-size:11px;color:var(--sub)">g</span>
@@ -2162,7 +2162,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
           <div class="dash-section" style="gap:0">
             <div class="gl-search-row">
-              <input id="gl-search" type="text" placeholder="용어 검색 — 예: ME, DMB, 제한 아미노산, 타우린..." oninput="renderGlossary()">
+              <input id="gl-search" type="text" aria-label="용어 검색" placeholder="용어 검색 — 예: ME, DMB, 제한 아미노산, 타우린..." oninput="renderGlossary()">
               <span class="gl-count" id="gl-count"></span>
             </div>
             <div class="gl-chips" id="gl-chips"></div>
@@ -2335,7 +2335,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="tab-pane" id="tab-ing">
       <div class="hdr-bar">원료 DB — USDA FoodData Central 기반, per 100g as-is</div>
       <div class="ing-toolbar">
-        <input type="text" id="ing-search" placeholder="원료명 검색..." oninput="filterIng()">
+        <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="filterIng()">
         <button id="sort-btn" onclick="toggleSort()"
           style="background:var(--acc2);color:white;border:none;border-radius:3px;
                  padding:5px 12px;cursor:pointer;font-size:11px;font-family:inherit">
@@ -2499,10 +2499,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
      z-index를 아무리 올려도 body 바로 아래(#app의 형제)에 있는 #fab(z-index:900)보다 위로 뜰 수 없다.
      그래서 #fab와 마찬가지로 #app의 형제로 배치한다. -->
 <div id="notif-overlay" onclick="closeNotifDrawer()"></div>
-<div id="notif-drawer" role="dialog" aria-label="알림">
+<div id="notif-drawer" role="dialog" aria-label="알림" aria-modal="false">
   <div id="notif-drawer-hdr">
     <span>알림</span>
-    <button id="notif-close-btn" onclick="closeNotifDrawer()" title="닫기">
+    <button id="notif-close-btn" onclick="closeNotifDrawer()" title="닫기" aria-label="닫기">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
       </svg>
@@ -2537,11 +2537,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </div>
 
 <!-- ══ 원료 추가 모달 ══ -->
-<div class="modal-overlay" id="add-ing-modal">
+<div class="modal-overlay" id="add-ing-modal" role="dialog" aria-modal="true" aria-labelledby="modal-ing-title">
   <div class="modal">
     <div class="modal-hdr">
       <span id="modal-ing-title">새 원료 추가 (per 100g as-is)</span>
-      <button onclick="closeModal('add-ing-modal')">✕</button>
+      <button onclick="closeModal('add-ing-modal')" aria-label="닫기">✕</button>
     </div>
     <div class="modal-body" id="add-ing-body"></div>
     <div class="modal-footer">
@@ -2552,23 +2552,23 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </div>
 
 <!-- ══ 비밀번호 변경 모달 ══ -->
-<div class="modal-overlay" id="pw-change-modal">
+<div class="modal-overlay" id="pw-change-modal" role="dialog" aria-modal="true" aria-labelledby="pw-change-modal-title">
   <div class="modal" style="width:440px">
     <div class="modal-hdr">
-      <span>🔑 비밀번호 변경</span>
-      <button onclick="closeModal('pw-change-modal')">✕</button>
+      <span id="pw-change-modal-title">🔑 비밀번호 변경</span>
+      <button onclick="closeModal('pw-change-modal')" aria-label="닫기">✕</button>
     </div>
     <div class="modal-body" style="padding:22px 28px">
       <div class="pw-field">
-        <label>현재 비밀번호</label>
+        <label for="pw-current">현재 비밀번호</label>
         <input type="password" id="pw-current" autocomplete="off">
       </div>
       <div class="pw-field">
-        <label>새 비밀번호</label>
+        <label for="pw-new">새 비밀번호</label>
         <input type="password" id="pw-new" autocomplete="off">
       </div>
       <div class="pw-field">
-        <label>새 비밀번호 확인</label>
+        <label for="pw-new2">새 비밀번호 확인</label>
         <input type="password" id="pw-new2" autocomplete="off">
       </div>
       <div id="pw-change-err" style="font-size:10px;color:#B03A2E;min-height:14px;margin-top:4px"></div>
@@ -2581,23 +2581,23 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </div>
 
 <!-- ══ 프로필 드롭다운: 개인정보 모달 (설정 탭의 비밀번호 변경과는 별개 화면) ══ -->
-<div class="modal-overlay" id="my-info-modal">
+<div class="modal-overlay" id="my-info-modal" role="dialog" aria-modal="true" aria-labelledby="my-info-modal-title">
   <div class="modal" style="width:420px;max-width:92vw">
     <div class="modal-hdr">
-      <span>개인정보</span>
-      <button onclick="closeModal('my-info-modal')">✕</button>
+      <span id="my-info-modal-title">개인정보</span>
+      <button onclick="closeModal('my-info-modal')" aria-label="닫기">✕</button>
     </div>
     <div class="modal-body" style="padding:22px 28px">
       <div class="pw-field">
-        <label>이메일</label>
+        <label for="my-info-email">이메일</label>
         <input type="text" id="my-info-email" readonly disabled>
       </div>
       <div class="pw-field">
-        <label>새 비밀번호</label>
+        <label for="my-info-pw">새 비밀번호</label>
         <input type="password" id="my-info-pw" autocomplete="new-password">
       </div>
       <div class="pw-field">
-        <label>새 비밀번호 확인</label>
+        <label for="my-info-pw2">새 비밀번호 확인</label>
         <input type="password" id="my-info-pw2" autocomplete="new-password">
       </div>
       <div id="my-info-err" style="font-size:10px;color:#B03A2E;min-height:14px;margin-top:4px"></div>
@@ -2610,19 +2610,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </div>
 
 <!-- ══ 관리자 페이지: 사용자 편집 모달 ══ -->
-<div class="modal-overlay" id="admin-edit-modal">
+<div class="modal-overlay" id="admin-edit-modal" role="dialog" aria-modal="true" aria-labelledby="admin-edit-modal-title">
   <div class="modal" style="width:420px">
     <div class="modal-hdr">
-      <span>✏️ 사용자 편집</span>
-      <button onclick="closeModal('admin-edit-modal')">✕</button>
+      <span id="admin-edit-modal-title">✏️ 사용자 편집</span>
+      <button onclick="closeModal('admin-edit-modal')" aria-label="닫기">✕</button>
     </div>
     <div class="modal-body" style="padding:22px 28px">
       <div class="pw-field">
-        <label>이메일</label>
+        <label for="edit-user-email">이메일</label>
         <input type="text" id="edit-user-email" readonly disabled>
       </div>
       <div class="pw-field">
-        <label>권한</label>
+        <label for="edit-user-role">권한</label>
         <select id="edit-user-role">
           <option value="user">일반 사용자</option>
           <option value="super_admin">관리자</option>
@@ -2630,7 +2630,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div id="edit-user-role-note" style="font-size:10px;color:var(--sub);margin-top:4px;display:none">본인 계정의 권한은 변경할 수 없습니다.</div>
       </div>
       <div class="pw-field">
-        <label>새 비밀번호 (변경할 때만 입력)</label>
+        <label for="edit-user-password">새 비밀번호 (변경할 때만 입력)</label>
         <input type="text" id="edit-user-password" placeholder="6자 이상, 비워두면 변경 안 함" autocomplete="off">
       </div>
       <div id="edit-user-err" style="font-size:10px;color:#B03A2E;min-height:14px;margin-top:4px"></div>
@@ -2643,11 +2643,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </div>
 
 <!-- ══ 제품 유형 판정 근거 모달 ══ -->
-<div class="modal-overlay" id="ptype-evidence-modal">
+<div class="modal-overlay" id="ptype-evidence-modal" role="dialog" aria-modal="true" aria-labelledby="ptype-evidence-modal-title">
   <div class="modal" style="width:600px">
     <div class="modal-hdr">
-      <span>🔍 제품 유형 판정 근거</span>
-      <button onclick="closeModal('ptype-evidence-modal')">✕</button>
+      <span id="ptype-evidence-modal-title">🔍 제품 유형 판정 근거</span>
+      <button onclick="closeModal('ptype-evidence-modal')" aria-label="닫기">✕</button>
     </div>
     <div class="modal-body" id="ptype-evidence-body"></div>
     <div class="modal-footer">
@@ -2657,15 +2657,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </div>
 
 <!-- ══ 기준 검증 — 사용자 등록 기준 편집 모달 ══ -->
-<div class="modal-overlay" id="stdverify-custom-modal">
+<div class="modal-overlay" id="stdverify-custom-modal" role="dialog" aria-modal="true" aria-labelledby="stdverify-custom-modal-title">
   <div class="modal" style="width:520px">
     <div class="modal-hdr">
       <span id="stdverify-custom-modal-title">＋ 새 기준 등록</span>
-      <button onclick="closeModal('stdverify-custom-modal')">✕</button>
+      <button onclick="closeModal('stdverify-custom-modal')" aria-label="닫기">✕</button>
     </div>
     <div class="modal-body">
       <div class="modal-row">
-        <label>기준 이름</label>
+        <label for="stdverify-custom-name">기준 이름</label>
         <input type="text" id="stdverify-custom-name" placeholder="예: 자사 프리미엄 라인 기준">
       </div>
       <div style="font-size:10px;color:var(--sub);margin:8px 0 10px">
@@ -5807,7 +5807,7 @@ function renderContribChart() {
     : `<b>${def.label}</b> 데이터가 없는 원료로만 구성되어 있습니다.`;
 
   chartEl.innerHTML = data.items.map(it => `
-    <div class="ana-contrib-bar-row" onclick="showContribDetail('${it.name.replace(/'/g, "\\'")}')">
+    <div class="ana-contrib-bar-row" onclick="showContribDetail('${it.name.replace(/'/g, "\\'")}')" role="button" tabindex="0" aria-label="${it.name} 기여도 상세 보기">
       <div class="ana-contrib-bar-toprow">
         <span class="ana-contrib-bar-name">${it.name}</span>
         <span class="ana-contrib-bar-meta">배합비 ${it.ratio.toFixed(1)}% · ${fmtContribAmount(it.amount, def.unit)}</span>
@@ -5849,7 +5849,7 @@ function renderContribDetail(name) {
   wrap.innerHTML = `
     <h4>
       <span>${name} <span style="font-weight:400;color:var(--sub);font-size:10px">· 배합비 ${rowInfo.ratio.toFixed(1)}%</span></span>
-      <span style="cursor:pointer;color:var(--sub)" onclick="closeContribDetail()">✕</span>
+      <span style="cursor:pointer;color:var(--sub)" onclick="closeContribDetail()" role="button" tabindex="0" aria-label="닫기">✕</span>
     </h4>
     <div class="ana-contrib-detail-note">
       이 원료는 <b style="color:var(--acc)">${top.label}</b> 공급에 가장 크게 기여합니다 (전체 ${top.label} 공급량의 ${top.pct.toFixed(1)}%).
@@ -6531,8 +6531,9 @@ const GLOSSARY_TERMS = [
 ];
 
 function setGlossaryCat(cat, btn) {
-  document.querySelectorAll('.gl-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.gl-chip').forEach(c => { c.classList.remove('active'); c.setAttribute('aria-pressed', 'false'); });
   btn.classList.add('active');
+  btn.setAttribute('aria-pressed', 'true');
   renderGlossary();
 }
 
@@ -6541,7 +6542,7 @@ function buildGlossaryChips() {
   if (!chipsEl) return;
   const cats = ['전체', ...Array.from(new Set(GLOSSARY_TERMS.map(t => t.cat)))];
   chipsEl.innerHTML = cats.map((c, i) =>
-    `<span class="gl-chip${i===0 ? ' active' : ''}" onclick="setGlossaryCat('${c}', this)">${c}</span>`
+    `<span class="gl-chip${i===0 ? ' active' : ''}" onclick="setGlossaryCat('${c}', this)" role="button" tabindex="0" aria-pressed="${i===0}">${c}</span>`
   ).join('');
 }
 
@@ -7179,6 +7180,17 @@ document.addEventListener('click', (e) => {
   const wrap = document.getElementById('top-search-wrap');
   const box = document.getElementById('top-search-results');
   if (wrap && box && !wrap.contains(e.target) && !box.contains(e.target)) closeGlobalSearch();
+});
+
+// 접근성: <button>이 아닌 div/span에 role="button"으로 붙인 커스텀 클릭 요소(사이드바 메뉴,
+// 프로필 드롭다운 항목 등)를 Enter/Space로도 활성화할 수 있게 하는 공통 위임 핸들러.
+// 네이티브 button/a는 이미 자체적으로 처리하므로 대상에서 제외한다.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('[role="button"]');
+  if (!el || el.tagName === 'BUTTON' || el.tagName === 'A') return;
+  e.preventDefault();
+  el.click();
 });
 
 // 사이드바 아코디언 그룹 펼침/접힘 — 그룹 헤더 클릭 시 호출된다.
