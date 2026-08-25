@@ -622,6 +622,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-options { flex: 1; overflow-y: auto; }
 .mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
 .mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
+.mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
 .mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); }
 .mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
                                font-size: 11px; height: 34px; padding: 0 6px;
@@ -4170,10 +4171,14 @@ function buildIngOptions() {
          names.map(n => `<option value="${n}">${n}</option>`).join('');
 }
 
+// 맨 위에 항상 "선택 안 함"을 붙여, 이미 고른 원료를 다시 공란으로 되돌릴 수 있게 한다
+// (검색어로 걸러지지 않고 항상 노출). data-name=""은 하단 클릭 핸들러에서 그대로 빈 값
+// 선택으로 처리되어 별도의 새 드롭다운 없이 기존 컴포넌트만으로 동작한다.
 function ingListItemsHTML(query) {
+  const noneItem = '<div class="mix-ing-opt mix-ing-opt-none" data-name="">— 선택 안 함 —</div>';
   const names = getSortedIngNames(query);
-  if (names.length === 0) return '<div class="mix-ing-empty">검색 결과가 없습니다</div>';
-  return names.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
+  if (names.length === 0) return noneItem + '<div class="mix-ing-empty">검색 결과가 없습니다</div>';
+  return noneItem + names.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
 }
 
 // 재료 검색 드롭다운 패널은 배합 테이블(스크롤 컨테이너) 안에서 잘리지 않도록
@@ -4214,7 +4219,14 @@ function getMixIngListEl() {
       if (mixIngSelectCallback) {
         mixIngSelectCallback(opt.dataset.name);
       } else {
-        setIngComboValue(mixIngOpenWrap, opt.dataset.name);
+        const name = opt.dataset.name;
+        setIngComboValue(mixIngOpenWrap, name);
+        // "선택 안 함" — 원료뿐 아니라 배합비(중량) 입력도 새 행과 같은 초기 상태(0)로 되돌린다.
+        // calculate()가 뒤이어 실행되며 실제 중량·영양 계산값과 알레르기 경고 배지까지 함께 갱신된다.
+        if (!name) {
+          const ratioInput = mixIngOpenWrap.closest('.mix-row')?.querySelector('input[type=number]');
+          if (ratioInput) ratioInput.value = 0;
+        }
         onMixChange();
       }
       closeIngDropdown();
