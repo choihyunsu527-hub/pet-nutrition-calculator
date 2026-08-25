@@ -256,9 +256,11 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 }
 
 /* ── 레이아웃 ── */
-/* 창을 좁혀도 사이드바(260px)+본문 레이아웃 비율이 찌그러지지 않도록 최소 폭을 고정하고,
-   그보다 좁아지면 레이아웃을 축소하는 대신 body의 overflow-x:auto로 가로 스크롤을 내보낸다. */
-#app { display: flex; flex: 1; overflow: hidden; min-width: 1200px; }
+/* 사이드바(260px)는 고정 폭을 유지하고 본문(#main)은 flex:1·min-width:0로 창 폭에 맞춰
+   자연스럽게 줄어든다. 표처럼 자체 최소 폭이 필요한 영역(#mix-table-wrap, #ing-table,
+   #std-table 등)은 각자 overflow-x:auto로 스스로 가로 스크롤을 내보내므로, 여기서 전체
+   앱 폭을 강제로 고정할 필요가 없다. */
+#app { display: flex; flex: 1; overflow: hidden; min-width: 0; }
 #sidebar { display: flex; flex-direction: column; width: 260px; flex-shrink: 0; box-sizing: border-box;
            background: var(--topbar-bg); padding: 22px 16px; overflow-y: auto; overflow-x: hidden;
            transition: width .25s ease; }
@@ -802,9 +804,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-panel { background: var(--panel-bg);
               padding: 24px; transition: background .25s ease;
               word-break: keep-all; overflow-wrap: break-word; }
-/* 자동 정렬 그리드 — 카드는 항상 동일한 폭의 고정 3열로 배치됨(사용자가 옮길 수 없음, 창이 좁아지면
-   레이아웃 대신 가로 스크롤로 대응) */
-.dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: stretch; }
+/* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
+   창이 좁아져 카드 폭이 최소치보다 줄어들면 다음 줄로 자연스럽게 내려간다. */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: stretch; }
 .dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: 12px;
                  box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
                  box-sizing: border-box; }
@@ -814,7 +816,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-section h3 .linkable { cursor: pointer; transition: color .35s ease; }
 .dash-section h3 .linkable:hover { color: var(--acc); }
 .dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 8px; }
-.product-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.product-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .product-info-box { background: var(--gray-grad); border: 1px solid var(--border); border-radius: 12px;
              padding: 12px 14px; box-shadow: var(--sh); }
 .product-info-box .pi-label { font-size: 10px; color: var(--sub); margin-bottom: 5px; font-weight: 700; }
