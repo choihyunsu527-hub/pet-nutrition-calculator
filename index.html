@@ -137,25 +137,30 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                     display: flex; align-items: center; gap: 10px; flex-shrink: 0;
                     width: 360px; max-width: 400px; height: 40px; box-sizing: border-box;
                     background: var(--side2); border: 1px solid var(--border); border-radius: 10px;
-                    padding: 0 14px; transition: border-color .2s ease, box-shadow .2s ease; }
+                    padding: 0 14px; transition: border-color .2s ease, box-shadow .2s ease,
+                    border-radius .15s ease; z-index: 501; }
 #top-search-wrap:hover { border-color: var(--sub); }
 #top-search-wrap:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+#top-search-wrap.search-open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 #top-search-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--sub);
                     fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 #top-search-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
                      font-size: 13px; font-family: inherit; color: var(--text); }
 #top-search-input::placeholder { color: var(--sub); }
-#top-search-results { position: fixed; background: var(--inp); border: 1px solid var(--border);
-                       border-radius: 10px; box-shadow: var(--sh-md); max-height: 360px;
-                       overflow-y: auto; z-index: 500; display: none; }
+#top-search-results { position: fixed; box-sizing: border-box; background: var(--side2);
+                       border: 1px solid var(--border); border-top: none;
+                       border-radius: 0 0 10px 10px;
+                       box-shadow: 0 12px 24px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08);
+                       max-height: 360px; overflow-y: auto; z-index: 500; display: none; }
 #top-search-results.open { display: block; }
-.tsr-item { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-            padding: 8px 14px; font-size: 12px; color: var(--text); cursor: pointer; }
+.tsr-item { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+            height: 40px; padding: 0 16px; font-size: 13px; line-height: 1; color: var(--text);
+            cursor: pointer; }
 .tsr-item:hover { background: var(--hover-tint); }
 .tsr-item + .tsr-item { border-top: 1px solid var(--border); }
 .tsr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tsr-src { font-size: 10px; color: var(--sub); flex-shrink: 0; white-space: nowrap; }
-.tsr-empty { padding: 14px; font-size: 12px; color: var(--sub); text-align: center; }
+.tsr-src { font-size: 11px; color: var(--sub); flex-shrink: 0; white-space: nowrap; }
+.tsr-empty { padding: 16px; font-size: 12px; color: var(--sub); text-align: center; }
 .search-hit-flash { animation: search-hit-flash-anim 1.6s ease; }
 @keyframes search-hit-flash-anim { 0%, 100% { background: transparent; } 15%, 60% { background: var(--calc); } }
 
@@ -7079,11 +7084,13 @@ function renderGlobalSearchResults(results) {
           <span class="tsr-name">${escHtml(r.name)}</span>
           <span class="tsr-src">${escHtml(r.src)}</span>
         </div>`).join('');
+  const zoom = getBodyZoom();
   const r = wrap.getBoundingClientRect();
-  box.style.left = r.left + 'px';
-  box.style.top = (r.bottom + 6) + 'px';
-  box.style.width = r.width + 'px';
+  box.style.left = (r.left / zoom) + 'px';
+  box.style.top = (r.bottom / zoom) + 'px';
+  box.style.width = (r.width / zoom) + 'px';
   box.classList.add('open');
+  wrap.classList.add('search-open');
 }
 
 function onGlobalSearchInput() {
@@ -7096,6 +7103,7 @@ function onGlobalSearchInput() {
 function closeGlobalSearch() {
   const box = document.getElementById('top-search-results');
   if (box) { box.classList.remove('open'); box.innerHTML = ''; }
+  document.getElementById('top-search-wrap')?.classList.remove('search-open');
   lastSearchResults = [];
 }
 
