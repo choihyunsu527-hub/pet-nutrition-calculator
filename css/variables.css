@@ -26,8 +26,11 @@
   --nrc-bg:   rgba(21,101,192,0.16);   --nrc-t: #1565C0;
   --aa-bg:    rgba(0,121,107,0.16);    --aa-t:  #00695C;
   --fed-bg:   rgba(173,20,87,0.16);    --fed-t: #AD1457;
-  --sh:       none;
-  --sh-md:    none;
+  /* 카드가 배경에서 아주 살짝만 떠 보이도록 하는 은은한 그림자 — 기존엔 둘 다 none이라
+     화면 전체에 그림자 자체가 없었다. --sh: 본문에 상시 떠 있는 카드/패널용(더 옅음).
+     --sh-md: 모달/드롭다운/드로어처럼 다른 콘텐츠 위에 뜨는 오버레이용(한 단계 더 또렷함). */
+  --sh:       0 1px 2px rgba(30,39,51,0.06);
+  --sh-md:    0 8px 24px rgba(30,39,51,0.10), 0 2px 6px rgba(30,39,51,0.06);
   --body-bg:    #eef1f3;
   --topbar-bg:  #1e2733;
   --panel-bg:   #eef1f3;
@@ -37,6 +40,10 @@
   --pill-text:  #FFFFFF;
   --scrollbar-thumb:       rgba(0,0,0,0.2);
   --scrollbar-thumb-hover: rgba(0,0,0,0.35);
+  /* 카드/패널 표준 radius — 화면 전체에서 이미 가장 많이 쓰이던 12px/16px 값을 토큰화한 것으로,
+     새 값을 만든 게 아니라 기존에 흩어져 있던 동일 값들을 한 곳에서 관리하기 위함이다. */
+  --radius-md: 12px;
+  --radius-lg: 16px;
 }
 html[data-theme="dark"] {
   --side:     #1e2733;
@@ -64,8 +71,11 @@ html[data-theme="dark"] {
   --nrc-bg:   rgba(100,181,246,0.2);  --nrc-t: #90CAF9;
   --aa-bg:    rgba(77,182,172,0.2);   --aa-t:  #80CBC4;
   --fed-bg:   rgba(240,98,146,0.2);   --fed-t: #F48FB1;
-  --sh:       none;
-  --sh-md:    none;
+  /* 다크 테마는 어두운 배경 위라 밝은 그림자는 안 보이므로, 더 짙고 살짝 더 넓게 퍼지는
+     검은 계열 그림자로 같은 "살짝 떠 있는" 느낌을 낸다(밝아지거나 화면이 뿌예지지 않도록
+     블러/투명도는 라이트 테마보다 절제된 수준으로 유지). */
+  --sh:       0 1px 2px rgba(0,0,0,0.25);
+  --sh-md:    0 8px 24px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.25);
   --body-bg:    #1e2733;
   --topbar-bg:  #1e2733;
   --panel-bg:   #1e2733;
