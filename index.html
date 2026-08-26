@@ -945,7 +945,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                               text-transform: uppercase; letter-spacing: .4px; }
 /* ── 대시보드: 최근 레시피 카드 — 드롭다운이 아닌 세로 목록. 기존 .dash-section 톤 재사용 ── */
 .dash-recent-list { display: flex; flex-direction: column; gap: 6px; }
-.dash-recent-item { display: block; width: 100%; text-align: left; background: var(--gray-grad);
+/* 항목 행 — 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 토글(.dash-fav-toggle-btn)을
+   형제 요소로 나란히 둬, 별 클릭이 레시피 열기 이벤트와 완전히 분리되게 한다. */
+.dash-recent-row { display: flex; align-items: stretch; gap: 6px; }
+.dash-recent-item { display: block; flex: 1; min-width: 0; text-align: left; background: var(--gray-grad);
                      border: 1px solid var(--border); border-radius: var(--radius-md);
                      padding: 9px 12px; font-size: 11.5px; font-weight: 600; color: var(--text);
                      cursor: pointer; font-family: inherit; box-shadow: var(--sh);
@@ -953,18 +956,18 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                      transition: border-color .15s ease, color .15s ease; }
 .dash-recent-item:hover { border-color: var(--acc); color: var(--acc); }
 .dash-recent-empty { font-size: 11px; color: var(--sub); padding: 4px 2px; }
-/* ── 대시보드: 최근 레시피 카드 헤더 — 최근/즐겨찾기 탭(.seg-control 재사용) + 현재 레시피
-   즐겨찾기 토글 버튼. h3 기본 스타일(테두리·간격)은 그대로 두고 배치만 flex로 조정한다. ── */
+/* ── 대시보드: 최근 레시피 카드 헤더 — 최근/즐겨찾기 탭(.seg-control 재사용) ── */
 .dash-recent-hdr { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .dash-recent-tabs { flex-shrink: 0; }
 .dash-recent-tabs .seg-btn { padding: 4px 10px; }
-.dash-fav-toggle-btn { width: 24px; height: 24px; padding: 0; flex-shrink: 0; margin-left: auto;
+/* 항목별 즐겨찾기 별 버튼(☆/★) — 배경이 있는 카드 톤에 맞춰 테두리를 두른 정사각 버튼 */
+.dash-fav-toggle-btn { width: 34px; flex-shrink: 0; padding: 0;
                         display: flex; align-items: center; justify-content: center;
-                        background: none; border: none; border-radius: 6px; color: var(--sub); cursor: pointer;
-                        transition: background-color .15s ease, color .15s ease; }
-.dash-fav-toggle-btn:hover:not(:disabled) { background: var(--hover-tint); color: var(--acc); }
+                        background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
+                        color: var(--sub); cursor: pointer; box-shadow: var(--sh);
+                        transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+.dash-fav-toggle-btn:hover { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
 .dash-fav-toggle-btn.active { color: var(--acc); }
-.dash-fav-toggle-btn:disabled { cursor: not-allowed; opacity: .4; }
 
 /* ── 기준 검증 탭 ── */
 .stdverify-deficit-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
@@ -1686,7 +1689,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근 레시피</button>
               <button type="button" class="seg-btn" data-view="favorite" onclick="setDashRecipeView('favorite')">즐겨찾기</button>
             </div>
-            <button type="button" id="dash-fav-toggle-btn" class="dash-fav-toggle-btn" onclick="toggleCurrentRecipeFavorite()" aria-label="레시피를 먼저 열거나 저장하세요" disabled></button>
           </h3>
           <div class="dash-recent-list" id="dash-recent-recipe-list">
             <div class="dash-recent-empty">최근 레시피가 없습니다.</div>
@@ -7952,7 +7954,6 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   const tr2 = document.getElementById('top-recipe-select');
   if (tr2) tr2.value = [...tr2.options].some(o => o.value === displayName) ? displayName : '__none__';
   recordRecentRecipe(displayName);
-  syncDashFavoriteButton();
   updateUnitHint();
   calculate();
 
@@ -8189,13 +8190,9 @@ function renderRecentRecipes() {
   const box = document.getElementById('dash-recent-recipe-list');
   if (!box || dashRecipeView !== 'recent') return;
   const list = getRecentRecipes();
-  if (!list.length) {
-    box.innerHTML = '<div class="dash-recent-empty">최근 레시피가 없습니다.</div>';
-    return;
-  }
-  box.innerHTML = list.map(r =>
-    `<button type="button" class="dash-recent-item" onclick="onRecentRecipeSelect('${escHtml(r.name).replace(/'/g,"\\'")}')" title="${escHtml(r.name)}">${escHtml(r.name.replace(/\.json$/i,''))}</button>`
-  ).join('');
+  box.innerHTML = !list.length
+    ? '<div class="dash-recent-empty">최근 레시피가 없습니다.</div>'
+    : list.map(r => dashRecipeRowHtml(r.name)).join('');
 }
 
 // 최근 레시피 클릭 — 연결된 폴더 안에서 같은 파일명을 찾아 여는 기존 onTopRecipeChange를 그대로 재사용한다.
@@ -8239,34 +8236,30 @@ function renderFavoriteRecipes() {
   const list = getFavoriteRecipes();
   box.innerHTML = !list.length
     ? '<div class="dash-recent-empty">즐겨찾기한 레시피가 없습니다.</div>'
-    : list.map(r =>
-        `<button type="button" class="dash-recent-item" onclick="onRecentRecipeSelect('${escHtml(r.name).replace(/'/g,"\\'")}')" title="${escHtml(r.name)}">${escHtml(r.name.replace(/\.json$/i,''))}</button>`
-      ).join('');
+    : list.map(r => dashRecipeRowHtml(r.name)).join('');
 }
 
-// 현재 열려 있는 레시피(currentRecipeFilename)를 즐겨찾기에 추가/제거한다.
-function toggleCurrentRecipeFavorite() {
-  const name = currentRecipeFilename;
+// 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 별 버튼(.dash-fav-toggle-btn)을 형제로
+// 묶어 한 행을 그린다(최근/즐겨찾기 탭 공용) — 별 클릭이 레시피 열기 이벤트와 완전히 분리된다.
+function dashRecipeRowHtml(name) {
+  const safe = escHtml(name).replace(/'/g, "\\'");
+  const fav = isFavoriteRecipe(name);
+  return `<div class="dash-recent-row">
+    <button type="button" class="dash-recent-item" onclick="onRecentRecipeSelect('${safe}')" title="${escHtml(name)}">${escHtml(name.replace(/\.json$/i,''))}</button>
+    <button type="button" class="dash-fav-toggle-btn${fav ? ' active' : ''}" onclick="toggleRecentFavorite('${safe}')" aria-label="${fav ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}">${svgStarIcon(fav, 14)}</button>
+  </div>`;
+}
+
+// 목록 항목의 별 버튼 클릭 — feedcalc_v4_favorite_recipes에 추가/제거하고,
+// 현재 보이는 탭(최근/즐겨찾기)만 즉시 다시 그린다(즐겨찾기 탭에서 제거 시 바로 사라짐).
+function toggleRecentFavorite(name) {
   if (!name) return;
   let list = getFavoriteRecipes();
   const idx = list.findIndex(r => r.name === name);
   if (idx >= 0) list.splice(idx, 1);
   else list.unshift({ name, ts: Date.now() });
   localStorage.setItem(FAVORITE_RECIPES_KEY, JSON.stringify(list));
-  syncDashFavoriteButton();
-  if (dashRecipeView === 'favorite') renderFavoriteRecipes();
-}
-
-// 즐겨찾기 토글 버튼의 별 아이콘(outline/filled)과 aria-label을 현재 열린 레시피 기준으로 갱신한다.
-function syncDashFavoriteButton() {
-  const btn = document.getElementById('dash-fav-toggle-btn');
-  if (!btn) return;
-  const name = currentRecipeFilename;
-  const fav = isFavoriteRecipe(name);
-  btn.disabled = !name;
-  btn.classList.toggle('active', fav);
-  btn.innerHTML = svgStarIcon(fav, 16);
-  btn.setAttribute('aria-label', !name ? '레시피를 먼저 열거나 저장하세요' : (fav ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'));
+  if (dashRecipeView === 'favorite') renderFavoriteRecipes(); else renderRecentRecipes();
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -9135,7 +9128,6 @@ function init() {
   calculate();
   initRecipeFolder();
   renderRecentRecipes();
-  syncDashFavoriteButton();
 
   const savedTab = sessionStorage.getItem('feedcalc_v4_tab');
   if (savedTab && document.getElementById('tab-'+savedTab)) goTab(savedTab);
