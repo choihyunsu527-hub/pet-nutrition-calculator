@@ -8252,6 +8252,22 @@ async function refreshRecipeList() {
     .concat(names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n.replace(/\.json$/i,'')}</option>`))
     .concat(['<option value="__change__">폴더 변경…</option>']);
   setTopRecipeOptions(opts.join(''));
+
+  // 최근/즐겨찾기에는 있지만 실제 폴더에는 없는(삭제된) 파일을 정리한다 — names가 실제
+  // 폴더 상태의 source of truth. 변경이 있을 때만 localStorage를 다시 쓰고 다시 그린다.
+  const nameSet = new Set(names);
+  const recentList = getRecentRecipes();
+  const prunedRecent = recentList.filter(r => nameSet.has(r.name));
+  if (prunedRecent.length !== recentList.length) {
+    localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(prunedRecent));
+    renderRecentRecipes();
+  }
+  const favoriteList = getFavoriteRecipes();
+  const prunedFavorite = favoriteList.filter(r => nameSet.has(r.name));
+  if (prunedFavorite.length !== favoriteList.length) {
+    localStorage.setItem(FAVORITE_RECIPES_KEY, JSON.stringify(prunedFavorite));
+    renderFavoriteRecipes();
+  }
 }
 
 async function onTopRecipeChange(name) {
