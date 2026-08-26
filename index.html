@@ -954,19 +954,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* ── 대시보드: 핵심 지표(위 dash-top-row) 아래의 프로필/설정 카드 — "기타 정보" 계층 ──
    기존 .dash-grid/.dash-section은 다른 탭에서도 공유하는 카드 시스템이라 그대로 두고,
    대시보드 하단 그리드에만 붙는 보조 클래스로 배치만 조정한다.
-   1) align-items: stretch(그리드 기본값) — 4개 카드 모두 그 행에서 가장 높은 카드에 맞춰
-      같은 높이가 되게 한다. .dash-section이 이미 display:flex; flex-direction:column이라
-      내용이 적은 카드도 내용은 위쪽에 그대로 붙고 남는 공간만 카드 아래쪽에 자연스럽게
-      생긴다(내용을 억지로 늘리지 않음).
+   1) align-items: start — 각 카드는 자기 내용 높이만큼만 차지한다(같은 행의 다른 카드가
+      더 길어도 억지로 늘어나지 않음).
    2) 2×2 그리드로 배치한다. .dash-profile-grid는 자체 그리드를 갖는 대신 display:contents로
       박스를 없애 그 안의 3개 카드가 dash-bottom-grid의 그리드에 직접 참여하게 한다(HTML
       구조는 그대로 둔 채 문서 순서 그대로 자동 배치) — 그 결과 1행에는 내용이 많은
       "기본 정보"/"생활 및 건강 정보"가, 2행에는 내용이 적은 "영양 계산 설정"/"최근
-      레시피"가 짝지어져 settings-grid가 좁은 폭에 눌려 1열로 강제 축소되던 문제가 풀리고,
-      align-items:stretch도 행 단위로만 높이를 맞춰 카드 간 높이 격차가 줄어든다.
+      레시피"가 짝지어져 settings-grid가 좁은 폭에 눌려 1열로 강제 축소되던 문제가 풀린다.
       minmax(0, 1fr)은 자식(특히 최근 레시피의 긴 이름)의 내용 길이가 트랙 폭을 늘리지
       못하게 막는다 — fr 트랙의 기본 최소폭은 auto(=내용의 min-content)이기 때문. */
-.dash-bottom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: stretch; margin-top: 20px; }
+.dash-bottom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; margin-top: 20px; }
 #tab-dash .dash-profile-grid { display: contents; }
 #tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
 #tab-dash .dash-section h3 { font-size: 10.5px; font-weight: 700; color: var(--sub);
@@ -999,9 +996,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                      transition: border-color .15s ease, color .15s ease; }
 .dash-recent-item:hover { border-color: var(--acc); color: var(--acc); }
 .dash-recent-empty { font-size: 11px; color: var(--sub); padding: 4px 2px; }
-/* ── 대시보드: 최근 레시피 카드 헤더 — 최근/즐겨찾기 탭(.seg-control 재사용) ── */
-.dash-recent-hdr { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.dash-recent-tabs { width: 100%; flex-wrap: nowrap; }
+/* ── 대시보드: 최근 레시피 카드 헤더 — 다른 3개 카드와 같이 h3에 고정 제목을 쓰고,
+   그 아래에 최근/즐겨찾기 탭(.seg-control 재사용)을 별도 줄로 둔다. ── */
+.dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 8px; }
 .dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
 /* 항목별 즐겨찾기 별 버튼(☆/★) — 배경이 있는 카드 톤에 맞춰 테두리를 두른 정사각 버튼 */
 .dash-fav-toggle-btn { width: 34px; flex-shrink: 0; padding: 0;
@@ -1729,12 +1726,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         </div>
         </div>
         <div class="dash-section">
-          <h3 class="dash-recent-hdr">
-            <div class="seg-control dash-recent-tabs">
-              <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근 레시피</button>
-              <button type="button" class="seg-btn" data-view="favorite" onclick="setDashRecipeView('favorite')">즐겨찾기</button>
-            </div>
-          </h3>
+          <h3>최근 레시피</h3>
+          <div class="seg-control dash-recent-tabs">
+            <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근 레시피</button>
+            <button type="button" class="seg-btn" data-view="favorite" onclick="setDashRecipeView('favorite')">즐겨찾기</button>
+          </div>
           <div class="dash-recent-list" id="dash-recent-recipe-list">
             <div class="dash-recent-empty">최근 레시피가 없습니다.</div>
           </div>
