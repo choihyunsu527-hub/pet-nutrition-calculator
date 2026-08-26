@@ -123,6 +123,8 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                        transition: border-color .15s ease, background-color .15s ease; }
 .top-recipe-btn-sub:hover { border-color: var(--acc); background: var(--hover-tint); }
 .top-recipe-btn-sub:active { transform: scale(0.97); }
+.top-recipe-btn-sub:disabled { opacity: .4; cursor: not-allowed; }
+.top-recipe-btn-sub:disabled:hover { border-color: var(--border); background: transparent; }
 /* "새 레시피" 뒤에만 구분선을 둬 "레시피 저장 계열"과 "폴더 위치" 그룹을 시각적으로 나눈다 */
 button.top-recipe-btn-sub[onclick="newRecipe()"] { position: relative; margin-right: 6px; }
 button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position: absolute; right: -9px; top: 50%;
@@ -1447,6 +1449,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <input id="top-search-input" type="text" aria-label="원료, 제품, 레시피 통합 검색" placeholder="원료, 제품, 레시피 검색..." autocomplete="off" oninput="onGlobalSearchInput()">
       </div>
       <div id="top-right">
+        <button id="top-undo-btn" class="top-recipe-btn-sub" onclick="undoRecipeChange()" title="실행 취소" disabled>↶ 실행 취소</button>
+        <button id="top-redo-btn" class="top-recipe-btn-sub" onclick="redoRecipeChange()" title="다시 실행" disabled>↷ 다시 실행</button>
         <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 업데이트합니다(아직 저장한 적이 없으면 새로 저장)">저장</button>
         <button class="top-recipe-btn-sub" onclick="saveRecipeAs()" title="현재 레시피를 다른 이름으로 복제해 새 레시피로 저장">다른 이름으로 저장</button>
         <button class="top-recipe-btn-sub" onclick="newRecipe()" title="새 레시피를 시작합니다">새 레시피</button>
@@ -5545,6 +5549,7 @@ function calculate() {
   renderAnaContribPanel(result, rows);
   saveToStorage();
   syncPanelWidths();
+  recordUndoSnapshot();
 }
 
 function syncPanelWidths() {
@@ -7960,6 +7965,86 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   // calculate() 내부의 saveToStorage()가 dirty 플래그를 세우지만, 방금 불러온 레시피는
   // 아직 아무것도 수정하지 않은 상태이므로 되돌린다(= 문서를 "연" 것이지 "수정"한 게 아니다).
   isDirty = false;
+
+  // Undo/Redo 복원(restoreRecipeSnapshot)이 이 함수를 재사용할 때는 히스토리를 건드리면 안
+  // 되므로 건너뛴다 — 그 외(파일 열기/최근·즐겨찾기에서 열기)에는 다른 문서를 연 것이므로
+  // 이전 문서의 되돌리기 기록은 의미가 없어 초기화한다.
+  if (!isRestoringRecipeHistory) resetRecipeHistory();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 실행 취소 / 다시 실행 — collectRecipeData() 스냅샷을 메모리 스택에 쌓아두고,
+// 복원은 기존 applyRecipeData()를 재사용한다(파일 저장/불러오기 구조는 건드리지 않음).
+// 스택은 새로고침 시(= 새 레시피/`newRecipe()`가 location.reload()로 처리) 자연히 비워진다.
+// ════════════════════════════════════════════════════════════════════════════
+let undoStack = [];
+let redoStack = [];
+let lastRecipeSnapshot = null;       // 마지막으로 확정(커밋)된 상태의 JSON 문자열
+let isRestoringRecipeHistory = false; // undo/redo 복원 중에는 스냅샷을 다시 기록하지 않기 위한 가드
+
+// calculate() 끝에서 매번 호출된다. calculate()는 debounce가 걸린 입력 핸들러(예:
+// debouncedMixChange/debouncedTotalGChange)의 콜백으로만 실행되거나, 행 추가/삭제 같은
+// 즉시 확정되는 동작에서 직접 호출되므로, 여기서 기록하면 "타이핑 한 글자마다"가 아니라
+// 300ms 디바운스가 끝나 값이 확정된 시점(또는 명시적 액션 시점) 기준으로 기록된다.
+function recordUndoSnapshot() {
+  if (isRestoringRecipeHistory) return;
+  const snap = JSON.stringify(collectRecipeData());
+  if (lastRecipeSnapshot === null) {
+    // 아직 기준 상태가 없으면(최초 로드) 지금 상태를 기준점으로만 세우고 스택에는 쌓지 않는다.
+    lastRecipeSnapshot = snap;
+    updateUndoRedoButtons();
+    return;
+  }
+  if (snap === lastRecipeSnapshot) return; // 실제 변경이 없으면 기록하지 않는다.
+  undoStack.push(lastRecipeSnapshot);
+  lastRecipeSnapshot = snap;
+  redoStack = []; // 새 변경이 생기면 다시 실행 스택은 비운다.
+  updateUndoRedoButtons();
+}
+
+// 다른 레시피를 열었을 때(로드/최근/즐겨찾기) 이전 문서의 되돌리기 기록은 의미가 없으므로
+// 스택을 비우고, 방금 로드된 상태를 새 기준점으로 삼는다.
+function resetRecipeHistory() {
+  undoStack = [];
+  redoStack = [];
+  lastRecipeSnapshot = JSON.stringify(collectRecipeData());
+  updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+  const undoBtn = document.getElementById('top-undo-btn');
+  const redoBtn = document.getElementById('top-redo-btn');
+  if (undoBtn) undoBtn.disabled = !undoStack.length;
+  if (redoBtn) redoBtn.disabled = !redoStack.length;
+}
+
+// applyRecipeData()로 스냅샷을 복원한다 — 문서 식별자(현재 열려 있는 파일명/핸들)는 그대로
+// 유지해 "다른 레시피를 연 것"이 아니라 "같은 문서를 편집 취소/다시 실행한 것"으로 취급한다.
+function restoreRecipeSnapshot(snapJSON) {
+  isRestoringRecipeHistory = true;
+  const data = JSON.parse(snapJSON);
+  applyRecipeData(data, currentRecipeFilename, currentRecipeFileHandle);
+  isRestoringRecipeHistory = false;
+  // applyRecipeData()는 "레시피를 여는" 흐름이라 끝에서 isDirty = false로 되돌리지만,
+  // 실행 취소/다시 실행은 저장되지 않은 편집 상태이므로 여기서 다시 true로 바꾼다.
+  isDirty = true;
+  updateUndoRedoButtons();
+}
+
+function undoRecipeChange() {
+  if (!undoStack.length) return;
+  const prev = undoStack.pop();
+  redoStack.push(lastRecipeSnapshot);
+  lastRecipeSnapshot = prev;
+  restoreRecipeSnapshot(prev);
+}
+
+function redoRecipeChange() {
+  if (!redoStack.length) return;
+  const next = redoStack.pop();
+  undoStack.push(lastRecipeSnapshot);
+  lastRecipeSnapshot = next;
+  restoreRecipeSnapshot(next);
 }
 
 // 레시피 불러오기 = 기존 문서를 "여는" 동작이다(복사본을 만들지 않음).
