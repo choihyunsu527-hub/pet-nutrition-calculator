@@ -95,7 +95,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
    불필요하게 박스처럼 보이던 장식을 줄임. 높이도 32px로 통일해 프로필/알림 아이콘과 정렬. */
 #top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 #top-recipe { font-size: 11px; font-weight: 600; color: var(--sub); white-space: nowrap; }
-#top-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
+#top-recipe-select, #top-recent-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
                       border: 1px solid var(--border); border-radius: 6px; padding: 0 8px;
                       height: 32px; box-sizing: border-box; max-width: 160px;
                       cursor: pointer; font-family: inherit; outline: none;
@@ -106,7 +106,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
                           display: inline-flex; align-items: center; justify-content: center;
                           position: relative;
                           transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
-#top-recipe-folder-btn:hover, #top-recipe-select:hover { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
+#top-recipe-folder-btn:hover, #top-recipe-select:hover, #top-recent-recipe-select:hover { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
 /* 폴더 위치 그룹(select+폴더 버튼)과 계정/알림 그룹을 나누는 구분선 — 폴더 버튼 오른쪽에 둔다 */
 #top-recipe-folder-btn { margin-right: 6px; }
 #top-recipe-folder-btn::after { content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
@@ -1426,6 +1426,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <button class="top-recipe-btn-sub" onclick="newRecipe()" title="새 레시피를 시작합니다">새 레시피</button>
         <select id="top-recipe-select" onchange="onTopRecipeChange(this.value)" title="같은 폴더에 저장된 레시피 목록">
           <option value="__none__">레시피 없음</option>
+        </select>
+        <select id="top-recent-recipe-select" onchange="onRecentRecipeSelect(this.value)" title="최근에 불러온 레시피">
+          <option value="__none__">최근 레시피</option>
         </select>
         <button id="top-recipe-folder-btn" onclick="chooseRecipeFolder()" title="레시피 폴더 선택/변경" aria-label="레시피 폴더 선택/변경"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg></button>
         <div id="profile-menu-wrap">
@@ -7908,6 +7911,7 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   document.getElementById('recipe-name').innerHTML = (fileHandle ? svgIcon('file', 12) : svgIcon('folder', 12)) + ' ' + escHtml(displayName);
   const tr2 = document.getElementById('top-recipe-select');
   if (tr2) tr2.value = [...tr2.options].some(o => o.value === displayName) ? displayName : '__none__';
+  recordRecentRecipe(displayName);
   updateUnitHint();
   calculate();
 
@@ -8112,6 +8116,51 @@ async function onTopRecipeChange(name) {
   } catch(e) {
     alert('레시피를 불러올 수 없습니다: ' + e.message);
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 최근 레시피 (localStorage) — 파일 저장/불러오기 구조는 그대로 두고, 최근에
+// "연" 레시피의 식별 정보(파일명)만 별도로 기록한다. 파일 핸들/전체 데이터는
+// 저장하지 않으며, 다시 열 때는 기존 onTopRecipeChange 흐름(연결된 폴더에서
+// 같은 파일명 찾기)을 그대로 재사용한다.
+// ════════════════════════════════════════════════════════════════════════════
+const RECENT_RECIPES_KEY = 'feedcalc_v4_recent_recipes';
+const RECENT_RECIPES_MAX = 10;
+
+function getRecentRecipes() {
+  try { return JSON.parse(localStorage.getItem(RECENT_RECIPES_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+
+// 같은 이름의 레시피를 다시 불러오면 기존 항목을 지우고 맨 앞(최신)으로 옮긴다.
+function recordRecentRecipe(name) {
+  if (!name) return;
+  let list = getRecentRecipes().filter(r => r.name !== name);
+  list.unshift({ name, ts: Date.now() });
+  if (list.length > RECENT_RECIPES_MAX) list = list.slice(0, RECENT_RECIPES_MAX);
+  localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(list));
+  renderRecentRecipes();
+}
+
+function renderRecentRecipes() {
+  const sel = document.getElementById('top-recent-recipe-select');
+  if (!sel) return;
+  const list = getRecentRecipes();
+  sel.innerHTML = '<option value="__none__">최근 레시피</option>' +
+    list.map(r => `<option value="${escHtml(r.name)}">${escHtml(r.name.replace(/\.json$/i,''))}</option>`).join('');
+}
+
+// 최근 레시피 선택 — 연결된 폴더 안에서 같은 파일명을 찾아 여는 기존 onTopRecipeChange를 그대로 재사용한다.
+async function onRecentRecipeSelect(name) {
+  const sel = document.getElementById('top-recent-recipe-select');
+  if (!name || name === '__none__') return;
+  if (!recipeDirHandle) {
+    alert('레시피 폴더가 연결되어 있지 않습니다.\n폴더를 연결한 뒤 다시 시도하세요.');
+    if (sel) sel.value = '__none__';
+    return;
+  }
+  await onTopRecipeChange(name);
+  if (sel) sel.value = '__none__';
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -8979,6 +9028,7 @@ function init() {
   updateUnitHint();
   calculate();
   initRecipeFolder();
+  renderRecentRecipes();
 
   const savedTab = sessionStorage.getItem('feedcalc_v4_tab');
   if (savedTab && document.getElementById('tab-'+savedTab)) goTab(savedTab);
