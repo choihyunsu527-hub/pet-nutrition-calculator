@@ -952,16 +952,23 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    대시보드 하단 그리드에만 붙는 보조 클래스로 배치만 조정한다.
    1) align-items: start — 영양 계산 설정 카드는 필드가 적어 다른 두 카드와 높이를
       stretch로 맞추면 빈 공간이 크게 남았다. 각 카드가 자기 내용 높이만큼만 차지하게 한다.
-   2) 세 번째(영양 계산 설정) 칼럼은 폭을 줄여, 내용량에 비례한 배치가 되도록 한다. */
-.dash-bottom-grid { display: grid; grid-template-columns: 2.6fr 1fr; gap: 10px; align-items: start; margin-top: 20px; }
-#tab-dash .dash-profile-grid { align-items: start; grid-template-columns: 1.2fr 1.2fr 1fr; }
+   2) 하단 4개 카드를 동일 너비로 고정한다. .dash-profile-grid는 자체 그리드를 갖는 대신
+      display:contents로 박스를 없애 그 안의 3개 카드가 dash-bottom-grid의 4열 그리드에
+      직접 참여하게 한다(HTML 구조는 그대로 둔 채 4칸 모두 정확히 같은 폭이 되도록).
+      minmax(0, 1fr)은 자식(특히 최근 레시피의 긴 이름)의 내용 길이가 트랙 폭을 늘리지
+      못하게 막는다 — fr 트랙의 기본 최소폭은 auto(=내용의 min-content)이기 때문. */
+.dash-bottom-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-items: start; margin-top: 20px; }
+#tab-dash .dash-profile-grid { display: contents; }
+#tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
 #tab-dash .dash-section h3 { font-size: 10.5px; font-weight: 700; color: var(--sub);
                               text-transform: uppercase; letter-spacing: .4px; }
 /* ── 대시보드: 최근 레시피 카드 — 드롭다운이 아닌 세로 목록. 기존 .dash-section 톤 재사용 ── */
-.dash-recent-list { display: flex; flex-direction: column; gap: 6px; }
+.dash-recent-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 /* 항목 행 — 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 토글(.dash-fav-toggle-btn)을
-   형제 요소로 나란히 둬, 별 클릭이 레시피 열기 이벤트와 완전히 분리되게 한다. */
-.dash-recent-row { display: flex; align-items: stretch; gap: 6px; }
+   형제 요소로 나란히 둬, 별 클릭이 레시피 열기 이벤트와 완전히 분리되게 한다.
+   min-width:0을 둬야 flex 자식(.dash-recent-item)의 기본 min-width:auto가 행 폭을
+   내용 길이만큼 늘리는 것을 막을 수 있다. */
+.dash-recent-row { display: flex; align-items: stretch; gap: 6px; min-width: 0; }
 .dash-recent-item { display: block; flex: 1; min-width: 0; text-align: left; background: var(--gray-grad);
                      border: 1px solid var(--border); border-radius: var(--radius-md);
                      padding: 9px 12px; font-size: 11.5px; font-weight: 600; color: var(--text);
