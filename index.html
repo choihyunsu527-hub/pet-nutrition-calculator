@@ -958,8 +958,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-recent-empty { font-size: 11px; color: var(--sub); padding: 4px 2px; }
 /* ── 대시보드: 최근 레시피 카드 헤더 — 최근/즐겨찾기 탭(.seg-control 재사용) ── */
 .dash-recent-hdr { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.dash-recent-tabs { flex-shrink: 0; }
-.dash-recent-tabs .seg-btn { padding: 4px 10px; }
+.dash-recent-tabs { width: 100%; flex-wrap: nowrap; }
+.dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
 /* 항목별 즐겨찾기 별 버튼(☆/★) — 배경이 있는 카드 톤에 맞춰 테두리를 두른 정사각 버튼 */
 .dash-fav-toggle-btn { width: 34px; flex-shrink: 0; padding: 0;
                         display: flex; align-items: center; justify-content: center;
