@@ -971,6 +971,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
 #tab-dash .dash-section h3 { font-size: 10.5px; font-weight: 700; color: var(--sub);
                               text-transform: uppercase; letter-spacing: .4px; }
+/* ── 대시보드 2×2 전환 후 "기본 정보"(1번째 카드)/"영양 계산 설정"(3번째 카드)만 —
+   공용 .settings-grid(다른 탭에서도 쓰므로 그대로 둠)를 여기서만 minmax 하한을 200px로
+   올려 넓어진 카드 폭에서 auto-fill이 안정적으로 2열이 되게 한다. 각 카드의 마지막
+   항목(기본 정보의 "현재 체중", 영양 계산 설정의 "목표 체중 조절")은 홀수 개수라 2열의
+   짝이 없는 고아 항목이 되므로 전체 폭을 쓰게 한다. */
+#tab-dash .dash-profile-grid > .dash-section:nth-child(1) .settings-grid,
+#tab-dash .dash-profile-grid > .dash-section:nth-child(3) .settings-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+#tab-dash .dash-profile-grid > .dash-section:nth-child(1) .settings-grid > .sf-item:last-child,
+#tab-dash .dash-profile-grid > .dash-section:nth-child(3) .settings-grid > .sf-item:last-child {
+  grid-column: 1 / -1;
+}
 /* ── 대시보드: 최근 레시피 카드 — 드롭다운이 아닌 세로 목록. 기존 .dash-section 톤 재사용 ── */
 .dash-recent-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 /* 항목 행 — 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 토글(.dash-fav-toggle-btn)을
