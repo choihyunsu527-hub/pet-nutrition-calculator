@@ -93,8 +93,20 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
    그룹 사이에만 얇은 구분선을 두고, "저장"만 포인트 컬러(주요 동작)로 남기고 나머지는 모두
    테두리만 있는 아웃라인 톤(보조 동작)으로 통일한다 — 배경을 채우던 --inp를 걷어내
    불필요하게 박스처럼 보이던 장식을 줄임. 높이도 32px로 통일해 프로필/알림 아이콘과 정렬. */
-#top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+/* position+z-index — #top-search-wrap은 absolute·z-index:501로 헤더 위에 겹쳐 그려지므로,
+   #top-right 전체를 그보다 높은 스택 컨텍스트에 둬 실행취소/다시실행 버튼이 검색창 뒤로
+   가려지거나 잘리지 않게 한다(검색창 자체의 크기·위치는 건드리지 않음). */
+#top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+             position: relative; z-index: 502; }
 #top-recipe { font-size: 11px; font-weight: 600; color: var(--sub); white-space: nowrap; }
+/* 실행 취소/다시 실행 — 아이콘 전용 정사각형 버튼(#top-recipe-folder-btn과 같은 톤) */
+#top-undo-btn, #top-redo-btn { width: 32px; height: 32px; padding: 0; flex-shrink: 0;
+                          background: transparent; border: 1px solid var(--border); border-radius: 8px;
+                          cursor: pointer; color: var(--sub);
+                          display: inline-flex; align-items: center; justify-content: center;
+                          transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+#top-undo-btn:hover:not(:disabled), #top-redo-btn:hover:not(:disabled) { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
+#top-undo-btn:disabled, #top-redo-btn:disabled { opacity: .4; cursor: not-allowed; }
 #top-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
                       border: 1px solid var(--border); border-radius: 6px; padding: 0 8px;
                       height: 32px; box-sizing: border-box; max-width: 160px;
@@ -1449,8 +1461,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <input id="top-search-input" type="text" aria-label="원료, 제품, 레시피 통합 검색" placeholder="원료, 제품, 레시피 검색..." autocomplete="off" oninput="onGlobalSearchInput()">
       </div>
       <div id="top-right">
-        <button id="top-undo-btn" class="top-recipe-btn-sub" onclick="undoRecipeChange()" title="실행 취소" disabled>↶ 실행 취소</button>
-        <button id="top-redo-btn" class="top-recipe-btn-sub" onclick="redoRecipeChange()" title="다시 실행" disabled>↷ 다시 실행</button>
+        <button id="top-undo-btn" onclick="undoRecipeChange()" title="실행 취소" aria-label="실행 취소" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg></button>
+        <button id="top-redo-btn" onclick="redoRecipeChange()" title="다시 실행" aria-label="다시 실행" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg></button>
         <button id="top-recipe-save-btn" onclick="saveRecipe()" title="현재 레시피를 업데이트합니다(아직 저장한 적이 없으면 새로 저장)">저장</button>
         <button class="top-recipe-btn-sub" onclick="saveRecipeAs()" title="현재 레시피를 다른 이름으로 복제해 새 레시피로 저장">다른 이름으로 저장</button>
         <button class="top-recipe-btn-sub" onclick="newRecipe()" title="새 레시피를 시작합니다">새 레시피</button>
