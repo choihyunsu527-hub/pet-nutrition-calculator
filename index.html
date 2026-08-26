@@ -149,9 +149,13 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
                align-items: center; justify-content: center; font-family: inherit; padding: 0;
                transition: filter .2s ease; }
 #profile-btn:hover { filter: brightness(1.1); }
-.profile-dropdown { display: none; position: absolute; top: 40px; right: 0; min-width: 180px;
+/* position:fixed — #top-bar가 overflow-y:hidden이라 position:absolute로는 버튼 아래로
+   펼쳐지는 부분이 잘렸다. top/right는 JS(positionProfileDropdown)가 #profile-btn의
+   getBoundingClientRect() 기준으로 매번 계산해 인라인 스타일로 채운다. z-index는
+   #top-right(502)보다 확실히 위에 오도록 충분히 높게 둔다. */
+.profile-dropdown { display: none; position: fixed; min-width: 180px;
                      background: var(--panel-grad); border: 1px solid var(--panel-border);
-                     border-radius: 10px; box-shadow: var(--sh-md); z-index: 500; overflow: hidden; }
+                     border-radius: 10px; box-shadow: var(--sh-md); z-index: 600; overflow: hidden; }
 .profile-dropdown.open { display: block; }
 #profile-dropdown-email { padding: 10px 14px; font-size: 11px; color: var(--sub);
                            border-bottom: 1px solid var(--border); word-break: break-all; }
@@ -9045,9 +9049,23 @@ async function enterApp(session) {
 }
 
 // 우측 상단 프로필 원형 아이콘 — 드롭다운(이메일/설정/로그아웃) 토글
+// #top-bar가 overflow-y:hidden이라 position:absolute로는 드롭다운 아래쪽이 잘렸다 —
+// #top-search-results와 같은 방식으로 position:fixed + getBoundingClientRect() 기반
+// 좌표 계산으로 바꿔 헤더 바깥에 그려지게 한다(디자인/항목/열고 닫는 동작은 동일).
+function positionProfileDropdown() {
+  const btn = document.getElementById('profile-btn');
+  const dd = document.getElementById('profile-dropdown');
+  if (!btn || !dd) return;
+  const zoom = getBodyZoom();
+  const r = btn.getBoundingClientRect();
+  dd.style.top   = ((r.bottom + 8) / zoom) + 'px';
+  dd.style.right = ((window.innerWidth - r.right) / zoom) + 'px';
+}
 function toggleProfileMenu(e) {
   e.stopPropagation();
-  document.getElementById('profile-dropdown').classList.toggle('open');
+  const dd = document.getElementById('profile-dropdown');
+  if (!dd.classList.contains('open')) positionProfileDropdown();
+  dd.classList.toggle('open');
 }
 function closeProfileMenu() {
   document.getElementById('profile-dropdown').classList.remove('open');
@@ -9055,6 +9073,10 @@ function closeProfileMenu() {
 document.addEventListener('click', (e) => {
   const wrap = document.getElementById('profile-menu-wrap');
   if (wrap && !wrap.contains(e.target)) closeProfileMenu();
+});
+window.addEventListener('resize', () => {
+  const dd = document.getElementById('profile-dropdown');
+  if (dd && dd.classList.contains('open')) positionProfileDropdown();
 });
 
 // ════════════════════════════════════════════════════════════════════════════
