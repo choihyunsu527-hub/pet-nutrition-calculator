@@ -1573,6 +1573,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         </div>
+        <div class="dash-section" id="dk-nutrient-summary-card">
+          <h3><span class="linkable" onclick="goTab('analysis')">주요 영양소 상태</span></h3>
+          <div class="dash-quick-grid" id="dk-quick-grid-dash"></div>
+          <button type="button" class="ptype-evidence-btn" style="margin-top:10px" onclick="goTab('analysis')">상세 영양 분석 →</button>
+        </div>
         <div class="dash-bottom-grid">
         <div class="dash-grid dash-profile-grid">
         <div class="dash-section">
@@ -6922,6 +6927,37 @@ function renderGlossary() {
   `).join('')}</div>`;
 }
 
+// 영양소명/현재값/판정 상태(qi-badge)/게이지를 렌더링하는 카드 HTML을 만든다.
+// "분석 현황" 탭의 주요 영양소 빠른 확인과 대시보드 탭의 요약 카드가 이 함수를 공유해
+// 판정 로직(gateJudge)과 상태 스타일(qi-badge)이 두 곳에서 절대 어긋나지 않게 한다.
+function buildNutrientQuickHtml(stds, policy, nameList) {
+  let quickHtml = '';
+  nameList.forEach(nm => {
+    const s = stds.find(st => st.name === nm);
+    if (!s) return;
+    const j = gateJudge(s.aafco_j, policy);
+    let cls, lbl, gaugeColor;
+    if (j === 'gated') {
+      cls = 'qi-none'; lbl = '평가 제외'; gaugeColor = 'var(--sub)';
+    } else {
+      cls = j==='pass' ? 'qi-pass' : j==='fail' ? 'qi-fail' : j==='over' ? 'qi-over' : 'qi-none';
+      lbl = j==='pass' ? '✅ 적합' : j==='fail' ? '❌ 미달' : j==='over' ? '⚠️ 초과' : '─';
+      gaugeColor = j==='pass' ? 'var(--pass-t)' : j==='fail' ? 'var(--fail-t)' : j==='over' ? 'var(--warn-t)' : 'var(--sub)';
+    }
+    const hasVal = typeof s.value === 'number' && !Number.isNaN(s.value);
+    const valueText = hasVal ? `${s.value.toFixed(2)} ${s.unit || ''}`.trim() : '─';
+    const hasMin = typeof s.aa_min === 'number' && !Number.isNaN(s.aa_min) && s.aa_min > 0;
+    const gaugePct = (hasVal && hasMin) ? Math.max(0, Math.min(150, s.value / s.aa_min * 100)) : 0;
+    quickHtml += `<div class="dash-quick-item">
+      <span class="qi-name">${nm}</span>
+      <span class="qi-value">${valueText}</span>
+      <span class="qi-badge ${cls}">${lbl}</span>
+      <div class="qi-gauge-track"><div class="qi-gauge-fill" style="width:${(gaugePct/150*100).toFixed(1)}%;background:${gaugeColor}"></div></div>
+    </div>`;
+  });
+  return quickHtml;
+}
+
 function updateDashboard(result, pc) {
   const dmb  = result.dmb;
   const stds = result.standards;
@@ -6992,31 +7028,16 @@ function updateDashboard(result, pc) {
 
   const keyNutrients = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)',
                         '비타민A','비타민D','비타민E(α-TE)','철(Fe)','아연(Zn)','리놀레산(LA,n-6)'];
-  let quickHtml = '';
-  keyNutrients.forEach(nm => {
-    const s = stds.find(st => st.name === nm);
-    if (!s) return;
-    const j = gateJudge(s.aafco_j, policy);
-    let cls, lbl, gaugeColor;
-    if (j === 'gated') {
-      cls = 'qi-none'; lbl = '평가 제외'; gaugeColor = 'var(--sub)';
-    } else {
-      cls = j==='pass' ? 'qi-pass' : j==='fail' ? 'qi-fail' : j==='over' ? 'qi-over' : 'qi-none';
-      lbl = j==='pass' ? '✅ 적합' : j==='fail' ? '❌ 미달' : j==='over' ? '⚠️ 초과' : '─';
-      gaugeColor = j==='pass' ? 'var(--pass-t)' : j==='fail' ? 'var(--fail-t)' : j==='over' ? 'var(--warn-t)' : 'var(--sub)';
-    }
-    const hasVal = typeof s.value === 'number' && !Number.isNaN(s.value);
-    const valueText = hasVal ? `${s.value.toFixed(2)} ${s.unit || ''}`.trim() : '─';
-    const hasMin = typeof s.aa_min === 'number' && !Number.isNaN(s.aa_min) && s.aa_min > 0;
-    const gaugePct = (hasVal && hasMin) ? Math.max(0, Math.min(150, s.value / s.aa_min * 100)) : 0;
-    quickHtml += `<div class="dash-quick-item">
-      <span class="qi-name">${nm}</span>
-      <span class="qi-value">${valueText}</span>
-      <span class="qi-badge ${cls}">${lbl}</span>
-      <div class="qi-gauge-track"><div class="qi-gauge-fill" style="width:${(gaugePct/150*100).toFixed(1)}%;background:${gaugeColor}"></div></div>
-    </div>`;
-  });
-  document.getElementById('dk-quick-grid').innerHTML = quickHtml;
+  document.getElementById('dk-quick-grid').innerHTML = buildNutrientQuickHtml(stds, policy, keyNutrients);
+
+  // 대시보드 탭(id="tab-dash")용 "주요 영양소 상태" 요약 카드 — "분석 현황" 탭과 동일한
+  // buildNutrientQuickHtml()/gateJudge()/qi-badge 로직을 그대로 재사용하고, 6개 핵심 영양소만 축약 표시.
+  const dashKeyNutrients = keyNutrients.slice(0, 6);
+  const dashQuickEl = document.getElementById('dk-quick-grid-dash');
+  if (dashQuickEl) {
+    const dashQuickHtml = buildNutrientQuickHtml(stds, policy, dashKeyNutrients);
+    dashQuickEl.innerHTML = dashQuickHtml || '<div class="dash-warn-empty">배합비를 입력하면 표시됩니다</div>';
+  }
 
   // Ca:P 요약 배지 — 판정은 evaluateCapStatus()로 통일(경고 패널 cap-card·게이지와 동일 로직 재사용)
   const cap   = dmb.cap;
