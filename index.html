@@ -574,7 +574,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* ── 배합 설계 테이블 밀도/보더 정리(2단계) ──
    --mix-line: 기존 --border 토큰을 그대로 쓰되 color-mix()로 살짝 옅게 만든 파생값 —
    새 색상을 만들지 않고 행/열 구분선의 시각적 노이즈만 줄인다(다른 곳엔 영향 없음, 이 안에서만 사용). */
-.mix-table-wrap { flex: 1; overflow-x: auto; display: flex; flex-direction: column; min-height: 0; background: var(--bg);
+/* flex:1(남은 공간을 무조건 채움) 대신 flex:0 1 auto + max-height로 바꿔, 원료가 몇 개 없을 때는
+   테이블이 내용 높이만큼만 차지하고(빈 공간 최소화), 행이 많아져 max-height를 넘으면 그때부터
+   #mix-body가 줄어들며 자체 스크롤(overflow-y:auto, 아래)이 걸리게 한다 — 30여 개 열 구조·헤더
+   고정(#mix-hdr flex-shrink:0)은 그대로. */
+.mix-table-wrap { flex: 0 1 auto; max-height: 60vh; overflow-x: auto; display: flex; flex-direction: column; min-height: 0; background: var(--bg);
                    --mix-line: color-mix(in srgb, var(--border) 65%, transparent);
                    /* 원료DB·영양기준DB 테이블(#ing-table/#std-table)과 같은 방식으로 파생한
                       불투명 헤더 틴트 — 새 색상이 아니라 기존 --th-bg/--sub의 조합이다. */
@@ -589,7 +593,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 원료명(선택 영역) 칼럼과 배합비/실제중량(입력 영역) 칼럼 사이만 진한 구분선을 둬서
    "무엇을 배합하는지"와 "얼마나 배합하는지"를 한눈에 나눠 보이게 한다. */
 #mix-hdr span[style*="width:200px"] { border-right-color: var(--border); }
-#mix-body { flex: 1; overflow-y: auto; min-width: max-content; }
+#mix-body { flex: 0 1 auto; overflow-y: auto; min-width: max-content; }
 .mix-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--mix-line);
            transition: background-color .15s ease; padding-right: 20px; }
 .mix-row:nth-child(even) { background: var(--even); }
@@ -930,6 +934,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
    창이 좁아져 카드 폭이 최소치보다 줄어들면 다음 줄로 자연스럽게 내려간다. */
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: stretch; }
+
+/* ── 분석 현황: 카드를 4개 그룹으로 묶는 래퍼 — 그룹 내부는 .dash-grid와 동일한
+   auto-fit 2열 규칙을 쓰되(좁아지면 1열로 자연 전환), 그룹 간에는 카드 간격(10px)보다
+   넉넉한 여백을 둬 그룹 경계를 시각적으로 구분한다. display:contents 없이 일반 래퍼로
+   구성해 각 그룹이 독립적인 레이아웃 박스를 갖는다. */
+.ana-group-list { display: flex; flex-direction: column; gap: 26px; }
+.ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+                    letter-spacing: .5px; margin-bottom: 10px; }
+.ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: stretch; }
 .dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
                  box-sizing: border-box; }
@@ -1080,29 +1093,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-bar-pct { font-size: 10px; font-weight: 700; color: var(--hdr); text-align: right; }
 .dash-bar-axis { display: flex; justify-content: space-between; font-size: 9px; color: var(--sub);
                   margin-top: 6px; padding-left: 74px; }
-
-/* ── 대시보드: 주요 영양소 충족 현황(동적 스케일 차트) ── */
-.dnc-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
-.dnc-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1.5px; }
-.dnc-maxdot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 5px; vertical-align: 1.5px; }
-.dnc-maxdot-ok   { background: var(--pass-t); }
-.dnc-maxdot-over { background: var(--fail-t); }
-.dnc-maxdot-none { background: var(--sub); opacity: .5; }
-.dnc-chart { flex: 1; display: flex; }
-.dnc-plot { position: relative; flex: 1; display: grid; grid-template-columns: 68px 1fr auto;
-             align-items: center; column-gap: 8px; row-gap: 8px; padding-top: 16px; }
-.dnc-label { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dnc-track { position: relative; height: 10px; background: var(--gray-l); border-radius: 999px; }
-.dnc-fill { position: absolute; top: 0; height: 100%; transition: width .4s ease; }
-.dnc-value { font-size: 10px; font-weight: 700; color: var(--hdr); white-space: nowrap; text-align: right; }
-.dnc-value .dnc-mult { font-size: 8.5px; font-weight: 500; color: var(--sub); margin-left: 3px; }
-.dnc-refline { position: absolute; top: 0; bottom: 0; border-left: 1.5px dashed var(--acc); pointer-events: none; }
-.dnc-refline-tag { position: absolute; top: -16px; left: 0; transform: translateX(-50%); font-size: 8.5px;
-                     font-weight: 700; color: var(--acc); white-space: nowrap; background: var(--side2); padding: 0 4px; }
-.dnc-axis { position: relative; height: 13px; }
-.dnc-axis span { position: absolute; top: 0; transform: translateX(-50%); font-size: 9px; color: var(--sub); white-space: nowrap; }
-.dnc-axis span:first-child { transform: translateX(0); }
-.dnc-axis span:last-child { transform: translateX(-100%); }
 
 /* ── 에너지 분석: DER 계수 분해 체인 ── */
 .ae-factor-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
@@ -1842,12 +1832,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <div class="hdr-bar hdr-bar-left">
         <span class="hdr-title">배합 설계</span>
         <span class="hdr-desc">원료 선택 후 배합비(%) 입력</span>
+        <span class="hdr-desc" id="mix-product-context">제품명 미입력 · 배합비 입력 전</span>
         <div class="hdr-btns">
           <button class="mix-btn-primary" onclick="addMixRow()">행 추가</button>
           <button class="mix-btn-danger" onclick="deleteSelectedMix()">선택 삭제</button>
           <button onclick="loadRecipe()">레시피 불러오기</button>
         </div>
       </div>
+      <div class="ptype-banner" id="mix-ptype-banner"></div>
       <div class="mix-unit-bar">
         <div class="mix-unit-item" style="min-width:220px">
           <label for="mix-recipe-name">레시피명</label>
@@ -1896,16 +1888,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
         <div class="dash-panel">
-        <div class="dash-grid">
+        <div class="ana-group-list">
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">영양 상태</h4>
+          <div class="ana-group-grid">
         <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 충족 현황 (AAFCO 대비 %)</span></h3>
-          <div class="dnc-legend">
-            <span><i style="background:var(--pass-t)"></i>AAFCO 최소 기준 충족 / 최대 기준 이내</span>
-            <span><i style="background:var(--nrc-t)"></i>AAFCO 최소 기준 미달</span>
-            <span><i style="background:var(--fail-t)"></i>AAFCO 최대 기준 초과</span>
-            <span><i style="background:var(--sub);opacity:.6"></i>AAFCO 최대 기준 없음 (판정 불가)</span>
-          </div>
-          <div class="dnc-chart" id="ds-nutrient-bars"></div>
+          <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 빠른 확인 (AAFCO 2023 <span id="dk-quick-species">성견</span> 기준)</span></h3>
+          <div class="dash-quick-grid" id="dk-quick-grid"></div>
         </div>
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('warn')">Ca:P 비율</span></h3>
@@ -1917,6 +1907,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <span class="dash-donut-badge" id="ds-cap-badge">계산 대기</span>
           </div>
         </div>
+          </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">구성 분석</h4>
+          <div class="ana-group-grid">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
           <div class="dash-bar-list" id="ds-amino-bars"></div>
@@ -1929,10 +1925,44 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <div class="dash-legend" id="ds-ing-legend"></div>
           </div>
         </div>
+          </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">경고 및 기준</h4>
+          <div class="ana-group-grid">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
           <div class="dash-warn-list" id="ds-warn-list"></div>
         </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('ana')">기준 충족 현황</span></h3>
+          <div class="dash-compliance">
+            <div class="dash-comp-card">
+              <div class="comp-title" style="color:var(--nrc-t)">NRC 2006</div>
+              <div class="dash-comp-stat"><span>✅ 충족</span><span class="cs-val cs-pass" id="dc-nrc-pass">─</span></div>
+              <div class="dash-comp-stat"><span>❌ 결핍</span><span class="cs-val cs-fail" id="dc-nrc-fail">─</span></div>
+              <div class="dash-comp-stat"><span>⚠️ 초과</span><span class="cs-val cs-over" id="dc-nrc-over">─</span></div>
+            </div>
+            <div class="dash-comp-card">
+              <div class="comp-title" style="color:var(--aa-t)">AAFCO 2023</div>
+              <div class="dash-comp-stat"><span>✅ 적합</span><span class="cs-val cs-pass" id="dc-aa-pass">─</span></div>
+              <div class="dash-comp-stat"><span>❌ 미달</span><span class="cs-val cs-fail" id="dc-aa-fail">─</span></div>
+              <div class="dash-comp-stat"><span>⚠️ 초과</span><span class="cs-val cs-over" id="dc-aa-over">─</span></div>
+            </div>
+            <div class="dash-comp-card">
+              <div class="comp-title" style="color:var(--fed-t)">FEDIAF 2025</div>
+              <div class="dash-comp-stat"><span>✅ 적합</span><span class="cs-val cs-pass" id="dc-fed-pass">─</span></div>
+              <div class="dash-comp-stat"><span>❌ 미달</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">계산 결과</h4>
+          <div class="ana-group-grid">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">핵심 지표</span></h3>
           <div class="dash-kpi-grid">
@@ -1996,38 +2026,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             RER = 70 × 체중(kg)<sup>0.75</sup> · MER = RER × 활동계수(참고용 평균값: 성견 1.6 / 성장견 2.0 / 임신·수유견 3.0)
           </div>
         </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('ana')">기준 충족 현황</span></h3>
-          <div class="dash-compliance">
-            <div class="dash-comp-card">
-              <div class="comp-title" style="color:var(--nrc-t)">NRC 2006</div>
-              <div class="dash-comp-stat"><span>✅ 충족</span><span class="cs-val cs-pass" id="dc-nrc-pass">─</span></div>
-              <div class="dash-comp-stat"><span>❌ 결핍</span><span class="cs-val cs-fail" id="dc-nrc-fail">─</span></div>
-              <div class="dash-comp-stat"><span>⚠️ 초과</span><span class="cs-val cs-over" id="dc-nrc-over">─</span></div>
-            </div>
-            <div class="dash-comp-card">
-              <div class="comp-title" style="color:var(--aa-t)">AAFCO 2023</div>
-              <div class="dash-comp-stat"><span>✅ 적합</span><span class="cs-val cs-pass" id="dc-aa-pass">─</span></div>
-              <div class="dash-comp-stat"><span>❌ 미달</span><span class="cs-val cs-fail" id="dc-aa-fail">─</span></div>
-              <div class="dash-comp-stat"><span>⚠️ 초과</span><span class="cs-val cs-over" id="dc-aa-over">─</span></div>
-            </div>
-            <div class="dash-comp-card">
-              <div class="comp-title" style="color:var(--fed-t)">FEDIAF 2025</div>
-              <div class="dash-comp-stat"><span>✅ 적합</span><span class="cs-val cs-pass" id="dc-fed-pass">─</span></div>
-              <div class="dash-comp-stat"><span>❌ 미달</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
-            </div>
           </div>
         </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 빠른 확인 (AAFCO 2023 <span id="dk-quick-species">성견</span> 기준)</span></h3>
-          <div class="dash-quick-grid" id="dk-quick-grid"></div>
-          <h3 style="margin-top:14px"><span class="linkable" onclick="goTab('warn')">Ca:P 비율</span></h3>
-          <div class="dash-cap-bar">
-            <span class="dash-cap-label">Ca:P 비율</span>
-            <span class="dash-cap-badge" id="dk-cap-badge">계산 대기</span>
-            <span style="font-size:10px;color:var(--sub)" id="dk-cap-note"></span>
-          </div>
-        </div>
+
         </div>
         <div style="padding-bottom:24px"></div>
         </div>
@@ -2330,6 +2331,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <div id="warn-info-line" style="padding:0 8px 4px;font-size:10px;font-weight:bold;color:var(--hdr);text-align:center">
         AAFCO 2023 Maximum level 초과 여부 — 출처: AAFCO 2023 Official Publication Table 1
       </div>
+      <div class="dash-warn-list" id="warn-summary-list" style="padding:0 16px 10px"></div>
       <div class="tbl-wrap">
         <table id="warn-table">
           <thead>
@@ -5291,8 +5293,8 @@ function gateJudge(j, policy) {
   return j;
 }
 
-// Ca:P 비율 평가를 한 곳에서 계산해 경고 패널(cap-card)·대시보드 요약(dk-cap-badge)·
-// 대시보드 게이지(renderDashCapGauge) 3곳이 동일한 판정을 재사용하도록 한다(로직 중복 방지).
+// Ca:P 비율 평가를 한 곳에서 계산해 경고 패널(cap-card)·대시보드 게이지(renderDashCapGauge)
+// 두 곳이 동일한 판정을 재사용하도록 한다(로직 중복 방지).
 // Ca:P 수치·정상범위(1.1~2.0, 심각 <0.8 또는 >2.5) 계산 자체는 그대로 두고, "그 판정을 얼마나
 // 심각하게 보여줄지"만 평가 정책에 따라 완화한다 — 보조식은 위험 대신 참고로, 간식·직접급여불가는 평가 제외.
 function evaluateCapStatus(cap, policy, isCat) {
@@ -6247,6 +6249,7 @@ function updateWarnPanel(result, pc) {
       `<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--sub)">
         ${pc.short} 유형으로 판단되어 일반 식품 기준의 과다·안전성 평가를 적용하지 않습니다.
       </td></tr>`;
+    renderDashWarnSummary('warn-summary-list');
     return;
   }
 
@@ -6314,6 +6317,7 @@ function updateWarnPanel(result, pc) {
     </tr>`;
   });
   document.getElementById('warn-body').innerHTML = html;
+  renderDashWarnSummary('warn-summary-list');
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -6959,6 +6963,16 @@ function updateDashboard(result, pc) {
   syncBcsGauge();
   renderProductTypeCard(pc);
 
+  // 배합 설계 탭 상단 컨텍스트 — 새 판정 로직 없이 제품/정보 탭과 같은 제품명·유형(pc)을
+  // 그대로 보여준다. ptype-banner는 기존 ana/amino/warn/stdverify와 동일한 renderPtypeBanner()
+  // 재사용(주식이면 비워지는 기존 규칙 그대로).
+  const mixCtxEl = document.getElementById('mix-product-context');
+  if (mixCtxEl) {
+    const mixName = document.getElementById('sb-name').value || '제품명 미입력';
+    mixCtxEl.textContent = (pc && pc.type) ? `${mixName} · ${pc.short}` : `${mixName} · 배합비 입력 전`;
+  }
+  renderPtypeBanner('mix-ptype-banner', pc);
+
   document.getElementById('dp-name').textContent   = document.getElementById('sb-name').value  || '─';
   document.getElementById('dp-maker').textContent  = document.getElementById('sb-maker').value || '─';
   document.getElementById('dp-ptype').textContent  = document.getElementById('sb-ptype').value;
@@ -7018,18 +7032,9 @@ function updateDashboard(result, pc) {
   }
 
   const keyNutrients = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)',
-                        '비타민A','비타민D','비타민E(α-TE)','철(Fe)','아연(Zn)','리놀레산(LA,n-6)'];
+                        '비타민A','비타민D','비타민E(α-TE)','철(Fe)','아연(Zn)','리놀레산(LA,n-6)','ALA(α-리놀렌,n-3)'];
   document.getElementById('dk-quick-grid').innerHTML = buildNutrientQuickHtml(stds, policy, keyNutrients);
-
-  // Ca:P 요약 배지 — 판정은 evaluateCapStatus()로 통일(경고 패널 cap-card·게이지와 동일 로직 재사용)
-  const cap   = dmb.cap;
-  const badge = document.getElementById('dk-cap-badge');
-  const note  = document.getElementById('dk-cap-note');
-  const capStatus = evaluateCapStatus(cap, policy, isCat);
-  const capIcon = { pass:'✅', warn:'🟡', fail:'🔴', reference:'📋', unknown:'⚠️', excluded:'⛔' }[capStatus.level] || '';
-  badge.textContent = capStatus.level === 'excluded' ? capStatus.label : `${cap ? cap.toFixed(2) : '─'} ${capIcon}`;
-  badge.style.cssText = `background:${capStatus.bg};color:${capStatus.color};font-size:11px;font-weight:700;padding:4px 14px;border-radius:4px`;
-  note.textContent = capStatus.label;
+  const cap = dmb.cap;
 
   // ── 요약 통계 타일(전체 충족률/경고/에너지/급여량) ──
   const aaJudged = stds.filter(s => s.aafco_j === 'pass' || s.aafco_j === 'fail' || s.aafco_j === 'over');
@@ -7072,7 +7077,6 @@ function updateDashboard(result, pc) {
   document.getElementById('ds-daily').textContent  = feed.dailyG ? feed.dailyG.toFixed(0) : '─';
   document.getElementById('ds-meal').textContent   = feed.mealG  ? feed.mealG.toFixed(0)  : '─';
 
-  renderDashNutrientChart(stds, DASH_NUTRIENT_BAR_LIST);
   renderDashBarChart('ds-amino-bars', stds, DASH_AMINO_BAR_LIST);
   renderDashCapGauge(cap, policy, isCat);
   renderDashIngredientDonut();
@@ -7188,107 +7192,8 @@ function renderEnergyAnalysis(result, pc) {
   }
 }
 
-// 대시보드 막대 차트에 표시할 영양소/아미노산 목록(AAFCO 최소치 대비 %로 표시)
-const DASH_NUTRIENT_BAR_LIST = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)','리놀레산(LA,n-6)','ALA(α-리놀렌,n-3)'];
+// 대시보드 막대 차트에 표시할 아미노산 목록(AAFCO 최소치 대비 %로 표시)
 const DASH_AMINO_BAR_LIST = ['아르기닌(Arg)','히스티딘(His)','이소류신(Ile)','류신(Leu)','라이신(Lys)','메티오닌+시스틴','페닐알라닌+티로신','트레오닌(Thr)','트립토판(Trp)','발린(Val)'];
-
-// AAFCO 최소(min) 대비 충족률 바 색상 구간을 계산.
-// - 최소 기준 미달(value < min): 전체를 "미달" 색으로 표시(빨강 아님 — 빨강은 최대 기준 초과 전용)
-// - 최소 기준 충족(value >= min): 100%까지는 "충족" 색
-//   - 100% 초과분은 그 자체로는 문제가 아니므로, maximum이 있고 실제로 그 값을 넘었을 때만 그 초과분만 "최대 초과" 색으로 표시
-//   - maximum이 없으면 100% 초과분은 판정 불가로 중립(회색) 표시
-function buildDncSegments(it, maxScale) {
-  const clamped = Math.max(0, Math.min(maxScale, it.pct));
-  if (it.belowMin) return [{ left: 0, width: clamped, color: 'var(--nrc-t)' }];
-  if (it.max == null) {
-    if (clamped <= 100) return [{ left: 0, width: clamped, color: 'var(--pass-t)' }];
-    return [
-      { left: 0, width: 100, color: 'var(--pass-t)' },
-      { left: 100, width: clamped - 100, color: 'var(--sub)' },
-    ];
-  }
-  const maxPos = Math.min(it.max / it.min * 100, maxScale);
-  if (clamped <= maxPos) return [{ left: 0, width: clamped, color: 'var(--pass-t)' }];
-  return [
-    { left: 0, width: maxPos, color: 'var(--pass-t)' },
-    { left: maxPos, width: clamped - maxPos, color: 'var(--fail-t)' },
-  ];
-}
-
-function renderDashNutrientChart(stds, nameList) {
-  const el = document.getElementById('ds-nutrient-bars');
-  if (!el) return;
-
-  const items = nameList
-    .map(nm => stds.find(st => st.name === nm))
-    .filter(s => s && s.aa_min && s.value != null)
-    .map(s => {
-      const min = s.aa_min;
-      const max = s.aa_max != null ? s.aa_max : null;
-      const value = s.value;
-      return {
-        name: s.name, min, max, value,
-        pct: value / min * 100,
-        belowMin: value < min,
-        overMax: max != null && value > max,
-      };
-    });
-
-  if (!items.length) {
-    el.innerHTML = '<div class="dash-warn-empty">데이터 없음</div>';
-    return;
-  }
-
-  const dataMax = Math.max(...items.map(it => it.pct), 100);
-  const maxScale = Math.max(Math.ceil(dataMax * 1.15 / 100) * 100, 200);
-  const n = items.length;
-  const refLeft = (100 / maxScale * 100).toFixed(2);
-
-  const rows = items.map((it, i) => {
-    const segs = buildDncSegments(it, maxScale);
-    const fillsHtml = segs.map((sg, idx) => {
-      const leftPct = (sg.left / maxScale * 100).toFixed(2);
-      const widthPct = (sg.width / maxScale * 100).toFixed(2);
-      const rTL = idx === 0 ? '999px' : '0';
-      const rBL = idx === 0 ? '999px' : '0';
-      const rTR = idx === segs.length - 1 ? '999px' : '0';
-      const rBR = idx === segs.length - 1 ? '999px' : '0';
-      return `<div class="dnc-fill" style="left:${leftPct}%;width:${widthPct}%;background:${sg.color};border-radius:${rTL} ${rTR} ${rBR} ${rBL}"></div>`;
-    }).join('');
-
-    const minStatusText = it.belowMin ? 'AAFCO 최소 기준 미달' : 'AAFCO 최소 기준 충족';
-    const maxStatusText = it.max == null ? 'AAFCO 최대 기준 없음' : (it.overMax ? 'AAFCO 최대 기준 초과' : 'AAFCO 최대 기준 이내');
-    const maxDotCls = it.max == null ? 'dnc-maxdot-none' : (it.overMax ? 'dnc-maxdot-over' : 'dnc-maxdot-ok');
-    const rowTitle = `${it.name} — 실제값 ${it.value}${it.max != null ? ` / 최소 ${it.min} / 최대 ${it.max}` : ` / 최소 ${it.min}`} · ${minStatusText} · ${maxStatusText}`;
-    const label = it.name.replace(/\([^)]*\)/, '');
-    const row = i + 1;
-    return `
-      <div class="dnc-label" style="grid-column:1;grid-row:${row}" title="${rowTitle}">${label}</div>
-      <div class="dnc-track" style="grid-column:2;grid-row:${row}" title="${rowTitle}">
-        ${fillsHtml}
-      </div>
-      <div class="dnc-value" style="grid-column:3;grid-row:${row}" title="${rowTitle}">${it.pct.toFixed(0)}%<span class="dnc-mult">×${(it.pct / 100).toFixed(2)}</span><span class="dnc-maxdot ${maxDotCls}"></span></div>`;
-  }).join('');
-
-  // 카드 실제 폭에 맞춰 겹치지 않을 눈금 개수를 정하고, 0%~maxScale을 균등 분할
-  // (양 끝은 항상 0%와 실제 축 최대값이 되도록 보장)
-  const elWidth = el.clientWidth || 260;
-  const trackWidth = Math.max(60, elWidth - 136);
-  const tickCount = Math.max(2, Math.min(8, Math.round(trackWidth / 55) + 1));
-  const axisSpans = Array.from({ length: tickCount }, (_, i) => {
-    const ratio = i / (tickCount - 1);
-    const val = Math.round(ratio * maxScale / 10) * 10;
-    return `<span style="left:${(ratio * 100).toFixed(2)}%">${val}%</span>`;
-  }).join('');
-
-  el.innerHTML = `<div class="dnc-plot">
-    <div class="dnc-refline" style="grid-column:2;grid-row:1 / ${n + 1};left:${refLeft}%">
-      <span class="dnc-refline-tag">AAFCO 최소 기준</span>
-    </div>
-    ${rows}
-    <div class="dnc-axis" style="grid-column:2;grid-row:${n + 1}">${axisSpans}</div>
-  </div>`;
-}
 
 function renderDashBarChart(containerId, stds, nameList) {
   const el = document.getElementById(containerId);
@@ -7371,8 +7276,8 @@ function renderDashIngredientDonut() {
     </div>`).join('');
 }
 
-function renderDashWarnSummary() {
-  const el = document.getElementById('ds-warn-list');
+function renderDashWarnSummary(elId = 'ds-warn-list') {
+  const el = document.getElementById(elId);
   if (!el) return;
   if (!lastWarnItems.length) {
     el.innerHTML = '<div class="dash-warn-empty">✅ 현재 경고 항목이 없습니다</div>';
