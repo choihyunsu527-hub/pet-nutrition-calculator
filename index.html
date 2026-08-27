@@ -438,11 +438,17 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
 /* 배합 설계 액션 버튼 hierarchy — 원료DB 툴바(.ing-toolbar button/.ing-btn-primary)와
    같은 언어(중립 아웃라인 = 기본, 포인트 컬러 = 주요 동작, 기존 위험색(#B03A2E) = 파괴적 동작)를
-   그대로 재사용해 화면 간 툴바 스타일을 통일한다. */
-#tab-mix .hdr-btns button { background: var(--side2); color: var(--text); border: 1px solid var(--border);
-                             padding: 5px 12px; font-size: 11px; font-weight: 600; border-radius: 5px; }
+   그대로 재사용해 화면 간 툴바 스타일을 통일한다.
+   전역 상단바(#top-recipe-save-btn/.top-recipe-btn-sub)와 같은 체급(32px 높이, radius 6px)으로
+   맞춰, 같은 "레시피/배합 관리" 액션인데 두 바의 버튼 크기가 달라 보이던 문제를 줄인다. */
+#tab-mix .hdr-btns { gap: 8px; }
+#tab-mix .hdr-btns button { display: inline-flex; align-items: center; gap: 5px;
+                             background: var(--side2); color: var(--text); border: 1px solid var(--border);
+                             padding: 0 12px; height: 32px; box-sizing: border-box;
+                             font-size: 11px; font-weight: 600; border-radius: 6px; }
+#tab-mix .hdr-btns button svg { flex-shrink: 0; }
 #tab-mix .hdr-btns button:hover { filter: none; border-color: var(--acc); background: var(--hover-tint); }
-#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
+#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); font-weight: 700; padding: 0 14px; }
 #tab-mix .hdr-btns button.mix-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
 #tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
 #tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
@@ -1880,7 +1886,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="hdr-btns">
           <button class="mix-btn-primary" onclick="addMixRow()">행 추가</button>
           <button class="mix-btn-danger" onclick="deleteSelectedMix()">선택 삭제</button>
-          <button onclick="loadRecipe()">레시피 불러오기</button>
+          <button onclick="loadRecipe()" title="내 컴퓨터의 레시피 파일(.json)을 열기 — 상단의 폴더 목록과는 별개입니다"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/></svg>파일에서 열기</button>
         </div>
       </div>
       <div class="ptype-banner" id="mix-ptype-banner"></div>
