@@ -1041,11 +1041,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                     display: flex; flex-direction: column; gap: 3px;
                     justify-content: center; align-items: center; text-align: center; }
 .qi-name { font-size: 9px; color: var(--text); line-height: 1.2; }
+.qi-value { font-size: 10px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
 .qi-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
 .qi-pass { background: var(--pass-bg); color: var(--pass-t); }
 .qi-fail { background: var(--fail-bg); color: var(--fail-t); }
 .qi-over { background: var(--warn-bg); color: var(--warn-t); }
 .qi-none { background: var(--gray-l); color: var(--sub); }
+.qi-gauge-track { width: 100%; height: 5px; background: var(--gray-l); border-radius: 999px; overflow: hidden; margin-top: 1px; }
+.qi-gauge-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
 .dash-cap-bar { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  padding: 10px 14px; box-shadow: var(--sh);
                  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
@@ -6994,14 +6997,24 @@ function updateDashboard(result, pc) {
     const s = stds.find(st => st.name === nm);
     if (!s) return;
     const j = gateJudge(s.aafco_j, policy);
-    let cls, lbl;
+    let cls, lbl, gaugeColor;
     if (j === 'gated') {
-      cls = 'qi-none'; lbl = '평가 제외';
+      cls = 'qi-none'; lbl = '평가 제외'; gaugeColor = 'var(--sub)';
     } else {
       cls = j==='pass' ? 'qi-pass' : j==='fail' ? 'qi-fail' : j==='over' ? 'qi-over' : 'qi-none';
       lbl = j==='pass' ? '✅ 적합' : j==='fail' ? '❌ 미달' : j==='over' ? '⚠️ 초과' : '─';
+      gaugeColor = j==='pass' ? 'var(--pass-t)' : j==='fail' ? 'var(--fail-t)' : j==='over' ? 'var(--warn-t)' : 'var(--sub)';
     }
-    quickHtml += `<div class="dash-quick-item"><span class="qi-name">${nm}</span><span class="qi-badge ${cls}">${lbl}</span></div>`;
+    const hasVal = typeof s.value === 'number' && !Number.isNaN(s.value);
+    const valueText = hasVal ? `${s.value.toFixed(2)} ${s.unit || ''}`.trim() : '─';
+    const hasMin = typeof s.aa_min === 'number' && !Number.isNaN(s.aa_min) && s.aa_min > 0;
+    const gaugePct = (hasVal && hasMin) ? Math.max(0, Math.min(150, s.value / s.aa_min * 100)) : 0;
+    quickHtml += `<div class="dash-quick-item">
+      <span class="qi-name">${nm}</span>
+      <span class="qi-value">${valueText}</span>
+      <span class="qi-badge ${cls}">${lbl}</span>
+      <div class="qi-gauge-track"><div class="qi-gauge-fill" style="width:${(gaugePct/150*100).toFixed(1)}%;background:${gaugeColor}"></div></div>
+    </div>`;
   });
   document.getElementById('dk-quick-grid').innerHTML = quickHtml;
 
