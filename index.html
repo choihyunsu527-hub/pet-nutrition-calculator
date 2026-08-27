@@ -85,7 +85,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 .tsr-item + .tsr-item { border-top: 1px solid var(--border); }
 .tsr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tsr-src { font-size: 11px; color: var(--sub); flex-shrink: 0; white-space: nowrap; }
-.tsr-empty { padding: 16px; font-size: 12px; color: var(--sub); text-align: center; }
+.tsr-empty { padding: 10px 8px; font-size: 11px; color: var(--sub); text-align: center; }
 .search-hit-flash { animation: search-hit-flash-anim 1.6s ease; }
 @keyframes search-hit-flash-anim { 0%, 100% { background: transparent; } 15%, 60% { background: var(--calc); } }
 
@@ -201,7 +201,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 .notif-title { font-size: 12.5px; font-weight: 700; color: var(--hdr); line-height: 1.4; }
 .notif-desc { font-size: 11.5px; color: var(--text); line-height: 1.55; margin-top: 3px; }
 .notif-time { font-size: 10px; color: var(--sub); margin-top: 6px; }
-.notif-empty { padding: 60px 20px; text-align: center; color: var(--sub); font-size: 12px; }
+.notif-empty { padding: 10px 8px; text-align: center; color: var(--sub); font-size: 11px; }
 
 /* ── 사이드바 접힘 상태 Tooltip — position:fixed로 JS가 좌표를 계산해 배치한다(사이드바의
    overflow-y:auto/overflow-x:hidden에 잘리지 않도록 사이드바 바깥, body 레벨에 둔다) ── */
@@ -390,7 +390,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
                 border: 1px solid var(--border); border-radius: 5px; background: var(--side2);
                 padding: 3px; display: flex; flex-direction: column; gap: 3px; }
 .allergy-list-empty { display: flex; align-items: center; justify-content: center;
-                       min-height: 31px; font-size: 9.5px; color: var(--sub); }
+                       min-height: 31px; font-size: 11px; color: var(--sub); }
 .allergy-item { display: flex; align-items: center; justify-content: space-between;
                 gap: 6px; padding: 3px 6px; border-radius: 4px; background: var(--inp);
                 font-size: 10.5px; color: var(--text); flex-shrink: 0; }
@@ -673,7 +673,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
 .mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
 .mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
-.mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); }
+.mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); text-align: center; }
 /* 배합비(%) 입력은 이 행에서 실제로 "입력"하는 유일한 값이라 실제중량(자동 계산, 보조 정보)보다
    또렷하게 — font-weight/크기만 올리고 색은 그대로(계산 로직·값 자체는 미변경). */
 .mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
@@ -1046,7 +1046,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                      transition: border-color .15s ease, color .15s ease; }
 .dash-recent-item:hover { border-color: var(--acc); color: var(--acc); }
-.dash-recent-empty { font-size: 11px; color: var(--sub); padding: 4px 2px; }
+.dash-recent-empty { font-size: 11px; color: var(--sub); padding: 10px 8px; text-align: center; }
 /* ── 대시보드: 최근 레시피 카드 헤더 — 다른 3개 카드와 같이 h3에 고정 제목을 쓰고,
    그 아래에 최근/즐겨찾기 탭(.seg-control 재사용)을 별도 줄로 둔다. ── */
 .dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 8px; }
@@ -1205,7 +1205,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .gl-def b { color: var(--hdr); }
 .gl-link { font-size: 10.5px; color: var(--acc); cursor: pointer; margin-top: 6px; display: inline-block; }
 .gl-link:hover { text-decoration: underline; }
-.gl-empty { text-align: center; padding: 50px 20px; color: var(--sub); font-size: 12px; }
+.gl-empty { text-align: center; padding: 10px 8px; color: var(--sub); font-size: 11px; }
 
 /* ── 제품 유형 자동 판정 카드 & 배너 ── */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
@@ -6015,7 +6015,7 @@ function renderStdVerify(result, pc) {
   `;
 
   if (!deficits.length && !excesses.length) {
-    deficitEl.innerHTML = `<div style="text-align:center;color:var(--pass-t);padding:14px;font-weight:600">✅ 선택한 기준의 모든 항목을 충족합니다.</div>`;
+    deficitEl.innerHTML = `<div style="text-align:center;color:var(--pass-t);padding:24px;font-weight:600;font-size:11px">${svgIcon('check', 12)} 선택한 기준의 모든 항목을 충족합니다.</div>`;
   } else {
     let dHtml = '';
     if (deficits.length) {
@@ -7388,7 +7388,7 @@ function renderDashWarnSummary(elId = 'ds-warn-list') {
   const el = document.getElementById(elId);
   if (!el) return;
   if (!lastWarnItems.length) {
-    el.innerHTML = `<div class="dash-warn-empty">${svgIcon('check', 12)} 현재 경고 항목이 없습니다</div>`;
+    el.innerHTML = `<div class="dash-warn-empty" style="color:var(--pass-t)">${svgIcon('check', 12)} 현재 경고 항목이 없습니다</div>`;
     return;
   }
   const sorted = [...lastWarnItems].sort((a,b) => (b.ratioPct||0) - (a.ratioPct||0)).slice(0, 6);
