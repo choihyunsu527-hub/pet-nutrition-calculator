@@ -1906,6 +1906,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         </div>
         <div class="mix-unit-hint" id="unit-hint">100% = 1000g = 1kg 기준</div>
       </div>
+      <div id="mix-nutrient-note" style="padding:4px 8px;font-size:10px;font-weight:bold;color:var(--hdr);text-align:center;background:var(--gray-l);border-bottom:1px solid var(--border)">
+        ※ 아래 영양소 열(수분·단백질·지방 등)은 원료 자체의 중량이 아니라, <b>최종 배합 100g 기준 이 원료의 기여량</b>입니다 — 배합비(%)와 같은 방식의 값입니다.
+      </div>
       <div class="mix-table-wrap">
         <div id="mix-hdr">
           <span style="width:28px;display:flex;align-items:center;justify-content:center">
@@ -4741,6 +4744,9 @@ function buildMixHdr() {
     const div = MIX_HDR_GROUP_END.has(i) ? 'border-right:2px solid var(--border);' : '';
     sp.style.cssText = `width:${h.w}px;flex-shrink:0;${div}`;
     sp.innerHTML = h.label;
+    // 라벨(예: "수분<br>(g)")은 폭 제약상 그대로 두고, 값의 의미(원료 100g당이 아니라
+    // "최종 배합 100g당 이 원료의 기여량")는 툴크립으로만 보강한다 — 헤더 텍스트/폭은 미변경.
+    sp.title = `${h.label.replace(/<br>/g, ' ')} — 최종 배합 100g 기준 이 원료의 기여량`;
     hdr.appendChild(sp);
   });
 }
