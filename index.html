@@ -1135,6 +1135,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                    box-shadow: var(--sh); padding: 16px; position: relative; overflow: hidden; }
 .dash-stat-label { font-size: var(--fs-meta); font-weight: 700; color: var(--sub); margin-bottom: 6px; }
 .dash-stat-val { font-size: var(--fs-metric); font-weight: 800; color: var(--hdr); line-height: 1.2; letter-spacing: -.3px; }
+/* 경고 항목 카드 강조 — 새 색상 없이 기존 상태색 토큰(.fail과 동일한 --fail-bg/--fail-t)만 재사용 */
+.dash-stat-card.fail { background: var(--fail-bg); border-color: var(--fail-t); }
+.dash-stat-card.fail .dash-stat-val { color: var(--fail-t); }
 .dash-stat-unit { font-size: 10px; color: var(--sub); margin-left: 3px; font-weight: 400; }
 .dash-stat-sub { font-size: 10px; color: var(--sub); margin-top: 4px; }
 .dash-stat-link { font-size: 10px; font-weight: 700; color: var(--acc); cursor: pointer; margin-top: 8px;
@@ -1590,6 +1593,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <div class="ptype-card-label">제품 유형 분석</div>
             <div class="ptype-card-type" style="color:var(--sub)">배합비를 입력하면 자동으로 분석됩니다</div>
             <div class="ptype-card-desc">배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을 분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중 가장 적합한 제품 유형을 자동으로 추천합니다.</div>
+            <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
           </div>
         </div>
         <div class="dash-stat-row">
@@ -1599,7 +1603,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <div class="dash-stat-track"><div class="dash-stat-fill" id="ds-overall-fill" style="width:0%"></div></div>
             <span class="dash-stat-link" onclick="goTab('ana')">상세 분석 보기 →</span>
           </div>
-          <div class="dash-stat-card">
+          <div class="dash-stat-card" id="ds-warn-card">
             <div class="dash-stat-label">경고 항목</div>
             <div class="dash-stat-val" id="ds-warn-total">─</div>
             <div class="dash-stat-sub" id="ds-warn-breakdown">위험 0건 · 주의 0건</div>
@@ -5574,6 +5578,7 @@ function renderProductTypeCard(pc) {
         <div class="ptype-card-label">제품 유형 분석</div>
         <div class="ptype-card-type" style="color:var(--sub)">배합비를 입력하면 자동으로 분석됩니다</div>
         <div class="ptype-card-desc">배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을 분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중 가장 적합한 제품 유형을 자동으로 추천합니다.</div>
+        <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
       </div>`;
     return;
   }
@@ -5585,6 +5590,7 @@ function renderProductTypeCard(pc) {
       <div class="ptype-card-type">${pc.label}</div>
       <div class="ptype-card-type-en">${pc.en}</div>
       <div class="ptype-card-desc">${pc.desc}</div>
+      <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
       <div class="ptype-card-stats">
         <span class="ptype-card-stat">평가 기준<b>${pc.evaluationPolicy ? pc.evaluationPolicy.summary.replace('평가 기준: ','') : '─'}</b></span>
         <span class="ptype-card-stat">AAFCO 최소기준 충족률<b>${Math.round(pc.minPassRate * 100)}%</b></span>
@@ -7181,11 +7187,15 @@ function updateDashboard(result, pc) {
   const warnCritical  = lastWarnItems.filter(w => w.cls === 'fail').length;
   const warnWarning   = lastWarnItems.filter(w => w.cls === 'warn').length;
   const allergyCount  = getMixAllergyMatches().length;
-  document.getElementById('ds-warn-total').textContent = (warnCritical + warnWarning + allergyCount) + '개';
+  const warnTotalCount = warnCritical + warnWarning + allergyCount;
+  document.getElementById('ds-warn-total').textContent = warnTotalCount + '개';
   // "위험/주의" 문구를 다른 상태 배지와 같은 아이콘 규칙(STATUS_TONE)으로 통일 — 집계 로직은 미변경.
   document.getElementById('ds-warn-breakdown').innerHTML =
     `${svgIcon('warning', 10)}위험 ${warnCritical}건 · ${svgIcon('alert-circle', 10)}주의 ${warnWarning}건`
     + (allergyCount ? ` · 알레르기 ${allergyCount}건` : '');
+  // 경고 항목이 0보다 클 때만 카드를 강조(.fail 토큰 재사용) — 판정/집계 로직은 변경 없음
+  const warnCard = document.getElementById('ds-warn-card');
+  if (warnCard) warnCard.classList.toggle('fail', warnTotalCount > 0);
 
   document.getElementById('ds-me-val').textContent = result.meAsis.toLocaleString('ko', {maximumFractionDigits:0});
   document.getElementById('ds-me-dmb').textContent = result.meDmb.toLocaleString('ko', {maximumFractionDigits:0});
