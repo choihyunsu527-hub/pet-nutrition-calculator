@@ -451,7 +451,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 /* ── 카드 ── */
 .cards { display: flex; gap: 6px; padding: 8px 12px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
-.card { padding: 8px 12px; border-radius: var(--radius-md); min-width: 80px;
+.card { padding: 10px 12px; border-radius: var(--radius-md); min-width: 80px;
         background: var(--gray-grad); box-shadow: var(--sh);
         border: 1px solid var(--border); position: relative; overflow: hidden; }
 .card .card-title { font-size: 9px; color: var(--sub); line-height: 1.4; min-height: 25px; }
@@ -462,6 +462,10 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 /* ── 탭 전체 컨테이너 (배합 설계·원료 DB 제외) ── */
 .tab-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden;
              background: var(--panel-bg); transition: background .25s ease; }
+/* 경고 패널은 .dash-panel이 아니라 .tab-panel을 쓰지만, 표(8열·최대 약 1075px)가 넓지
+   않은 "카드형 정보 화면"이라 다른 카드 화면과 같은 폭 제한을 적용한다. .tab-panel 자체는
+   영양 분석·영양기준 DB처럼 진짜 넓은 표 화면도 공유하므로 여기서만 스코프한다. */
+#tab-warn .tab-panel { max-width: 1400px; margin: 0 auto; width: 100%; }
 
 /* ── 테이블 컨테이너 ── */
 .tbl-wrap { flex: 1; overflow: auto; padding: 20px;
@@ -515,7 +519,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                       background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                       box-shadow: var(--sh-md);
                       transition: background .25s ease; align-self: stretch; }
-.ana-contrib-hdr h3 { font-size: 13px; font-weight: 700; color: var(--hdr); margin-bottom: 2px; }
+.ana-contrib-hdr h3 { font-size: 13px; font-weight: 700; color: var(--hdr); margin-bottom: 12px; }
 .ana-contrib-sub { font-size: 10px; color: var(--sub); margin-bottom: 12px; letter-spacing: .3px; }
 .ana-contrib-nutsel { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
 .ana-contrib-nutbtn { padding: 5px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
@@ -695,7 +699,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .amino-info { background: var(--warn-bg); color: var(--warn-t); border-bottom: 1px solid rgba(217,179,108,0.3);
               padding: 8px 14px; font-size: 10px; flex-shrink: 0; }
 .amino-section { padding: 10px 12px; flex-shrink: 0; }
-.amino-section h3 { font-size: 11px; color: var(--hdr); margin-bottom: 8px; font-weight: bold; }
+.amino-section h3 { font-size: 11px; color: var(--hdr); margin-bottom: 12px; font-weight: bold; }
 /* 다른 데이터 표(원료DB/영양기준 DB/영양소·경고 분석)와 같은 톤으로, gap이 만드는 격자선 색을
    진한 --border 그대로가 아니라 옅게 섞은 값으로 바꿔 과도한 테두리 느낌을 줄인다. */
 .amino-grid { display: grid; grid-template-columns: 170px 70px 110px 100px 65px 82px 82px 75px 78px 90px;
@@ -951,29 +955,32 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 대시보드 ── */
 #tab-dash { overflow-y: auto; }
+/* .dash-panel을 쓰는 화면(대시보드/제품/분석 현황/에너지 분석/기준 검증/아미노산 분석/
+   경고 패널/용어 사전/설정 등 대부분의 "카드형 정보 화면")은 기본적으로 폭을 1400px로
+   제한해, 넓은 모니터에서 카드가 양옆으로 과도하게 늘어지지 않게 한다. 배합 설계·영양
+   분석·원료 DB·영양기준 DB처럼 가로로 긴 표가 필요한 화면은 이 클래스를 쓰지 않으므로
+   영향받지 않는다. */
 .dash-panel { background: var(--panel-bg);
               padding: 24px; transition: background .25s ease;
-              word-break: keep-all; overflow-wrap: break-word; }
-/* 대시보드만 전체 폭을 제한해 넓은 화면에서 카드가 과도하게 늘어지지 않게 한다
-   (.dash-panel/.dash-grid는 제품/분석 현황 등 다른 탭도 공유하는 클래스라 여기서만 스코프). */
-#tab-dash .dash-panel { max-width: 1400px; margin: 0 auto; }
+              word-break: keep-all; overflow-wrap: break-word;
+              max-width: 1400px; margin: 0 auto; }
 /* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
    창이 좁아져 카드 폭이 최소치보다 줄어들면 다음 줄로 자연스럽게 내려간다. */
-.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: stretch; }
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
 
 /* ── 분석 현황: 카드를 4개 그룹으로 묶는 래퍼 — 그룹 내부는 .dash-grid와 동일한
-   auto-fit 2열 규칙을 쓰되(좁아지면 1열로 자연 전환), 그룹 간에는 카드 간격(10px)보다
-   넉넉한 여백을 둬 그룹 경계를 시각적으로 구분한다. display:contents 없이 일반 래퍼로
-   구성해 각 그룹이 독립적인 레이아웃 박스를 갖는다. */
-.ana-group-list { display: flex; flex-direction: column; gap: 26px; }
+   auto-fit 2열 규칙을 쓰되(좁아지면 1열로 자연 전환), 그룹 간에는 카드 간격(16px)보다
+   넉넉한 "섹션 간" 여백(24px)을 둬 그룹 경계를 시각적으로 구분한다. display:contents 없이
+   일반 래퍼로 구성해 각 그룹이 독립적인 레이아웃 박스를 갖는다. */
+.ana-group-list { display: flex; flex-direction: column; gap: 24px; }
 .ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
                     letter-spacing: .5px; margin-bottom: 10px; }
-.ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: stretch; }
+.ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
 .dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
                  box-sizing: border-box; }
 .dash-section h3 { font-size: 11px; font-weight: 700; color: var(--hdr);
-                    margin-bottom: 8px; border-bottom: 1px solid var(--border);
+                    margin-bottom: 12px; border-bottom: 1px solid var(--border);
                     padding-bottom: 4px; }
 .dash-section h3 .linkable { cursor: pointer; transition: color .35s ease; }
 .dash-section h3 .linkable:hover { color: var(--acc); }
@@ -985,7 +992,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .product-info-box .pi-val { font-size: 13px; font-weight: 700; color: var(--hdr); line-height: 1.3;
              word-break: keep-all; overflow-wrap: break-word; }
 .dash-kpi { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
-             padding: 10px 12px; box-shadow: var(--sh); position: relative; overflow: hidden; }
+             padding: 12px 14px; box-shadow: var(--sh); position: relative; overflow: hidden; }
 .dash-kpi .kpi-label { font-size: 9px; color: var(--sub); margin-bottom: 4px; }
 .dash-kpi .kpi-val { font-size: 18px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
 .dash-kpi .kpi-unit { font-size: 9px; color: var(--sub); margin-top: 2px; }
@@ -998,8 +1005,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    두어 각 컬럼이 자기 카드들의 실제 높이만큼만 차지하게 한다.
    왼쪽: 기본 정보 → 영양 계산 설정 / 오른쪽: 생활 및 건강 정보 → 최근 레시피.
    flex-wrap으로 좁은 화면에서는 컬럼이 아래로 떨어져 자연스럽게 1열이 된다. */
-.dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-.dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 #tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
 #tab-dash .dash-section h3 { font-size: 10.5px; font-weight: 700; color: var(--sub);
                               text-transform: uppercase; letter-spacing: .4px; }
@@ -1060,7 +1067,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-section > .accent-card { flex: 1; display: flex; flex-direction: column; }
 .dash-section > .accent-card > .settings-actions { margin-top: auto; }
 .dash-comp-card { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
-                   padding: 8px 10px; box-shadow: var(--sh); }
+                   padding: 12px 14px; box-shadow: var(--sh); }
 .comp-title { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
 .dash-comp-stat { display: flex; justify-content: space-between; align-items: center;
                    padding: 1px 0; font-size: 10px; }
@@ -1105,7 +1112,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* ── 대시보드: 요약 통계 타일 ── */
 .dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
 .dash-stat-card { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
-                   box-shadow: var(--sh); padding: 14px 16px; position: relative; overflow: hidden; }
+                   box-shadow: var(--sh); padding: 16px; position: relative; overflow: hidden; }
 .dash-stat-label { font-size: 10.5px; font-weight: 700; color: var(--sub); margin-bottom: 6px; }
 .dash-stat-val { font-size: 22px; font-weight: 800; color: var(--hdr); line-height: 1.2; letter-spacing: -.3px; }
 .dash-stat-unit { font-size: 10px; color: var(--sub); margin-left: 3px; font-weight: 400; }
@@ -1153,7 +1160,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cb-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; font-size: 11px; }
 .cb-badge-desc { color: var(--sub); margin-right: 10px; }
 .cb-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 4px; }
-.cb-subcard { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; box-shadow: var(--sh); }
+.cb-subcard { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; box-shadow: var(--sh); }
 .cb-subtitle { font-size: 10.5px; font-weight: 700; color: var(--hdr); margin-bottom: 6px; }
 .cb-mini-table { width: 100%; font-size: 10.5px; border-collapse: collapse; }
 .cb-mini-table td { padding: 3px 4px; border-bottom: 1px solid var(--border); white-space: normal; }
@@ -1191,7 +1198,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 제품 유형 자동 판정 카드 & 배너 ── */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
-              border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 14px;
+              border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 14px;
               box-shadow: var(--sh); flex-wrap: wrap; }
 .ptype-card-main { flex: 1; min-width: 240px; }
 .ptype-card-label { font-size: 10.5px; color: var(--sub); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 3px; }
@@ -2175,7 +2182,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <span class="hdr-desc">ME(대사에너지) · RER/MER 급여량 · 칼로리 조성 · AAFCO 열량 밀도 보정</span>
       </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:24px">
 
           <div class="dash-section">
             <h3>핵심 에너지 지표</h3>
@@ -2250,7 +2257,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
       <div class="ptype-banner" id="stdverify-ptype-banner"></div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:24px">
 
           <div class="dash-section">
             <h3>검증 기준 선택</h3>
@@ -2423,7 +2430,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <span class="hdr-desc">이 계산기가 쓰는 수의영양학 · AAFCO 용어 모음</span>
       </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:24px">
 
           <div class="dash-section" style="gap:0">
             <div class="gl-search-row">
@@ -2446,7 +2453,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <span class="hdr-desc">이 계산기가 사용하는 공식·기준·판정 로직 레퍼런스</span>
       </div>
       <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
-        <div class="dash-panel" style="display:flex;flex-direction:column;gap:10px">
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:24px">
 
           <div class="dash-section">
             <h3>1. 왜 건물(DM) 기준으로 환산하는가</h3>
