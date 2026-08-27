@@ -386,11 +386,11 @@ html.sidebar-collapsed .nav-group-body { display: none; }
    input(#pet-allergy)이 콤마 구분 문자열로 그대로 보유(기존 저장/불러오기 로직 재사용) ── */
 .allergy-control { display: flex; gap: 6px; align-items: flex-start; }
 .allergy-control select { flex: 1 1 40%; min-width: 0; height: 37px; }
-.allergy-list { flex: 1 1 60%; min-width: 0; height: 75px; overflow-y: auto;
+.allergy-list { flex: 1 1 60%; min-width: 0; max-height: 110px; overflow-y: auto;
                 border: 1px solid var(--border); border-radius: 5px; background: var(--side2);
                 padding: 3px; display: flex; flex-direction: column; gap: 3px; }
 .allergy-list-empty { display: flex; align-items: center; justify-content: center;
-                       height: 100%; font-size: 9.5px; color: var(--sub); }
+                       min-height: 31px; font-size: 9.5px; color: var(--sub); }
 .allergy-item { display: flex; align-items: center; justify-content: space-between;
                 gap: 6px; padding: 3px 6px; border-radius: 4px; background: var(--inp);
                 font-size: 10.5px; color: var(--text); flex-shrink: 0; }
@@ -953,32 +953,26 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 대시보드: 핵심 지표(위 dash-top-row) 아래의 프로필/설정 카드 — "기타 정보" 계층 ──
    기존 .dash-grid/.dash-section은 다른 탭에서도 공유하는 카드 시스템이라 그대로 두고,
-   대시보드 하단 그리드에만 붙는 보조 클래스로 배치만 조정한다.
-   1) align-items: start — 각 카드는 자기 내용 높이만큼만 차지한다(같은 행의 다른 카드가
-      더 길어도 억지로 늘어나지 않음).
-   2) 2×2 그리드로 배치한다. .dash-profile-grid는 자체 그리드를 갖는 대신 display:contents로
-      박스를 없애 그 안의 3개 카드가 dash-bottom-grid의 그리드에 직접 참여하게 한다(HTML
-      구조는 그대로 둔 채 문서 순서 그대로 자동 배치) — 그 결과 1행에는 내용이 많은
-      "기본 정보"/"생활 및 건강 정보"가, 2행에는 내용이 적은 "영양 계산 설정"/"최근
-      레시피"가 짝지어져 settings-grid가 좁은 폭에 눌려 1열로 강제 축소되던 문제가 풀린다.
-      minmax(0, 1fr)은 자식(특히 최근 레시피의 긴 이름)의 내용 길이가 트랙 폭을 늘리지
-      못하게 막는다 — fr 트랙의 기본 최소폭은 auto(=내용의 min-content)이기 때문. */
-.dash-bottom-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; margin-top: 20px; }
-#tab-dash .dash-profile-grid { display: contents; }
+   대시보드 하단 영역에만 붙는 보조 클래스로 배치만 조정한다.
+   좌/우를 완전히 독립된 세로 스택(.dash-bottom-col)으로 분리한다 — 그리드의 같은 행에
+   묶이면 짧은 카드도 옆 카드 높이만큼 빈 공간이 생기므로, flex column 두 개를 나란히
+   두어 각 컬럼이 자기 카드들의 실제 높이만큼만 차지하게 한다.
+   왼쪽: 기본 정보 → 영양 계산 설정 / 오른쪽: 생활 및 건강 정보 → 최근 레시피.
+   flex-wrap으로 좁은 화면에서는 컬럼이 아래로 떨어져 자연스럽게 1열이 된다. */
+.dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 #tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
 #tab-dash .dash-section h3 { font-size: 10.5px; font-weight: 700; color: var(--sub);
                               text-transform: uppercase; letter-spacing: .4px; }
-/* ── 대시보드 2×2 전환 후 "기본 정보"(1번째 카드)/"영양 계산 설정"(3번째 카드)만 —
-   공용 .settings-grid(다른 탭에서도 쓰므로 그대로 둠)를 여기서만 minmax 하한을 200px로
-   올려 넓어진 카드 폭에서 auto-fill이 안정적으로 2열이 되게 한다. 각 카드의 마지막
-   항목(기본 정보의 "현재 체중", 영양 계산 설정의 "목표 체중 조절")은 홀수 개수라 2열의
-   짝이 없는 고아 항목이 되므로 전체 폭을 쓰게 한다. */
-#tab-dash .dash-profile-grid > .dash-section:nth-child(1) .settings-grid,
-#tab-dash .dash-profile-grid > .dash-section:nth-child(3) .settings-grid {
+/* ── 왼쪽 컬럼("기본 정보"/"영양 계산 설정")만 — 공용 .settings-grid(다른 탭에서도
+   쓰므로 그대로 둠)를 여기서만 minmax 하한을 200px로 올려 넓어진 카드 폭에서 auto-fill이
+   안정적으로 2열이 되게 한다. 각 카드의 마지막 항목(기본 정보의 "현재 체중", 영양 계산
+   설정의 "목표 체중 조절")은 홀수 개수라 2열의 짝이 없는 고아 항목이 되므로 전체 폭을
+   쓰게 한다. */
+#tab-dash .dash-bottom-col:first-child .settings-grid {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
-#tab-dash .dash-profile-grid > .dash-section:nth-child(1) .settings-grid > .sf-item:last-child,
-#tab-dash .dash-profile-grid > .dash-section:nth-child(3) .settings-grid > .sf-item:last-child {
+#tab-dash .dash-bottom-col:first-child .settings-grid > .sf-item:last-child {
   grid-column: 1 / -1;
 }
 /* ── 대시보드: 최근 레시피 카드 — 드롭다운이 아닌 세로 목록. 기존 .dash-section 톤 재사용 ── */
@@ -1574,7 +1568,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         </div>
         </div>
         <div class="dash-bottom-grid">
-        <div class="dash-grid dash-profile-grid">
+        <div class="dash-bottom-col">
         <div class="dash-section">
           <h3>기본 정보</h3>
           <div class="accent-card">
@@ -1628,6 +1622,36 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             </div>
           </div>
         </div>
+        <div class="dash-section">
+          <h3>영양 계산 설정</h3>
+          <div class="accent-card">
+            <div class="settings-grid">
+              <div class="sf-item">
+                <label>생애 단계</label>
+                <select id="sb-target" onchange="calculate()">
+                  <option>성견(성체유지)</option><option>성장견</option><option>임신·수유견</option><option>노령견</option>
+                </select>
+              </div>
+              <div class="sf-item">
+                <label>목표 체중 (kg)</label>
+                <input id="pet-target-bw" type="number" value="15" min="1" max="80" step="0.5" onchange="calculate()">
+              </div>
+              <div class="sf-item">
+                <label>목표 체중 조절</label>
+                <select id="pet-weight-goal" onchange="calculate()">
+                  <option value="유지" selected>유지</option>
+                  <option value="감량">감량</option>
+                  <option value="증량">증량</option>
+                </select>
+              </div>
+            </div>
+            <div style="font-size:9.5px;color:var(--sub);margin-top:8px">
+              감량/증량으로 설정하거나 BCS가 6단계 이상(과체중) 또는 4단계 이하(저체중)이면, 칼로리 계산 기준이 위 목표 체중으로 자동 전환됩니다. <span id="pet-weight-basis-note"></span>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="dash-bottom-col">
         <div class="dash-section">
           <h3>생활 및 건강 정보</h3>
           <div class="accent-card">
@@ -1700,35 +1724,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         <div class="dash-section">
-          <h3>영양 계산 설정</h3>
-          <div class="accent-card">
-            <div class="settings-grid">
-              <div class="sf-item">
-                <label>생애 단계</label>
-                <select id="sb-target" onchange="calculate()">
-                  <option>성견(성체유지)</option><option>성장견</option><option>임신·수유견</option><option>노령견</option>
-                </select>
-              </div>
-              <div class="sf-item">
-                <label>목표 체중 (kg)</label>
-                <input id="pet-target-bw" type="number" value="15" min="1" max="80" step="0.5" onchange="calculate()">
-              </div>
-              <div class="sf-item">
-                <label>목표 체중 조절</label>
-                <select id="pet-weight-goal" onchange="calculate()">
-                  <option value="유지" selected>유지</option>
-                  <option value="감량">감량</option>
-                  <option value="증량">증량</option>
-                </select>
-              </div>
-            </div>
-            <div style="font-size:9.5px;color:var(--sub);margin-top:8px">
-              감량/증량으로 설정하거나 BCS가 6단계 이상(과체중) 또는 4단계 이하(저체중)이면, 칼로리 계산 기준이 위 목표 체중으로 자동 전환됩니다. <span id="pet-weight-basis-note"></span>
-            </div>
-          </div>
-        </div>
-        </div>
-        <div class="dash-section">
           <h3>최근 레시피</h3>
           <div class="seg-control dash-recent-tabs">
             <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근 레시피</button>
@@ -1739,7 +1734,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         </div>
-        <div style="border-top:1px solid var(--border);margin-top:16px;padding-bottom:120px"></div>
+        </div>
+        <div style="border-top:1px solid var(--border);margin-top:16px"></div>
         </div>
       </div>
     </div>
