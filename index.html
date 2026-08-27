@@ -483,12 +483,21 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
    1행은 top:0, 2행은 1행 높이만큼 내려서 각자 제자리에 고정되도록 함 */
 #ana-table thead tr:first-child th { height: 27px; }
 #ana-table thead tr:nth-child(2) th { top: 27px; }
-/* 영양소/경고 분석 표 — 원료DB·영양기준 DB 표에 쓴 것과 같은 방식으로 진한 테두리(var(--border))만
-   옅게 만든 파생값을 덮어써서 격자선 노이즈를 줄인다(그룹 헤더의 색상 배경 등은 그대로 유지). */
-#ana-table, #warn-table { border-color: color-mix(in srgb, var(--border) 65%, transparent); }
-#ana-table th, #warn-table th,
-#ana-table td, #warn-table td { border-color: color-mix(in srgb, var(--border) 65%, transparent); }
+/* 영양소/경고/기준검증 표 — 원료DB·영양기준 DB 표(810번대)와 동일한 --table-line/--table-hdr-bg/
+   --hover-tint 토큰을 그대로 재사용한다(새 색상·새 컴포넌트 없음, 밀도/패딩은 표별로 유지). */
+#ana-table, #warn-table, #stdverify-table {
+  --table-line: color-mix(in srgb, var(--border) 65%, transparent);
+  --table-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%);
+  border-color: var(--table-line);
+}
+#ana-table th, #warn-table th, #stdverify-table th {
+  border-color: var(--table-line); background: var(--table-hdr-bg);
+}
+#ana-table td, #warn-table td, #stdverify-table td { border-color: var(--table-line); }
 #ana-table td, #warn-table td { padding: 5px 8px; }
+#ana-table tbody tr:not(.cat-row):hover td,
+#warn-table tbody tr:not(.cat-row):hover td,
+#stdverify-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
 th { background: var(--th-bg); color: var(--hdr); padding: 6px 6px;
      text-align: center; position: sticky; top: 0; z-index: 10;
      white-space: nowrap; font-size: 10px; border: 1px solid var(--border);
