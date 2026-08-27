@@ -1573,11 +1573,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         </div>
-        <div class="dash-section" id="dk-nutrient-summary-card">
-          <h3><span class="linkable" onclick="goTab('analysis')">주요 영양소 상태</span></h3>
-          <div class="dash-quick-grid" id="dk-quick-grid-dash"></div>
-          <button type="button" class="ptype-evidence-btn" style="margin-top:10px" onclick="goTab('analysis')">상세 영양 분석 →</button>
-        </div>
         <div class="dash-bottom-grid">
         <div class="dash-grid dash-profile-grid">
         <div class="dash-section">
@@ -7029,15 +7024,6 @@ function updateDashboard(result, pc) {
   const keyNutrients = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)',
                         '비타민A','비타민D','비타민E(α-TE)','철(Fe)','아연(Zn)','리놀레산(LA,n-6)'];
   document.getElementById('dk-quick-grid').innerHTML = buildNutrientQuickHtml(stds, policy, keyNutrients);
-
-  // 대시보드 탭(id="tab-dash")용 "주요 영양소 상태" 요약 카드 — "분석 현황" 탭과 동일한
-  // buildNutrientQuickHtml()/gateJudge()/qi-badge 로직을 그대로 재사용하고, 6개 핵심 영양소만 축약 표시.
-  const dashKeyNutrients = keyNutrients.slice(0, 6);
-  const dashQuickEl = document.getElementById('dk-quick-grid-dash');
-  if (dashQuickEl) {
-    const dashQuickHtml = buildNutrientQuickHtml(stds, policy, dashKeyNutrients);
-    dashQuickEl.innerHTML = dashQuickHtml || '<div class="dash-warn-empty">배합비를 입력하면 표시됩니다</div>';
-  }
 
   // Ca:P 요약 배지 — 판정은 evaluateCapStatus()로 통일(경고 패널 cap-card·게이지와 동일 로직 재사용)
   const cap   = dmb.cap;
