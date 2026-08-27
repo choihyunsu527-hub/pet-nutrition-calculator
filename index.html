@@ -492,9 +492,14 @@ tr.sec-row td { background: var(--sec); color: var(--hdr); font-weight: bold; }
 tr:nth-child(even):not(.cat-row):not(.sec-row) td { background: var(--even); }
 tr:nth-child(odd):not(.cat-row):not(.sec-row) td { background: var(--odd); }
 tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !important; }
+/* 상태 셀 색상 — "초과"는 최소/최대 기준을 실제로 벗어난 상태이므로 --fail(빨강)을 쓴다.
+   "주의"(근접이지만 아직 벗어나지 않음, 경고 패널 전용)만 별도 .warn 클래스로 --warn(노랑)을 쓴다
+   — 예전엔 이 둘이 같은 .over 클래스를 공유해서 탭마다 "초과"의 색이 반대로 보였다(판정값 자체는
+   그대로, 색 매핑만 정리). */
 .pass { background: var(--pass-bg) !important; color: var(--pass-t); font-weight: bold; }
 .fail { background: var(--fail-bg) !important; color: var(--fail-t); font-weight: bold; }
-.over { background: var(--warn-bg) !important; color: var(--warn-t); font-weight: bold; }
+.over { background: var(--fail-bg) !important; color: var(--fail-t); font-weight: bold; }
+.warn { background: var(--warn-bg) !important; color: var(--warn-t); font-weight: bold; }
 .none { background: var(--gray-l) !important; color: var(--sub); font-weight: bold; }
 .info { background: var(--calc) !important; color: var(--acc); font-weight: bold; }
 .num { text-align: right; }
@@ -1062,7 +1067,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-comp-stat .cs-val { font-weight: 700; font-size: 11px; }
 .cs-pass { color: var(--pass-t); }
 .cs-fail { color: var(--fail-t); }
-.cs-over { color: var(--warn-t); }
+.cs-over { color: var(--fail-t); }
 .dash-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .dash-quick-item { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                     padding: 6px 6px; box-shadow: var(--sh);
@@ -1070,10 +1075,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                     justify-content: center; align-items: center; text-align: center; }
 .qi-name { font-size: 9px; color: var(--text); line-height: 1.2; }
 .qi-value { font-size: 10px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
-.qi-badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+/* ── 상태 배지 표준 컴포넌트 — 정상/부족/초과/주의/참고/미함유(평가 제외 포함)를
+   앱 전체에서 이 하나의 모양(아이콘+문구, radius 3px)으로 통일한다. 색은 기존
+   --pass/--fail/--warn 토큰 그대로: 부족·초과 모두 --fail(실제 기준 위반), 주의만
+   --warn(아직 위반은 아니고 근접), 참고는 기존 .info와 같은 --calc/--acc 계열. */
+.qi-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+.qi-badge svg { flex-shrink: 0; }
 .qi-pass { background: var(--pass-bg); color: var(--pass-t); }
 .qi-fail { background: var(--fail-bg); color: var(--fail-t); }
-.qi-over { background: var(--warn-bg); color: var(--warn-t); }
+.qi-over { background: var(--fail-bg); color: var(--fail-t); }
+.qi-warn { background: var(--warn-bg); color: var(--warn-t); }
+.qi-info { background: var(--calc); color: var(--acc); }
 .qi-none { background: var(--gray-l); color: var(--sub); }
 .qi-gauge-track { width: 100%; height: 5px; background: var(--gray-l); border-radius: 999px; overflow: hidden; margin-top: 1px; }
 .qi-gauge-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
@@ -1224,7 +1236,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                       align-items: center; justify-content: center; text-align: center; }
 .dash-donut-val { font-size: 19px; font-weight: 700; color: var(--hdr); position: relative; z-index: 1; }
 .dash-donut-sub { font-size: 9px; color: var(--sub); margin-top: 10px; text-align: center; }
-.dash-donut-badge { font-size: 10.5px; font-weight: 700; padding: 3px 12px; border-radius: 999px; margin-top: 6px; }
+.dash-donut-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; padding: 3px 12px; border-radius: 3px; margin-top: 6px; }
+.dash-donut-badge svg { flex-shrink: 0; }
 .dash-legend { display: flex; flex-direction: column; gap: 4px; width: 100%; }
 .dash-legend-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text); }
 .dash-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -1235,7 +1248,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-warn-list { display: flex; flex-direction: column; gap: 6px; }
 .dash-warn-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px;
                    background: var(--gray-l); border-radius: 10px; }
-.dash-warn-badge { font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; flex-shrink: 0; }
+.dash-warn-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 3px; flex-shrink: 0; }
+.dash-warn-badge svg { flex-shrink: 0; }
 .dash-warn-badge.critical { background: var(--fail-bg); color: var(--fail-t); }
 .dash-warn-badge.warning { background: var(--warn-bg); color: var(--warn-t); }
 .dash-warn-name { font-size: 11px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
@@ -1960,20 +1974,20 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <div class="dash-compliance">
             <div class="dash-comp-card">
               <div class="comp-title" style="color:var(--nrc-t)">NRC 2006</div>
-              <div class="dash-comp-stat"><span>✅ 충족</span><span class="cs-val cs-pass" id="dc-nrc-pass">─</span></div>
-              <div class="dash-comp-stat"><span>❌ 결핍</span><span class="cs-val cs-fail" id="dc-nrc-fail">─</span></div>
-              <div class="dash-comp-stat"><span>⚠️ 초과</span><span class="cs-val cs-over" id="dc-nrc-over">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-nrc-pass">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-nrc-fail">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과</span><span class="cs-val cs-over" id="dc-nrc-over">─</span></div>
             </div>
             <div class="dash-comp-card">
               <div class="comp-title" style="color:var(--aa-t)">AAFCO 2023</div>
-              <div class="dash-comp-stat"><span>✅ 적합</span><span class="cs-val cs-pass" id="dc-aa-pass">─</span></div>
-              <div class="dash-comp-stat"><span>❌ 미달</span><span class="cs-val cs-fail" id="dc-aa-fail">─</span></div>
-              <div class="dash-comp-stat"><span>⚠️ 초과</span><span class="cs-val cs-over" id="dc-aa-over">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-aa-pass">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-aa-fail">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과</span><span class="cs-val cs-over" id="dc-aa-over">─</span></div>
             </div>
             <div class="dash-comp-card">
               <div class="comp-title" style="color:var(--fed-t)">FEDIAF 2025</div>
-              <div class="dash-comp-stat"><span>✅ 적합</span><span class="cs-val cs-pass" id="dc-fed-pass">─</span></div>
-              <div class="dash-comp-stat"><span>❌ 미달</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-fed-pass">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
             </div>
           </div>
         </div>
@@ -2098,9 +2112,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
       <div id="ana-legend" style="display:flex;gap:8px;padding:5px 10px;font-size:9.5px;align-items:center;justify-content:center;flex-shrink:0;background:var(--gray-l);border-bottom:1px solid var(--border)">
         <span style="font-weight:700;color:var(--sub)">판정:</span>
-        <span style="background:var(--pass-bg);color:var(--pass-t);padding:1px 7px;border-radius:2px;font-weight:bold">✅ 적합/충족</span>
-        <span style="background:var(--fail-bg);color:var(--fail-t);padding:1px 7px;border-radius:2px;font-weight:bold">❌ 미달/결핍</span>
-        <span style="background:var(--warn-bg);color:var(--warn-t);padding:1px 7px;border-radius:2px;font-weight:bold">⚠️ 초과</span>
+        <span style="background:var(--pass-bg);color:var(--pass-t);padding:1px 7px;border-radius:2px;font-weight:bold">정상</span>
+        <span style="background:var(--fail-bg);color:var(--fail-t);padding:1px 7px;border-radius:2px;font-weight:bold">부족</span>
+        <span style="background:var(--fail-bg);color:var(--fail-t);padding:1px 7px;border-radius:2px;font-weight:bold">초과</span>
       </div>
       <div class="tbl-wrap">
         <table id="ana-table">
@@ -2475,9 +2489,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               판정은 실측값(DMB)을 각 기준의 최소/최대값과 비교해 세 가지로 분류합니다.
             </div>
             <div class="cb-badges">
-              <span class="qi-badge qi-pass">✅ 충족(pass)</span><span class="cb-badge-desc">최소기준 이상 (최대기준이 있다면 그 이하)</span>
-              <span class="qi-badge qi-fail">❌ 미달(fail)</span><span class="cb-badge-desc">최소기준 미만</span>
-              <span class="qi-badge qi-over">⚠️ 초과(over)</span><span class="cb-badge-desc">최대기준 초과</span>
+              <span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상(pass)</span><span class="cb-badge-desc">최소기준 이상 (최대기준이 있다면 그 이하)</span>
+              <span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족(fail)</span><span class="cb-badge-desc">최소기준 미만</span>
+              <span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과(over)</span><span class="cb-badge-desc">최대기준 초과</span>
             </div>
           </div>
 
@@ -2949,6 +2963,13 @@ const ICON_PATHS = {
   folder: '<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>',
   file: '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/>',
   warning: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+  // 상태 배지(정상/부족/초과/주의/참고/미함유) 전용 아이콘 5종 — 기존 warning(AlertTriangle)과
+  // 함께 6개 상태를 모두 커버한다. 다른 아이콘과 같은 Lucide 24×24 stroke path.
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  'alert-circle': '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>',
+  minus: '<path d="M5 12h14"/>',
   beef: '<path d="M16.4 13.7A6.5 6.5 0 1 0 6.28 6.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3"/><path d="m18.5 6 2.19 4.5a6.48 6.48 0 0 1-2.29 7.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5"/><circle cx="12.5" cy="8.5" r="2.5"/>',
   fish: '<path d="M6.5 12c.94-3.46 4.94-6 8.5-6 3.56 0 6.06 2.54 7 6-.94 3.47-3.44 6-7 6s-7.56-2.53-8.5-6Z"/><path d="M18 12v.5"/><path d="M16 17.93a9.77 9.77 0 0 1 0-11.86"/><path d="M7 10.67C7 8 5.58 5.97 2.73 5.5c-1 1.5-1 5 .23 6.5-1.24 1.5-1.24 5-.23 6.5C5.58 18.03 7 16 7 13.33"/><path d="M10.46 7.26C10.2 5.88 9.17 4.24 8 3h5.8a2 2 0 0 1 1.98 1.67l.23 1.4"/><path d="m16.01 17.93-.23 1.4A2 2 0 0 1 13.8 21H9.5a5.96 5.96 0 0 0 1.49-3.98"/>',
   egg: '<path d="M12 2C8 2 4 8 4 14a8 8 0 0 0 16 0c0-6-4-12-8-12"/>',
@@ -2975,6 +2996,32 @@ function svgIcon(name, size) {
 function svgStarIcon(filled, size) {
   size = size || 14;
   return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${filled ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0">${ICON_PATHS.star}</svg>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 상태 배지(정상/부족/초과/주의/참고/미함유/평가 제외) 표준 — 판정값(pass/fail/over/...)은
+// 그대로 두고 "화면에 어떤 아이콘·문구·색으로 그릴지"만 이 한 곳에서 정의한다. gateJudge()·
+// judge()·evaluateCapStatus() 등 판정 함수는 건드리지 않으며, 여기서는 이미 나온 판정값을
+// 입력으로 받아 표시용 HTML만 만든다.
+// ────────────────────────────────────────────────────────────────────────────
+const STATUS_TONE = {
+  pass:  { icon: 'check',        label: '정상',     cls: 'qi-pass' },
+  fail:  { icon: 'x',            label: '부족',     cls: 'qi-fail' },
+  over:  { icon: 'warning',      label: '초과',     cls: 'qi-over' },
+  warn:  { icon: 'alert-circle', label: '주의',     cls: 'qi-warn' },
+  info:  { icon: 'info',         label: '참고',     cls: 'qi-info' },
+  none:  { icon: 'minus',        label: '미함유',   cls: 'qi-none' },
+  gated: { icon: 'minus',        label: '평가 제외', cls: 'qi-none' },
+};
+// 셀 배경이 이미 상태색을 칠하는 곳(ana-table 등)에서 쓰는 아이콘+문구만(배지 pill 없이).
+function statusIconText(tone, size) {
+  const t = STATUS_TONE[tone] || STATUS_TONE.none;
+  return `${svgIcon(t.icon, size || 11)}${t.label}`;
+}
+// 배경이 없는 곳(quick-grid, 기준 충족 현황, Ca:P, 경고 요약 등)에서 쓰는 표준 pill 배지.
+function statusBadge(tone, size) {
+  const t = STATUS_TONE[tone] || STATUS_TONE.none;
+  return `<span class="qi-badge ${t.cls}">${svgIcon(t.icon, size || 11)}${t.label}</span>`;
 }
 
 let toastHideTimer = null;
@@ -5676,40 +5723,48 @@ function updateCards(result, pc) {
   // 배합비(%)만으로는 실제 배치 크기를 알 수 없으므로 총 배치량(g)도 함께 보여준다.
   document.getElementById('c-tot-g').textContent   = getMixTotalG().toLocaleString('ko') + ' g';
 
-  // 간식/직접급여불가는 결핍 평가 자체를 적용하지 않음 — 요약 카드도 "주식기준 외"로 통일
+  // 카드 값(아이콘+문구)과 색을 함께 설정 — 이모지가 스스로 색을 갖던 것과 달리 SVG 아이콘은
+  // currentColor를 쓰므로, 판정 상태에 맞는 색(--pass-t/--fail-t/--sub)을 같이 지정해야
+  // 예전과 같은 정상/부족 색 구분이 유지된다(판정값 nf/af/ff/gf 자체는 미변경).
+  function setJudgeCard(id, tone, html, title) {
+    const el = document.getElementById(id);
+    el.innerHTML = html;
+    el.style.color = tone === 'pass' ? 'var(--pass-t)' : tone === 'fail' ? 'var(--fail-t)' : 'var(--sub)';
+    el.title = title || '';
+  }
+
+  // 간식/직접급여불가는 결핍 평가 자체를 적용하지 않음 — 요약 카드도 "평가 제외"로 통일
   if (!policy.evalMinDeficiency) {
     const note = `주식 기준 미적용 (${pc.short} 유형)`;
-    document.getElementById('c-nrc').textContent    = '주식기준 외';
-    document.getElementById('c-nrc').title = note;
-    document.getElementById('c-aafco').textContent  = '주식기준 외';
-    document.getElementById('c-aafco').title = note;
-    document.getElementById('c-fediaf').textContent = '주식기준 외';
-    document.getElementById('c-fediaf').title = note;
+    setJudgeCard('c-nrc',    'gated', statusIconText('gated'), note);
+    setJudgeCard('c-aafco',  'gated', statusIconText('gated'), note);
+    setJudgeCard('c-fediaf', 'gated', statusIconText('gated'), note);
     return;
   }
 
   const gf = stds.filter(s => s.aafco_gr_j==='fail').length;
+  // 판정 개수(nf/af/ff/gf) 자체는 그대로 — 문구/아이콘/색만 STATUS_TONE 기준(정상/부족)으로 통일.
   if (policy.showCompleteness) {
-    // 주식: 완전·균형식 인증 문구(✅ 충족/성견 등) 그대로 사용
-    document.getElementById('c-nrc').textContent     = nf===0 ? '✅ 충족' : `❌ ${nf}개`;
-    document.getElementById('c-nrc').title = '';
-    document.getElementById('c-aafco').textContent   = af===0 ? (isCat ? '✅ 성묘' : '✅ 성견') : `❌ ${af}개`;
-    document.getElementById('c-aafco').title = `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개`;
-    document.getElementById('c-fediaf').textContent  = ff===0 ? '✅ 적합' : `❌ ${ff}개`;
-    document.getElementById('c-fediaf').title = '';
+    // 주식: 완전·균형식 인증
+    setJudgeCard('c-nrc',    nf===0?'pass':'fail', nf===0 ? statusIconText('pass') : `${statusIconText('fail')} ${nf}개`);
+    setJudgeCard('c-aafco',  af===0?'pass':'fail', af===0 ? `${statusIconText('pass')} ${isCat ? '성묘' : '성견'}` : `${statusIconText('fail')} ${af}개`,
+      `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개`);
+    setJudgeCard('c-fediaf', ff===0?'pass':'fail', ff===0 ? statusIconText('pass') : `${statusIconText('fail')} ${ff}개`);
   } else {
-    // 보조식: 완전·균형식 인증 문구는 쓰지 않고, 결핍(개선 필요) 항목 개수만 안내
-    document.getElementById('c-nrc').textContent     = nf===0 ? '결핍 없음' : `❌ ${nf}개 부족`;
-    document.getElementById('c-nrc').title = '보조식은 완전·균형식 판정을 적용하지 않으며, 주식 전환 시 개선이 필요한 항목만 안내합니다.';
-    document.getElementById('c-aafco').textContent   = af===0 ? '결핍 없음' : `❌ ${af}개 부족`;
-    document.getElementById('c-aafco').title = `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개 (보조식 참고용, 완전·균형식 판정 아님)`;
-    document.getElementById('c-fediaf').textContent  = ff===0 ? '결핍 없음' : `❌ ${ff}개 부족`;
-    document.getElementById('c-fediaf').title = '보조식 참고용 — 완전·균형식 판정 아님';
+    // 보조식: 완전·균형식 인증 문구는 쓰지 않고, 부족(개선 필요) 항목 개수만 안내
+    setJudgeCard('c-nrc',    nf===0?'pass':'fail', nf===0 ? statusIconText('pass') : `${statusIconText('fail')} ${nf}개`,
+      '보조식은 완전·균형식 판정을 적용하지 않으며, 주식 전환 시 개선이 필요한 항목만 안내합니다.');
+    setJudgeCard('c-aafco',  af===0?'pass':'fail', af===0 ? statusIconText('pass') : `${statusIconText('fail')} ${af}개`,
+      `${isCat ? '성장묘' : '성장견'} 미달: ${gf}개 (보조식 참고용, 완전·균형식 판정 아님)`);
+    setJudgeCard('c-fediaf', ff===0?'pass':'fail', ff===0 ? statusIconText('pass') : `${statusIconText('fail')} ${ff}개`,
+      '보조식 참고용 — 완전·균형식 판정 아님');
   }
 }
 
-const J_LABEL = {pass:'✅ 적합',fail:'❌ 미달',over:'⚠️ 초과',gated:'주식기준 외','─':'─'};
-const J_NRC   = {pass:'✅ 충족',fail:'❌ 결핍',over:'⚠️ RA초과',gated:'주식기준 외','─':'─'};
+// 판정값(pass/fail/over/gated)은 그대로, 화면 문구/아이콘만 STATUS_TONE 기준으로 통일
+// ("적합/충족" → 정상, "미달/결핍" → 부족, "RA초과" 포함 모든 초과 → 초과, "주식기준 외" → 평가 제외).
+const J_LABEL = {pass:statusIconText('pass'),fail:statusIconText('fail'),over:statusIconText('over'),gated:statusIconText('gated'),'─':'─'};
+const J_NRC   = {pass:statusIconText('pass'),fail:statusIconText('fail'),over:statusIconText('over'),gated:statusIconText('gated'),'─':'─'};
 
 function updateAnaTable(result, pc) {
   const tbody = document.getElementById('ana-body');
@@ -5932,7 +5987,7 @@ function renderStdVerify(result, pc) {
     <div class="dash-kpi"><div class="kpi-label">전체 충족률</div><div class="kpi-val">${overallPct}%</div></div>
     <div class="dash-kpi"><div class="kpi-label">충족</div><div class="kpi-val" style="color:var(--pass-t)">${passCount}</div></div>
     <div class="dash-kpi"><div class="kpi-label">부족</div><div class="kpi-val" style="color:var(--fail-t)">${failCount}</div></div>
-    <div class="dash-kpi"><div class="kpi-label">초과</div><div class="kpi-val" style="color:var(--warn-t)">${overCount}</div></div>
+    <div class="dash-kpi"><div class="kpi-label">초과</div><div class="kpi-val" style="color:var(--fail-t)">${overCount}</div></div>
   `;
 
   if (!deficits.length && !excesses.length) {
@@ -6258,10 +6313,13 @@ function updateWarnPanel(result, pc) {
       ? '아래 최대 기준 초과 여부는 이 제품을 100% 급여했다고 가정한 수치이며, 보조식은 소량 급여가 일반적이므로 참고용으로만 활용하세요.'
       : undefined);
 
-  // Ca:P 카드 — 판정 자체는 evaluateCapStatus()에서 정책에 따라 한 곳에서 계산(로직 중복 방지)
+  // Ca:P 카드 — 판정 자체는 evaluateCapStatus()에서 정책에 따라 한 곳에서 계산(로직 중복 방지).
+  // 여기서는 그 결과(level/text/bg/color)를 그대로 쓰고, 앞에 붙는 아이콘만 다른 상태 배지와
+  // 같은 규칙(STATUS_TONE)으로 통일한다 — evaluateCapStatus() 자체는 미변경.
   const capStatus = evaluateCapStatus(cap, policy, isCat);
+  const CAP_LEVEL_ICON = { pass:'check', warn:'alert-circle', fail:'warning', reference:'info', excluded:'minus', unknown:'alert-circle' };
   const capCard = document.getElementById('cap-card');
-  capCard.textContent = capStatus.text;
+  capCard.innerHTML = `${svgIcon(CAP_LEVEL_ICON[capStatus.level] || 'minus', 12)} ${capStatus.text}`;
   capCard.style.background = capStatus.bg;
   capCard.style.color = capStatus.color;
 
@@ -6313,19 +6371,23 @@ function updateWarnPanel(result, pc) {
     if (mx) {
       if (val === 0) {
         ratio = '0.0%';
-        status = '⬜ 미함유 (원료 미포함)'; cls = 'none';
+        status = `${statusIconText('none')} (원료 미포함)`; cls = 'none';
       } else {
         const r = val/mx;
         ratioPct = r*100;
         ratio = ratioPct.toFixed(1)+'%';
-        if (r > 1.0) { status=`🔴 초과! (${(r*100).toFixed(0)}%)`; cls='fail'; }
-        else if (r > 0.8) { status=`🟡 주의 (${(r*100).toFixed(0)}%)`; cls='over'; }
-        else { status=`✅ 정상 (${(r*100).toFixed(0)}%)`; cls='pass'; }
+        // 판정 임계값(1.0/0.8)은 그대로 — "초과"(실제로 최대기준을 넘음)는 --fail, "주의"(아직
+        // 넘진 않았지만 80% 이상 근접)는 --warn 클래스(.warn, 위 STATUS_TONE과 동일 색 규칙)로
+        // 구분한다. 예전엔 이 "주의" 상태가 다른 탭의 "초과"와 같은 .over 클래스를 공유해
+        // 색이 서로 반대로 보였다 — 클래스명만 분리, 조건식(r>1.0/r>0.8)은 미변경.
+        if (r > 1.0) { status=`${statusIconText('over')} (${(r*100).toFixed(0)}%)`; cls='fail'; }
+        else if (r > 0.8) { status=`${statusIconText('warn')} (${(r*100).toFixed(0)}%)`; cls='warn'; }
+        else { status=`${statusIconText('pass')} (${(r*100).toFixed(0)}%)`; cls='pass'; }
       }
     } else {
-      status=`🔵 참고: ${vs} (Max 미설정)`; cls='info';
+      status=`${statusIconText('info')}: ${vs} (Max 미설정)`; cls='info';
     }
-    if (cls === 'fail' || cls === 'over') {
+    if (cls === 'fail' || cls === 'warn') {
       lastWarnItems.push({ name: nm, cls, ratioPct, risk });
     }
     html += `<tr>
@@ -6954,14 +7016,9 @@ function buildNutrientQuickHtml(stds, policy, nameList) {
     const s = stds.find(st => st.name === nm);
     if (!s) return;
     const j = gateJudge(s.aafco_j, policy);
-    let cls, lbl, gaugeColor;
-    if (j === 'gated') {
-      cls = 'qi-none'; lbl = '평가 제외'; gaugeColor = 'var(--sub)';
-    } else {
-      cls = j==='pass' ? 'qi-pass' : j==='fail' ? 'qi-fail' : j==='over' ? 'qi-over' : 'qi-none';
-      lbl = j==='pass' ? '✅ 적합' : j==='fail' ? '❌ 미달' : j==='over' ? '⚠️ 초과' : '─';
-      gaugeColor = j==='pass' ? 'var(--pass-t)' : j==='fail' ? 'var(--fail-t)' : j==='over' ? 'var(--warn-t)' : 'var(--sub)';
-    }
+    // 판정값(j)은 그대로 — tone은 "어떤 아이콘/문구/색으로 보여줄지"만 결정(STATUS_TONE 기준).
+    const tone = j === 'gated' ? 'gated' : (j === 'pass' || j === 'fail' || j === 'over') ? j : 'none';
+    const gaugeColor = tone === 'pass' ? 'var(--pass-t)' : (tone === 'fail' || tone === 'over') ? 'var(--fail-t)' : 'var(--sub)';
     const hasVal = typeof s.value === 'number' && !Number.isNaN(s.value);
     const valueText = hasVal ? `${s.value.toFixed(2)} ${s.unit || ''}`.trim() : '─';
     const hasMin = typeof s.aa_min === 'number' && !Number.isNaN(s.aa_min) && s.aa_min > 0;
@@ -6969,7 +7026,7 @@ function buildNutrientQuickHtml(stds, policy, nameList) {
     quickHtml += `<div class="dash-quick-item">
       <span class="qi-name">${nm}</span>
       <span class="qi-value">${valueText}</span>
-      <span class="qi-badge ${cls}">${lbl}</span>
+      ${statusBadge(tone)}
       <div class="qi-gauge-track"><div class="qi-gauge-fill" style="width:${(gaugePct/150*100).toFixed(1)}%;background:${gaugeColor}"></div></div>
     </div>`;
   });
@@ -7089,11 +7146,13 @@ function updateDashboard(result, pc) {
   }
 
   const warnCritical  = lastWarnItems.filter(w => w.cls === 'fail').length;
-  const warnWarning   = lastWarnItems.filter(w => w.cls === 'over').length;
+  const warnWarning   = lastWarnItems.filter(w => w.cls === 'warn').length;
   const allergyCount  = getMixAllergyMatches().length;
   document.getElementById('ds-warn-total').textContent = (warnCritical + warnWarning + allergyCount) + '개';
-  document.getElementById('ds-warn-breakdown').textContent =
-    `위험 ${warnCritical}건 · 주의 ${warnWarning}건` + (allergyCount ? ` · 알레르기 ${allergyCount}건` : '');
+  // "위험/주의" 문구를 다른 상태 배지와 같은 아이콘 규칙(STATUS_TONE)으로 통일 — 집계 로직은 미변경.
+  document.getElementById('ds-warn-breakdown').innerHTML =
+    `${svgIcon('warning', 10)}위험 ${warnCritical}건 · ${svgIcon('alert-circle', 10)}주의 ${warnWarning}건`
+    + (allergyCount ? ` · 알레르기 ${allergyCount}건` : '');
 
   document.getElementById('ds-me-val').textContent = result.meAsis.toLocaleString('ko', {maximumFractionDigits:0});
   document.getElementById('ds-me-dmb').textContent = result.meDmb.toLocaleString('ko', {maximumFractionDigits:0});
@@ -7252,11 +7311,13 @@ function renderDashCapGauge(cap, policy, isCat) {
   if (!donut) return;
   valEl.textContent = cap ? cap.toFixed(2) + ':1' : '─';
 
-  // 판정은 evaluateCapStatus()로 통일(경고 패널 cap-card·대시보드 요약 배지와 동일 로직 재사용)
+  // 판정은 evaluateCapStatus()로 통일(경고 패널 cap-card·대시보드 요약 배지와 동일 로직 재사용).
+  // 아이콘만 cap-card와 같은 STATUS_TONE 규칙으로 붙인다 — evaluateCapStatus() 자체는 미변경.
   const status = evaluateCapStatus(cap, policy || { mode: 'complete' }, isCat);
   const color = status.color;
+  const CAP_LEVEL_ICON = { pass:'check', warn:'alert-circle', fail:'warning', reference:'info', excluded:'minus', unknown:'alert-circle' };
   badge.style.background = status.bg; badge.style.color = status.color;
-  badge.textContent = status.label;
+  badge.innerHTML = `${svgIcon(CAP_LEVEL_ICON[status.level] || 'minus', 10.5)}${status.label}`;
 
   const domainMax = 3.0; // 게이지가 표현하는 전체 범위(0~3.0) — Ca:P는 통상 0.5~3 사이에서 움직임
   const deg = status.level === 'excluded' ? 0 : Math.max(0, Math.min(1, (cap || 0) / domainMax)) * 360;
@@ -7303,13 +7364,13 @@ function renderDashWarnSummary(elId = 'ds-warn-list') {
   const el = document.getElementById(elId);
   if (!el) return;
   if (!lastWarnItems.length) {
-    el.innerHTML = '<div class="dash-warn-empty">✅ 현재 경고 항목이 없습니다</div>';
+    el.innerHTML = `<div class="dash-warn-empty">${svgIcon('check', 12)} 현재 경고 항목이 없습니다</div>`;
     return;
   }
   const sorted = [...lastWarnItems].sort((a,b) => (b.ratioPct||0) - (a.ratioPct||0)).slice(0, 6);
   el.innerHTML = sorted.map(w => `
     <div class="dash-warn-item">
-      <span class="dash-warn-badge ${w.cls === 'fail' ? 'critical' : 'warning'}">${w.cls === 'fail' ? '위험' : '주의'}</span>
+      <span class="dash-warn-badge ${w.cls === 'fail' ? 'critical' : 'warning'}">${svgIcon(w.cls === 'fail' ? 'warning' : 'alert-circle', 10)}${w.cls === 'fail' ? '위험' : '주의'}</span>
       <span class="dash-warn-name">${w.name}</span>
       <span class="dash-warn-desc">${w.risk}</span>
     </div>`).join('');
