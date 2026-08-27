@@ -579,10 +579,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    #mix-body가 줄어들며 자체 스크롤(overflow-y:auto, 아래)이 걸리게 한다 — 30여 개 열 구조·헤더
    고정(#mix-hdr flex-shrink:0)은 그대로. */
 .mix-table-wrap { flex: 0 1 auto; max-height: 60vh; overflow-x: auto; display: flex; flex-direction: column; min-height: 0; background: var(--bg);
-                   --mix-line: color-mix(in srgb, var(--border) 65%, transparent);
+                   --mix-line: color-mix(in srgb, var(--border) 45%, transparent);
                    /* 원료DB·영양기준DB 테이블(#ing-table/#std-table)과 같은 방식으로 파생한
-                      불투명 헤더 틴트 — 새 색상이 아니라 기존 --th-bg/--sub의 조합이다. */
-                   --mix-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%); }
+                      불투명 헤더 틴트 — 새 색상이 아니라 기존 --th-bg/--sub의 조합이다. 행 배경(백색/side2)과
+                      또렷이 구분되도록 섞는 비율만 6%→11%로 살짝 올렸다(다른 곳엔 영향 없음, 이 안에서만 사용). */
+                   --mix-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 11%); }
 #mix-hdr { display: flex; background: var(--mix-hdr-bg); flex-shrink: 0; min-width: max-content;
            border-bottom: 1px solid var(--border); padding-right: 20px; }
 #mix-hdr > * { display: flex; align-items: center; justify-content: center;
@@ -590,9 +591,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                 font-weight: 700; text-align: center; flex-shrink: 0;
                 text-transform: uppercase; letter-spacing: .3px;
                 border-right: 1px solid var(--mix-line); box-sizing: border-box; }
-/* 원료명(선택 영역) 칼럼과 배합비/실제중량(입력 영역) 칼럼 사이만 진한 구분선을 둬서
-   "무엇을 배합하는지"와 "얼마나 배합하는지"를 한눈에 나눠 보이게 한다. */
+/* 원료명(선택 영역) 칼럼과 배합비(입력 영역) 칼럼 사이, 그리고 배합비와 그 뒤 스크롤 영역
+   사이에 진한 구분선을 둬서 "무엇을 배합하는지"·"얼마나 배합하는지"·"분석값" 세 구간을
+   한눈에 나눠 보이게 한다(아래 sticky 처리와 같은 경계). */
 #mix-hdr span[style*="width:200px"] { border-right-color: var(--border); }
+#mix-hdr #mix-hdr-ratio { border-right-color: var(--border); }
 #mix-body { flex: 0 1 auto; overflow-y: auto; min-width: max-content; }
 .mix-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--mix-line);
            transition: background-color .15s ease; padding-right: 20px; }
@@ -600,6 +603,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-row:nth-child(odd)  { background: var(--odd); }
 .mix-row:hover { background: var(--hover-tint) !important; }
 .mix-row > * { border-right: 1px solid var(--mix-line); box-sizing: border-box; }
+/* ── 좌측 sticky 컬럼(체크박스/#/원료명/배합비) — 가로 스크롤로 30여 개 영양소 열을 볼 때도
+   "어떤 원료·몇 %인지"는 항상 보이게 고정한다. background:inherit로 각 행의 실제 배경
+   (짝/홀수 줄무늬, hover 강조, 알레르기 강조 !important 포함)을 그대로 물려받아 뒤로
+   스크롤되는 값들이 깔끔하게 가려지도록 한다. 폭/순서/테두리 등 기존 구조는 그대로 둔다. */
+#mix-hdr > *:nth-child(1), .mix-row > *:nth-child(1) { position: sticky; left: 0;    z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(2), .mix-row > *:nth-child(2) { position: sticky; left: 28px; z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(3), .mix-row > *:nth-child(3) { position: sticky; left: 60px; z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { position: sticky; left: 260px; z-index: 2; background: inherit; }
 .mix-row .mix-no { width: 32px; text-align: center; font-size: 10px;
                    line-height: 34px; color: var(--sub); flex-shrink: 0; }
 .mix-row select { flex: 0 0 200px; border: none; border-right: 1px solid var(--border); background: transparent;
@@ -653,8 +664,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                                transition: box-shadow .15s ease, background-color .15s ease; }
 .mix-row input[type=number]:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
 .mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 2px var(--calc); background: var(--side2); }
+/* 배합비 입력칸은 sticky 구간의 마지막 열이라, 뒤에 스크롤되는 분석값 구간과의 경계를
+   원료명 칼럼과 같은 진한 구분선(var(--border))으로 표시한다(border:none으로 리셋된
+   border-right만 다시 지정 — 다른 스타일은 위 규칙 그대로). */
+.mix-row input[type=number] { border-right: 1px solid var(--border); }
 .mix-row .mix-val, .mix-row .mix-actual-g { display: flex; align-items: center; justify-content: flex-end; align-self: stretch;
                      font-size: 10px; color: var(--sub); padding: 0 4px; flex-shrink: 0; box-sizing: border-box; }
+/* 실측 배합 결과가 있는 셀은 조금 더 또렷하게, 비어서 "─"만 있는 셀은 기존처럼 옅게 —
+   판정/계산 로직이 아니라 updateMixRowVals()가 값 유무에 따라 붙이는 표시용 클래스만 본다. */
+.mix-row .mix-val.mix-val-filled, .mix-row .mix-actual-g.mix-val-filled { color: var(--text); font-weight: 600; }
 .mix-row .mix-unit { margin-left: 1px; }
 /* 합계/상태 바 — updateTotBar()가 이미 배합비 합계 상태(정확히 100% / ±5% 이내 / 크게 벗어남)에
    따라 background·borderTopColor·글자색을 pass/warn/fail 토큰으로 인라인 설정해준다(로직 그대로).
@@ -931,6 +949,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-panel { background: var(--panel-bg);
               padding: 24px; transition: background .25s ease;
               word-break: keep-all; overflow-wrap: break-word; }
+/* 대시보드만 전체 폭을 제한해 넓은 화면에서 카드가 과도하게 늘어지지 않게 한다
+   (.dash-panel/.dash-grid는 제품/분석 현황 등 다른 탭도 공유하는 클래스라 여기서만 스코프). */
+#tab-dash .dash-panel { max-width: 1400px; margin: 0 auto; }
 /* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
    창이 좁아져 카드 폭이 최소치보다 줄어들면 다음 줄로 자연스럽게 내려간다. */
 .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; align-items: stretch; }
@@ -1063,18 +1084,18 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cap-badge { font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 4px; }
 
 /* ── 대시보드: 제품 유형 카드 + 요약 통계 타일을 한 줄로(좌: 카드, 우: 2x2) ──
-   이 둘은 대시보드의 "핵심 지표" 최상위 계층이므로, 아래 프로필 카드(보조 정보)보다
-   한 단계 큰 radius/그림자(--radius-lg/--sh-md)를 줘서 시각적 우선순위를 분리한다. */
-.dash-top-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 20px; }
+   이 둘과 아래 프로필 카드(.dash-section)를 같은 radius/그림자(--radius-md/--sh)로
+   통일해, 카드마다 무게감이 달라 보이던 것을 하나의 톤으로 정리한다. */
+.dash-top-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; }
 .dash-top-row .ptype-card { flex: 1.3; min-width: 0; margin-bottom: 0; }
 .dash-top-row .dash-stat-row { flex: 1; min-width: 0; margin-bottom: 0; }
 
 /* ── 대시보드: 요약 통계 타일 ── */
 .dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
-.dash-stat-card { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-lg);
-                   box-shadow: var(--sh-md); padding: 14px 16px; position: relative; overflow: hidden; }
+.dash-stat-card { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                   box-shadow: var(--sh); padding: 14px 16px; position: relative; overflow: hidden; }
 .dash-stat-label { font-size: 10.5px; font-weight: 700; color: var(--sub); margin-bottom: 6px; }
-.dash-stat-val { font-size: 26px; font-weight: 800; color: var(--hdr); line-height: 1.2; letter-spacing: -.3px; }
+.dash-stat-val { font-size: 22px; font-weight: 800; color: var(--hdr); line-height: 1.2; letter-spacing: -.3px; }
 .dash-stat-unit { font-size: 10px; color: var(--sub); margin-left: 3px; font-weight: 400; }
 .dash-stat-sub { font-size: 10px; color: var(--sub); margin-top: 4px; }
 .dash-stat-link { font-size: 10px; font-weight: 700; color: var(--acc); cursor: pointer; margin-top: 8px;
@@ -1158,8 +1179,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 제품 유형 자동 판정 카드 & 배너 ── */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
-              border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 14px;
-              box-shadow: var(--sh-md); flex-wrap: wrap; }
+              border-radius: var(--radius-md); padding: 18px 20px; margin-bottom: 14px;
+              box-shadow: var(--sh); flex-wrap: wrap; }
 .ptype-card-main { flex: 1; min-width: 240px; }
 .ptype-card-label { font-size: 10.5px; color: var(--sub); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 3px; }
 .ptype-card-type { font-size: 22px; font-weight: 800; color: var(--hdr); letter-spacing: -.3px; }
@@ -1725,7 +1746,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         </div>
         </div>
         </div>
-        <div style="border-top:1px solid var(--border);margin-top:16px"></div>
         </div>
       </div>
     </div>
@@ -4860,16 +4880,19 @@ function updateMixRowVals(rows) {
     const ing = getIng(nm);
     const spans = row.querySelectorAll('.mix-val');
     const actualGEl = row.querySelector('.mix-actual-g');
+    const hasG = nm && ratio > 0;
     if (actualGEl) {
-      actualGEl.innerHTML = (nm && ratio > 0) ? `${(totalG * ratio / 100).toLocaleString('ko', {maximumFractionDigits:1})}<span class="mix-unit">g</span>` : '─';
+      actualGEl.innerHTML = hasG ? `${(totalG * ratio / 100).toLocaleString('ko', {maximumFractionDigits:1})}<span class="mix-unit">g</span>` : '─';
+      actualGEl.classList.toggle('mix-val-filled', hasG);
     }
     if (ing && ratio > 0) {
       const f = ratio / 100;
       MIX_HDR.forEach((h, si) => {
         spans[si].textContent = (ing[h.col] * f).toFixed(2);
+        spans[si].classList.add('mix-val-filled');
       });
     } else {
-      spans.forEach(sp => sp.textContent = '─');
+      spans.forEach(sp => { sp.textContent = '─'; sp.classList.remove('mix-val-filled'); });
     }
   });
 }
