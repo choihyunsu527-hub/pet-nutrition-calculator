@@ -581,8 +581,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-unit-item label { font-size: 9.5px; color: var(--sub); font-weight: 700;
                         text-transform: uppercase; letter-spacing: .4px; }
 .mix-unit-item select, .mix-unit-item input { font-size: 12px; padding: 6px 10px;
-                 border: 1px solid var(--border); border-radius: 4px;
-                 background: var(--inp); color: var(--text); font-family: inherit; }
+                 border: 1px solid var(--border); border-radius: 6px;
+                 background: var(--inp); color: var(--text); font-family: inherit; outline: none;
+                 transition: border-color .15s ease, box-shadow .15s ease; }
+.mix-unit-item select:focus, .mix-unit-item input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .mix-unit-item select { cursor: pointer; min-width: 110px; }
 .mix-unit-item input { width: 80px; text-align: right; }
 .mix-unit-hint { font-size: 11px; color: var(--sub); margin-left: auto; }
@@ -666,7 +668,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-search-input { width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px;
                  border: 1px solid var(--border); border-radius: 4px; background: var(--side2);
                  color: var(--text); font-family: inherit; outline: none; }
-.mix-ing-search-input:focus { border-color: var(--acc); }
+.mix-ing-search-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .mix-ing-options { flex: 1; overflow-y: auto; }
 .mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
 .mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
@@ -681,7 +683,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                                box-shadow: inset 0 0 0 1px transparent;
                                transition: box-shadow .15s ease, background-color .15s ease; }
 .mix-row input[type=number]:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
-.mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 2px var(--calc); background: var(--side2); }
+.mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 3px var(--calc); background: var(--side2); }
 /* 배합비 입력칸은 sticky 구간의 마지막 열이라, 뒤에 스크롤되는 분석값 구간과의 경계를
    원료명 칼럼과 같은 진한 구분선(var(--border))으로 표시한다(border:none으로 리셋된
    border-right만 다시 지정 — 다른 스타일은 위 규칙 그대로). */
