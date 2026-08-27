@@ -595,10 +595,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                    --mix-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 11%); }
 #mix-hdr { display: flex; background: var(--mix-hdr-bg); flex-shrink: 0; min-width: max-content;
            border-bottom: 1px solid var(--border); padding-right: 20px; }
+/* text-transform:uppercase를 쓰지 않는다 — 헤더 라벨은 대부분 한글이라 대소문자 구분이
+   없지만, "(kcal)"·"(g)"·"(mg)" 같은 단위 표기까지 함께 대문자로 바뀌어 KCAL/G/MG로
+   보이는 부작용이 있었다. 대문자·자간 톤은 letter-spacing만으로 유지한다. */
 #mix-hdr > * { display: flex; align-items: center; justify-content: center;
                 padding: 7px 4px; color: var(--hdr); font-size: 9.5px;
                 font-weight: 700; text-align: center; flex-shrink: 0;
-                text-transform: uppercase; letter-spacing: .3px;
+                letter-spacing: .3px;
                 border-right: 1px solid var(--mix-line); box-sizing: border-box; }
 /* 원료명(선택 영역) 칼럼과 배합비(입력 영역) 칼럼 사이, 그리고 배합비와 그 뒤 스크롤 영역
    사이에 진한 구분선을 둬서 "무엇을 배합하는지"·"얼마나 배합하는지"·"분석값" 세 구간을
