@@ -1232,32 +1232,39 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 제품 유형 자동 판정 카드 & 배너 ──
    HEADER(eyebrow+accent dot / 신뢰도 pill) → 핵심 제품 유형명(카드의 주인공) → 보조
-   설명 → 통계(하단에서 얇은 구분선으로 분리된 독립 그룹) → ACTION(맨 아래 고정) 순의
-   세로 위계. 카드를 flex-column 컨테이너로 두고 .dash-stat-link(다른 KPI 카드와 공유)에
-   이미 있는 margin-top:auto가 그대로 작동해, 카드가 옆 KPI 그리드만큼 늘어나도 액션
-   링크는 항상 맨 아래에 붙는다. 배경/border/radius/shadow는 다른 대시보드 카드와 같은
+   설명 → 통계(하단에서 구분선 + 항목별 세로 divider로 분리된 독립 그룹) → ACTION(맨
+   아래 고정) 순의 세로 위계. 4개 영역 사이 간격을 서로 다른 크기로 둬서(헤더 20px,
+   설명→통계 22px, 통계 내부는 divider) 위계 단계가 눈에 보이게 한다. 카드를
+   flex-column 컨테이너로 두고 .dash-stat-link(다른 KPI 카드와 공유)에 이미 있는
+   margin-top:auto가 그대로 작동해, 카드가 옆 KPI 그리드만큼 늘어나도 액션 링크는
+   항상 맨 아래에 붙는다. 배경/border/radius/shadow는 다른 대시보드 카드와 같은
    --side2/--border/--radius-md/--sh 그대로, 새 색상 없음. */
 .ptype-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
-              border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px; box-shadow: var(--sh); }
-/* HEADER — 왼쪽 eyebrow 라벨, 오른쪽 신뢰도 pill(+판정 근거 버튼). 얇은 구분선 하나로
-   카드 안에서 독립된 영역처럼 보이게 한다(색이 아니라 경계선으로 분리). */
+              border-radius: var(--radius-md); padding: 24px; margin-bottom: 14px; box-shadow: var(--sh); }
+/* HEADER — 왼쪽 eyebrow 라벨, 오른쪽 신뢰도 pill(+판정 근거 버튼). 얇은 구분선 + 넉넉한
+   margin-bottom으로 본문과 확실히 분리한다(색이 아니라 경계선/여백으로 분리). */
 .ptype-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-                      padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
+                      padding-bottom: 14px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
 .ptype-card-label { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--sub);
                      font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
 .ptype-card-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
 .ptype-card-side { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-/* 핵심 정보 — 제품 유형명이 카드의 시각적 중심. 24~26px/700로 확실히 크되 과하지 않게. */
-.ptype-card-type { font-size: 26px; font-weight: 700; color: var(--hdr); letter-spacing: -.3px; line-height: 1.2; }
-.ptype-card-type-en { font-size: 11px; color: var(--sub); font-weight: 600; margin-top: 3px; margin-bottom: 10px; }
-.ptype-card-desc { font-size: 11px; color: var(--sub); font-weight: 400; line-height: 1.5; max-width: 480px; }
-/* 통계 그룹 — 위 설명과 얇은 구분선으로 분리된 독립 영역. 라벨은 작고 차분하게, 값은
-   아래 줄에 크고 진하게 둬서(숫자 → 라벨 순서가 아니라 라벨 → 숫자로 한 눈에 위계가
-   보이도록) 강조한다. 색상은 var(--hdr)/var(--sub)만 사용 — 새 색 없음. */
-.ptype-card-stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 16px; padding-top: 14px;
+/* 핵심 정보 — 제품 유형명이 카드의 시각적 중심. 26px/700로 카드에서 가장 먼저 눈에
+   들어오게 하고, 영문명은 대문자+letter-spacing으로 "작은 캡션" 톤을 분명히 준다. */
+.ptype-card-type { font-size: 26px; font-weight: 700; color: var(--hdr); letter-spacing: -.4px; line-height: 1.2; }
+.ptype-card-type-en { font-size: 10.5px; color: var(--sub); font-weight: 600; letter-spacing: .3px;
+                       text-transform: uppercase; margin-top: 4px; margin-bottom: 14px; }
+.ptype-card-desc { font-size: 12px; color: var(--sub); font-weight: 400; line-height: 1.6; max-width: 480px; }
+/* 통계 그룹 — 위 설명과 얇은 구분선 + 22px 여백으로 분리된 독립 영역. 항목 사이에도
+   세로 divider(border-right)를 둬서 "나열"이 아니라 하나의 통계 묶음처럼 보이게 한다.
+   라벨은 위에 작고 차분하게, 값은 아래 줄에 크고 진하게(16px/700) — 색상은
+   var(--hdr)/var(--sub)만 사용, 새 색 없음. */
+.ptype-card-stats { display: flex; flex-wrap: wrap; margin-top: 22px; padding-top: 16px;
                      border-top: 1px solid var(--border); }
-.ptype-card-stat { font-size: 10.5px; color: var(--sub); }
-.ptype-card-stat b { display: block; color: var(--hdr); font-size: 14px; font-weight: 700; margin-top: 3px; }
+.ptype-card-stat { font-size: 10.5px; color: var(--sub); padding-right: 22px; margin-right: 22px;
+                    border-right: 1px solid var(--border); }
+.ptype-card-stat:last-child { padding-right: 0; margin-right: 0; border-right: none; }
+.ptype-card-stat b { display: block; color: var(--hdr); font-size: 16px; font-weight: 700; letter-spacing: -.2px; margin-top: 4px; }
 .ptype-confidence { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
 .ptype-confidence.conf-high   { background: var(--pass-bg); color: var(--pass-t); }
 .ptype-confidence.conf-medium { background: var(--warn-bg); color: var(--warn-t); }
