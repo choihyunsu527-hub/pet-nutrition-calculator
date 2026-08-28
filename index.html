@@ -255,7 +255,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 #sidebar-collapse-btn:hover { background: rgba(255,255,255,0.12); color: #FFFFFF; }
 #sidebar-collapse-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
                              stroke-linecap: round; stroke-linejoin: round; }
-#sidebar-tagline { font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: #8b96a3;
+#sidebar-tagline { font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: #b7c0ca;
                     text-transform: uppercase; white-space: normal; line-height: 1.35; display: block;
                     cursor: pointer; border-radius: 6px;
                     padding: 2px 4px; margin: 2px -4px 0; box-sizing: border-box;
@@ -264,7 +264,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 #sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
 /* 메뉴 영역과 분리 — .nav-divider와 같은 톤(rgba(255,255,255,0.045))의 얇은 보더로 구분 */
 #sidebar-foot { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.045);
-                font-size: 9px; color: #8b96a3; opacity: 0.55; flex-shrink: 0; }
+                font-size: 9px; color: #b7c0ca; opacity: 0.75; flex-shrink: 0; }
 #main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
 
 /* ── 사이드바 접힘 상태(76px) — 레이아웃/색상/아이콘/메뉴 순서는 그대로 두고 텍스트만 숨긴다 ── */
@@ -4514,6 +4514,9 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
 // 배합 설계 탭
 // ════════════════════════════════════════════════════════════════════════════
 let mixRows = [];
+// unit-select의 onchange 시점엔 select.value가 이미 새 단위로 바뀌어 있어, 변경 "전" 단위를
+// 알기 위해 별도로 추적한다. onUnitChange()에서 환산 후 최신 단위로 갱신된다.
+let currentMixUnit = 'pct';
 
 function getSortedIngNames(query) {
   let names = allIngs().map(i => i[0]).sort((a, b) => a.localeCompare(b, 'ko'));
@@ -4923,12 +4926,26 @@ function updateUnitHint() {
 
 function onUnitChange() {
   const unit = document.getElementById('unit-select')?.value || 'pct';
+  const prevUnit = currentMixUnit;
+  const totalG = getMixTotalG();
   const stepMap = { pct: '0.5', g: '1', kg: '0.001' };
   mixRows.forEach(row => {
     const inp = row.querySelector('input[type=number]');
+    const prevVal = parseFloat(inp.value) || 0;
+    // 이전 단위 값을 g(그램) 기준으로 환산한 뒤, 새 단위로 다시 환산한다 — 배합비(%)는
+    // 이 시점의 총 배치량(totalG) 기준이며, 각 행의 값만 바뀌고 다른 행/총량은 건드리지 않는다.
+    let grams;
+    if (prevUnit === 'g') grams = prevVal;
+    else if (prevUnit === 'kg') grams = prevVal * 1000;
+    else grams = totalG > 0 ? prevVal / 100 * totalG : 0;   // pct
+    let newVal;
+    if (unit === 'g') newVal = grams;
+    else if (unit === 'kg') newVal = grams / 1000;
+    else newVal = totalG > 0 ? grams * 100 / totalG : 0;    // pct
     inp.step = stepMap[unit];
-    inp.value = 0;
+    inp.value = +(Math.round(newVal * 1e6) / 1e6);
   });
+  currentMixUnit = unit;
 
   // g/kg 모드에서는 총 배치량이 원료 중량 합계로 자동 계산되므로 직접 입력을 막는다.
   // % 모드에서는 총 배치량이 사용자가 정하는 기준값이라 다시 편집 가능하게 되돌린다.
