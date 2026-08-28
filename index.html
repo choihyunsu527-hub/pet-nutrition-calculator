@@ -1132,31 +1132,48 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-top-row .ptype-card { flex: 1.3; min-width: 0; margin-bottom: 0; }
 .dash-top-row .dash-stat-row { flex: 1; min-width: 0; margin-bottom: 0; }
 
-/* ── 대시보드: 요약 통계 타일(SaaS Analytics 스타일 KPI 카드) ──
-   색으로 상태를 칠하는 대신 타이포그래피 위계(eyebrow 라벨 → 큰 숫자 → 옅은 보조 설명 →
-   하단 액션 링크)와 여백으로 정보를 강조한다. radius/shadow/border/배경은 새 값을 만들지
-   않고 다른 대시보드 카드(ptype-card 등)와 같은 --radius-md/--sh/--border/--side2를
-   그대로 재사용. 카드를 flex-column으로 두고 액션 링크에 margin-top:auto를 줘서, 카드마다
-   중간 콘텐츠 줄 수가 달라도(진행바 유무 등) 4개 카드의 링크가 같은 높이에 맞춰진다. */
+/* ── 대시보드: 요약 통계 타일(KPI 카드) — .ptype-card Hero Card와 같은 디자인 언어 ──
+   EYEBROW(accent dot+작은 라벨) → PRIMARY VALUE(카드의 핵심 숫자) → UNIT(작게) →
+   SECONDARY(진행바/보조 설명, 카드별로 유무만 다름) → ACTION(맨 아래 고정) 위계를
+   ptype-card와 동일한 padding(22px)·eyebrow 톤·색상 규칙으로 맞춘다. PRIMARY VALUE는
+   27px로, ptype-card-type(31px, 제품 유형명)보다 한 단계 낮춰 두 컴포넌트가 서로
+   위계를 침범하지 않게 한다. radius/shadow/border/배경은 새 값 없이 다른 대시보드
+   카드와 같은 --radius-md/--sh/--border/--side2 재사용. 카드를 flex-column으로 두고
+   액션 링크에 margin-top:auto를 줘서, 카드마다 중간 콘텐츠 줄 수가 달라도(진행바
+   유무 등) 4개 카드의 링크가 같은 높이에 맞춰진다. 상태(pass/warn/fail)에 따른
+   카드 배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
 .dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; margin-bottom: 10px; }
 .dash-stat-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
-                   border-radius: var(--radius-md); box-shadow: var(--sh); padding: 20px; position: relative; overflow: hidden; }
-/* eyebrow 라벨 — 얇고 작은 대문자 톤 + 청록 accent 점 하나만으로 포인트 컬러를 절제해서 사용 */
-.dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: var(--fs-meta); font-weight: 600;
-                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+                   border-radius: var(--radius-md); box-shadow: var(--sh); padding: 22px; position: relative; overflow: hidden; }
+/* EYEBROW — ptype-card-label과 같은 톤(10px/500/대문자) + 같은 청록 accent 점 하나만 */
+.dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500;
+                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
 .dash-stat-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
-/* 핵심 숫자 — 4개 카드 전부 같은 체급으로 통일(기존엔 2개 카드만 30px로 커서 하나의
-   컴포넌트처럼 보이지 않았음). 단위(.dash-stat-unit)와 크기 차이를 크게 둬 숫자만 먼저
-   눈에 들어오게 하고, 굵기는 800→700으로 낮춰 전체적으로는 얇은 타이포 톤을 유지한다. */
-.dash-stat-val { font-size: 32px; font-weight: 700; color: var(--hdr); line-height: 1.15; letter-spacing: -.5px; }
+/* PRIMARY VALUE — 카드의 핵심 정보. ptype-card-type(31px)보다 확실히 낮은 27px로,
+   두 히어로급 텍스트가 화면에서 서로 경쟁하지 않도록 위계 한 단계 아래에 둔다. */
+.dash-stat-val { font-size: 27px; font-weight: 700; color: var(--hdr); line-height: 1.2; letter-spacing: -.4px; }
 .dash-stat-unit { font-size: 12px; color: var(--sub); margin-left: 4px; font-weight: 500; letter-spacing: 0; }
-.dash-stat-sub { font-size: 10.5px; color: var(--sub); font-weight: 400; margin-top: 6px; line-height: 1.5; }
+.dash-stat-sub { font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 6px; line-height: 1.5; }
 .dash-stat-link { font-size: 10.5px; font-weight: 700; color: var(--acc); cursor: pointer; margin-top: auto;
                    padding-top: 12px; display: inline-block; transition: color .2s ease; }
 .dash-stat-link:hover { color: var(--acc2); }
 .dash-stat-track { width: 100%; height: 6px; background: var(--gray-l); border-radius: 999px;
                     margin-top: 10px; overflow: hidden; }
 .dash-stat-fill { height: 100%; border-radius: 999px; background: var(--pass-t); transition: width .4s ease; }
+/* #ds-overall-card/#ds-warn-card는 진행바 톤 계산을 위해 JS가 pass/warn/fail 클래스를
+   계속 토글한다(판정 로직·집계는 그대로) — 다만 이 클래스명이 표 셀 상태색 유틸리티
+   (.pass/.fail/.warn, 521번째 줄 부근, background !important)와 이름이 겹쳐 카드 전체
+   배경까지 물드는 부작용이 있었다. 이 두 카드만 항상 기본 .dash-stat-card 배경(Neutral,
+   var(--side2))으로 고정해 그 부작용만 무력화한다 — 진행바(#ds-overall-fill) 자체의
+   pass/warn/fail 색상은 이 규칙과 무관하게 기존 로직 그대로 유지된다. */
+#ds-overall-card.pass, #ds-overall-card.warn, #ds-overall-card.fail,
+#ds-warn-card.pass, #ds-warn-card.warn, #ds-warn-card.fail { background: var(--side2) !important; }
+/* 위 두 카드에 .pass/.fail이 붙었을 때 전역 유틸리티(.pass/.fail)의 color 속성
+   (--pass-t #1E7E34 / --fail-t #C0392B)까지 그대로 남아있던 부분을 #FFFFFF로 지정.
+   자식 요소(.dash-stat-val 등)는 각자 자기 color를 갖고 있어 화면상 숫자색에는
+   영향이 없고, 카드 div 자신의 color 속성값만 바뀐다. */
+div#ds-warn-card.dash-stat-card.pass { color: #FFFFFF; }
+div#ds-overall-card.dash-stat-card.fail { color: #FFFFFF; }
 
 /* ── 대시보드: 막대 차트(영양소/아미노산 충족률) ── */
 .dash-bar-list { display: flex; flex-direction: column; justify-content: center; gap: 7px; flex: 1; }
@@ -7234,7 +7251,6 @@ function updateDashboard(result, pc) {
   const overallCard = document.getElementById('ds-overall-card');
   if (policy.showCompleteness) {
     overallPctEl.innerHTML = overallPct + '<span class="dash-stat-unit">%</span>';
-    overallPctEl.style.fontSize = '';
     overallPctEl.title = '';
     if (overallLabel) overallLabel.textContent = '전체 충족률 (AAFCO)';
     overallFill.style.width = overallPct + '%';
@@ -7254,7 +7270,6 @@ function updateDashboard(result, pc) {
       not_for_direct_feeding: ['영양 적합성 평가', '배합용 원료로 판단되어 영양 적합성 평가를 적용하지 않습니다.'],
     }[policy.mode] || ['완전·균형식 평가', ''];
     overallPctEl.textContent = '해당없음';
-    overallPctEl.style.fontSize = '16px';
     overallPctEl.title = overallText[1];
     if (overallLabel) overallLabel.textContent = overallText[0];
     overallFill.style.width = '0%';
