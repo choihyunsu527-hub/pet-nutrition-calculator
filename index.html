@@ -1272,6 +1272,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .ptype-banner.type-unsuitable { background: var(--fail-bg); color: var(--fail-t); }
 .ptype-banner b { white-space: nowrap; }
 .ptype-banner .linkable { text-decoration: underline; cursor: pointer; margin-left: auto; white-space: nowrap; }
+/* 배합설계 탭의 안내 바만 절제된 톤으로 — 배합비 입력/배합 테이블이 화면의 주인공이 되도록
+   진한 색 전체 배경 대신 다른 얇은 안내 바(#mix-nutrient-note 등)와 같은 중립 배경을 쓰고,
+   상태는 얇은 좌측 accent border 하나로만 표시한다(id 선택자라 std-verify 탭의 동일 배너는
+   기존 스타일 그대로 유지됨 — 표시 조건·문구·판정 로직은 renderPtypeBanner() 그대로). */
+#mix-ptype-banner.show { padding: 6px 14px; border-left: 3px solid transparent; border-bottom: 1px solid var(--border); }
+#mix-ptype-banner.type-supplement { background: var(--gray-l); color: var(--text); border-left-color: var(--fed-t); }
+#mix-ptype-banner.type-treat      { background: var(--gray-l); color: var(--text); border-left-color: var(--warn-t); }
+#mix-ptype-banner.type-unsuitable { background: var(--gray-l); color: var(--text); border-left-color: var(--fail-t); }
 
 /* ── 대시보드: 도넛/게이지 ── */
 .dash-donut-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; }
@@ -5676,6 +5684,9 @@ function openPtypeEvidence() {
 }
 
 // 주식이 아닌 제품(간식/보조식)으로 분석됐을 때, 해당 탭 상단에 안내 배너를 표시/숨김
+// 배합설계 탭(mix-ptype-banner)에서만 STATUS_TONE과 같은 아이콘 언어(info/alert-circle/warning)를
+// 한 줄 맨 앞에 덧붙인다 — std-verify 탭 배너는 문구·표시 조건 그대로 아이콘 없이 유지.
+const PTYPE_BANNER_ICON = { supplement: 'info', treat: 'alert-circle', unsuitable: 'warning' };
 function renderPtypeBanner(elId, pc, message) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -5683,7 +5694,10 @@ function renderPtypeBanner(elId, pc, message) {
   const policy = getEvaluationPolicy(pc);
   const msg = message || policy.bannerNote || `아래 결핍·초과 판정은 "주식기준 외"로 표시됩니다.`;
   el.className = `ptype-banner show type-${pc.type}`;
-  el.innerHTML = `<span style="flex:1;text-align:center"><b>${pc.short}</b> 유형으로 분석되어 주식(완전·균형식) AAFCO 기준을 적용하지 않았습니다. ${msg}</span>
+  const iconHtml = elId === 'mix-ptype-banner'
+    ? `<span style="display:inline-flex;flex-shrink:0">${svgIcon(PTYPE_BANNER_ICON[pc.type] || 'info', 12)}</span>`
+    : '';
+  el.innerHTML = `${iconHtml}<span style="flex:1;text-align:center"><b>${pc.short}</b> 유형으로 분석되어 주식(완전·균형식) AAFCO 기준을 적용하지 않았습니다. ${msg}</span>
     <span class="linkable" onclick="goTab('dash')">제품 유형 분석 보기 →</span>`;
 }
 
