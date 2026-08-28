@@ -1138,7 +1138,18 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                    box-shadow: var(--sh); padding: 16px; position: relative; overflow: hidden; }
 .dash-stat-label { font-size: var(--fs-meta); font-weight: 700; color: var(--sub); margin-bottom: 6px; }
 .dash-stat-val { font-size: var(--fs-metric); font-weight: 800; color: var(--hdr); line-height: 1.2; letter-spacing: -.3px; }
-/* 경고 항목 카드 강조 — 새 색상 없이 기존 상태색 토큰(.fail과 동일한 --fail-bg/--fail-t)만 재사용 */
+/* "전체 충족률"/"경고 항목"처럼 한눈에 상태를 알아야 하는 핵심 수치만 다른 타일보다
+   크게 — 기존 --fs-metric(22px) 토큰은 donut/제품유형 카드와 공유하므로 그대로 두고,
+   이 두 값에만 로컬로 약 1.36배 키운다(폰트 굵기·톤은 .dash-stat-val 그대로 상속). */
+#ds-overall-pct, #ds-warn-total { font-size: 30px; }
+/* 카드 배경에 옅은 상태색을 얹는 3단계 톤 — 새 색상 없이 기존 pass/warn/fail 배지·테이블에
+   쓰는 --pass/--warn/--fail 토큰만 재사용(정상=청록/그린, 주의=주황, 위험=레드).
+   ds-overall-card는 충족률 구간(80/50%), ds-warn-card는 위험·경고 건수에 따라 JS가
+   이 중 하나의 클래스만 토글한다 — 판정 기준 자체는 미변경, 표시만 이 톤을 따른다. */
+.dash-stat-card.pass { background: var(--pass-bg); border-color: var(--pass-t); }
+.dash-stat-card.pass .dash-stat-val { color: var(--pass-t); }
+.dash-stat-card.warn { background: var(--warn-bg); border-color: var(--warn-t); }
+.dash-stat-card.warn .dash-stat-val { color: var(--warn-t); }
 .dash-stat-card.fail { background: var(--fail-bg); border-color: var(--fail-t); }
 .dash-stat-card.fail .dash-stat-val { color: var(--fail-t); }
 .dash-stat-unit { font-size: 10px; color: var(--sub); margin-left: 3px; font-weight: 400; }
@@ -1600,7 +1611,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         <div class="dash-stat-row">
-          <div class="dash-stat-card">
+          <div class="dash-stat-card" id="ds-overall-card">
             <div class="dash-stat-label" id="ds-overall-label">전체 충족률 (AAFCO)</div>
             <div class="dash-stat-val" id="ds-overall-pct">─<span class="dash-stat-unit">%</span></div>
             <div class="dash-stat-track"><div class="dash-stat-fill" id="ds-overall-fill" style="width:0%"></div></div>
@@ -7183,13 +7194,20 @@ function updateDashboard(result, pc) {
   const overallLabel = document.getElementById('ds-overall-label');
   const overallFill = document.getElementById('ds-overall-fill');
   const overallPctEl = document.getElementById('ds-overall-pct');
+  const overallCard = document.getElementById('ds-overall-card');
   if (policy.showCompleteness) {
     overallPctEl.innerHTML = overallPct + '<span class="dash-stat-unit">%</span>';
     overallPctEl.style.fontSize = '';
     overallPctEl.title = '';
     if (overallLabel) overallLabel.textContent = '전체 충족률 (AAFCO)';
     overallFill.style.width = overallPct + '%';
-    overallFill.style.background = overallPct >= 80 ? 'var(--pass-t)' : overallPct >= 50 ? 'var(--warn-t)' : 'var(--fail-t)';
+    // 카드 배경 톤도 막대 색과 같은 구간(80%/50%)을 그대로 재사용 — 새 판정 기준 아님
+    const overallTone = overallPct >= 80 ? 'pass' : overallPct >= 50 ? 'warn' : 'fail';
+    overallFill.style.background = `var(--${overallTone}-t)`;
+    if (overallCard) {
+      overallCard.classList.remove('pass', 'warn', 'fail');
+      overallCard.classList.add(overallTone);
+    }
   } else {
     // 보조식·간식·직접급여불가는 "완전·균형식 충족률"이라는 지표 자체가 성립하지 않으므로,
     // 퍼센트 숫자 대신 "해당없음"을 표시해 완전식 평가 결과로 오해되지 않게 한다.
@@ -7204,6 +7222,7 @@ function updateDashboard(result, pc) {
     if (overallLabel) overallLabel.textContent = overallText[0];
     overallFill.style.width = '0%';
     overallFill.style.background = 'var(--sub)';
+    if (overallCard) overallCard.classList.remove('pass', 'warn', 'fail');
   }
 
   const warnCritical  = lastWarnItems.filter(w => w.cls === 'fail').length;
@@ -7215,9 +7234,14 @@ function updateDashboard(result, pc) {
   document.getElementById('ds-warn-breakdown').innerHTML =
     `${svgIcon('warning', 10)}위험 ${warnCritical}건 · ${svgIcon('alert-circle', 10)}주의 ${warnWarning}건`
     + (allergyCount ? ` · 알레르기 ${allergyCount}건` : '');
-  // 경고 항목이 0보다 클 때만 카드를 강조(.fail 토큰 재사용) — 판정/집계 로직은 변경 없음
+  // 카드 배경 톤 — 위험(또는 알레르기)이 하나라도 있으면 fail, 주의만 있으면 warn,
+  // 전부 0이면 pass. 위험/주의를 나누는 기준(w.cls)은 그대로이고 표시 톤만 매핑한다.
   const warnCard = document.getElementById('ds-warn-card');
-  if (warnCard) warnCard.classList.toggle('fail', warnTotalCount > 0);
+  if (warnCard) {
+    const warnTone = (warnCritical + allergyCount) > 0 ? 'fail' : warnWarning > 0 ? 'warn' : 'pass';
+    warnCard.classList.remove('pass', 'warn', 'fail');
+    warnCard.classList.add(warnTone);
+  }
 
   document.getElementById('ds-me-val').textContent = result.meAsis.toLocaleString('ko', {maximumFractionDigits:0});
   document.getElementById('ds-me-dmb').textContent = result.meDmb.toLocaleString('ko', {maximumFractionDigits:0});
