@@ -1142,15 +1142,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    크게 — 기존 --fs-metric(22px) 토큰은 donut/제품유형 카드와 공유하므로 그대로 두고,
    이 두 값에만 로컬로 약 1.36배 키운다(폰트 굵기·톤은 .dash-stat-val 그대로 상속). */
 #ds-overall-pct, #ds-warn-total { font-size: 30px; }
-/* 카드 배경에 옅은 상태색을 얹는 3단계 톤 — 새 색상 없이 기존 pass/warn/fail 배지·테이블에
-   쓰는 --pass/--warn/--fail 토큰만 재사용(정상=청록/그린, 주의=주황, 위험=레드).
-   ds-overall-card는 충족률 구간(80/50%), ds-warn-card는 위험·경고 건수에 따라 JS가
-   이 중 하나의 클래스만 토글한다 — 판정 기준 자체는 미변경, 표시만 이 톤을 따른다. */
-.dash-stat-card.pass { background: var(--pass-bg); border-color: var(--pass-t); }
+/* 상태 강조 — 카드 배경은 항상 기본 톤(var(--side2))을 유지하고, 상태는 숫자 색과
+   기존 1px 테두리 색만 pass/warn/fail 토큰으로 살짝 물들여 표시한다(청회색 톤 위에
+   면 전체가 알록달록해지지 않도록 절제). ds-overall-card는 충족률 구간(80/50%),
+   ds-warn-card는 위험·경고 건수에 따라 JS가 이 중 하나의 클래스만 토글한다 —
+   판정 기준 자체는 미변경, 표시만 이 톤을 따른다. */
+.dash-stat-card.pass { border-color: var(--pass-t); }
 .dash-stat-card.pass .dash-stat-val { color: var(--pass-t); }
-.dash-stat-card.warn { background: var(--warn-bg); border-color: var(--warn-t); }
+.dash-stat-card.warn { border-color: var(--warn-t); }
 .dash-stat-card.warn .dash-stat-val { color: var(--warn-t); }
-.dash-stat-card.fail { background: var(--fail-bg); border-color: var(--fail-t); }
+.dash-stat-card.fail { border-color: var(--fail-t); }
 .dash-stat-card.fail .dash-stat-val { color: var(--fail-t); }
 .dash-stat-unit { font-size: 10px; color: var(--sub); margin-left: 3px; font-weight: 400; }
 .dash-stat-sub { font-size: 10px; color: var(--sub); margin-top: 4px; }
