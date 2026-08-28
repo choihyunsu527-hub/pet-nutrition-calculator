@@ -1230,15 +1230,20 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .gl-link:hover { text-decoration: underline; }
 .gl-empty { text-align: center; padding: 10px 8px; color: var(--sub); font-size: 11px; }
 
-/* ── 제품 유형 자동 판정 카드 & 배너 ── */
+/* ── 제품 유형 자동 판정 카드 & 배너 ──
+   상단 KPI 카드(.dash-stat-card)와 같은 타이포그래피 위계(eyebrow → 큰 제목 → 차분한
+   메타 텍스트)로 정돈 — padding도 KPI 카드와 같은 20px, eyebrow의 청록 accent 점도
+   .dash-stat-label과 같은 표현을 재사용. 배경/border/radius/shadow 토큰은 변경 없음. */
 .ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
-              border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 14px;
+              border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px;
               box-shadow: var(--sh); flex-wrap: wrap; }
 .ptype-card-main { flex: 1; min-width: 240px; }
-.ptype-card-label { font-size: 10.5px; color: var(--sub); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 3px; }
-.ptype-card-type { font-size: var(--fs-metric); font-weight: 800; color: var(--hdr); letter-spacing: -.3px; }
-.ptype-card-type-en { font-size: 11px; color: var(--sub); font-weight: 600; margin-bottom: 7px; }
-.ptype-card-desc { font-size: 11.5px; color: var(--text); line-height: 1.5; margin-bottom: 9px; max-width: 560px; }
+.ptype-card-label { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--sub);
+                     font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+.ptype-card-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
+.ptype-card-type { font-size: 26px; font-weight: 700; color: var(--hdr); letter-spacing: -.3px; line-height: 1.2; }
+.ptype-card-type-en { font-size: 11px; color: var(--sub); font-weight: 600; margin-top: 3px; margin-bottom: 8px; }
+.ptype-card-desc { font-size: 11px; color: var(--sub); font-weight: 400; line-height: 1.5; margin-bottom: 10px; max-width: 560px; }
 .ptype-card-stats { display: flex; gap: 18px; flex-wrap: wrap; }
 .ptype-card-stat { font-size: 10.5px; color: var(--sub); }
 .ptype-card-stat b { color: var(--hdr); font-size: 13px; margin-left: 5px; }
@@ -5633,7 +5638,7 @@ function renderProductTypeCard(pc) {
         <span class="ptype-card-stat">필수 영양소 충족<b>${pc.metMinCount} / ${pc.withDataCount}</b></span>
         <span class="ptype-card-stat">입력 데이터 완전성<b>${Math.round(pc.completeness * 100)}%</b></span>
       </div>
-      ${pc.type === 'unsuitable' ? `<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--fail-bg);color:var(--fail-t);font-size:11px;font-weight:600;line-height:1.5">${svgIcon('warning', 12)} 직접 급여용 제품이 아닌 배합용 원료로 판단됩니다. 실제 제품에 사용할 경우 적정 배합비와 안전 사용량을 별도로 확인해야 합니다.</div>` : ''}
+      ${pc.type === 'unsuitable' ? `<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border-left:3px solid var(--fail-t);background:var(--gray-l);color:var(--text);font-size:11px;font-weight:600;line-height:1.5"><span style="color:var(--fail-t);display:inline-flex;vertical-align:-2px">${svgIcon('warning', 12)}</span> 직접 급여용 제품이 아닌 배합용 원료로 판단됩니다. 실제 제품에 사용할 경우 적정 배합비와 안전 사용량을 별도로 확인해야 합니다.</div>` : ''}
     </div>
     <div class="ptype-card-side">
       <span class="ptype-confidence conf-${pc.confidence}">${pc.confidenceLabel}</span>
