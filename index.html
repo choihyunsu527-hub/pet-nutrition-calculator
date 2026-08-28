@@ -958,7 +958,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* 상단 툴바 버튼(#top-recipe-save-btn / .top-recipe-btn-sub)과 톤을 맞춘 크기·폰트·여백 —
    색상 구분(편집=중립/삭제=경고/등록=강조)은 .btn-cancel·.btn-save와 개별 경고색으로 유지한다. */
-#stdverify-custom-bar button { font-size: 11px; font-weight: 700; border-radius: 5px;
+#stdverify-custom-bar button { font-size: 11px; font-weight: 700; border-radius: 6px;
                                  padding: 6px 12px; font-family: inherit; white-space: nowrap;
                                  cursor: pointer; transition: filter .2s ease; }
 #stdverify-custom-bar button:hover { filter: brightness(1.08); }
@@ -1324,8 +1324,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 설정 탭 ── */
 .settings-opt-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.settings-opt-btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 8px;
-                     background: var(--side2); color: var(--text); font-size: 12px; font-weight: 600;
+.settings-opt-btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px;
+                     background: var(--side2); color: var(--text); font-size: 11px; font-weight: 600;
                      cursor: pointer; font-family: inherit;
                      transition: background-color .25s ease, color .25s ease; }
 .settings-opt-btn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
@@ -2316,9 +2316,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <h3>기준 비교표</h3>
             <div style="display:flex;gap:8px;padding:5px 10px;font-size:9.5px;align-items:center;justify-content:center;flex-shrink:0;background:var(--gray-l);border-bottom:1px solid var(--border);border-radius:8px;margin-bottom:8px">
               <span style="font-weight:700;color:var(--sub)">판정:</span>
-              <span style="background:var(--pass-bg);color:var(--pass-t);padding:1px 7px;border-radius:2px;font-weight:bold">✅ 충족</span>
-              <span style="background:var(--fail-bg);color:var(--fail-t);padding:1px 7px;border-radius:2px;font-weight:bold">❌ 부족</span>
-              <span style="background:var(--warn-bg);color:var(--warn-t);padding:1px 7px;border-radius:2px;font-weight:bold">⚠️ 초과</span>
+              <span style="background:var(--pass-bg);color:var(--pass-t);padding:1px 7px;border-radius:2px;font-weight:bold"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg> 충족</span>
+              <span style="background:var(--fail-bg);color:var(--fail-t);padding:1px 7px;border-radius:2px;font-weight:bold"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> 부족</span>
+              <span style="background:var(--warn-bg);color:var(--warn-t);padding:1px 7px;border-radius:2px;font-weight:bold"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> 초과</span>
             </div>
             <div style="overflow-x:auto">
               <table id="stdverify-table">
@@ -5219,7 +5219,7 @@ function renderAminoLimitingCard(result) {
 
   summaryEl.innerHTML = hasLimiting
     ? `현재 배합의 제한 아미노산은 <b style="color:var(--fail-t)">${lowest.name}</b>이며, 기준 충족률은 <b>${lowest.pct.toFixed(0)}%</b>입니다.`
-    : `🟢 모든 분석 대상 필수 아미노산이 기준을 충족합니다.<br>상대적으로 가장 낮은 충족률은 <b>${lowest.name} ${lowest.pct.toFixed(0)}%</b>입니다.`;
+    : `모든 분석 대상 필수 아미노산이 기준을 충족합니다.<br>상대적으로 가장 낮은 충족률은 <b>${lowest.name} ${lowest.pct.toFixed(0)}%</b>입니다.`;
 
   // LIMITING 뱃지는 실제로 기준 미달(100% 미만)인 아미노산이 있을 때만 표시 — 전부 충족 시에는 표시하지 않음
   chartEl.innerHTML = `
@@ -5929,7 +5929,9 @@ function saveCustomStandardsToStorage() {
 }
 let customStandards = loadCustomStandards();
 
-const STDV_LABEL = { pass:'✅ 충족', fail:'❌ 부족', over:'⚠️ 초과', '─':'─' };
+// 아이콘은 ana-table 등 다른 판정 표와 같은 STATUS_TONE 세트(check/x/warning)를 재사용 —
+// 이모지 대신 svgIcon으로 통일(문구·색상 판정 로직은 그대로 유지)
+const STDV_LABEL = { pass:`${svgIcon('check', 10)} 충족`, fail:`${svgIcon('x', 10)} 부족`, over:`${svgIcon('warning', 10)} 초과`, '─':'─' };
 function stdvJClass(j) { return j==='pass'?'pass':j==='fail'?'fail':j==='over'?'over':''; }
 
 function judgeGeneric(v, lo, hi) {
@@ -6041,7 +6043,7 @@ function renderStdVerify(result, pc) {
   summaryEl.innerHTML = `
     <div class="dash-kpi" style="grid-column:span 2;background:${stapleOk ? 'var(--pass-bg)' : 'var(--fail-bg)'}">
       <div class="kpi-label">주식 판정 (${srcLabel} 기준)</div>
-      <div class="kpi-val" style="color:${stapleOk ? 'var(--pass-t)' : 'var(--fail-t)'}">${stapleOk ? '✅ 주식 기준 충족' : '❌ 주식 기준 미충족'}</div>
+      <div class="kpi-val" style="color:${stapleOk ? 'var(--pass-t)' : 'var(--fail-t)'}">${stapleOk ? '주식 기준 충족' : '주식 기준 미충족'}</div>
     </div>
     <div class="dash-kpi"><div class="kpi-label">전체 충족률</div><div class="kpi-val">${overallPct}%</div></div>
     <div class="dash-kpi"><div class="kpi-label">충족</div><div class="kpi-val" style="color:var(--pass-t)">${passCount}</div></div>
