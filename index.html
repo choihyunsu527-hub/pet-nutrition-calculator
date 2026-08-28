@@ -1168,12 +1168,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    pass/warn/fail 색상은 이 규칙과 무관하게 기존 로직 그대로 유지된다. */
 #ds-overall-card.pass, #ds-overall-card.warn, #ds-overall-card.fail,
 #ds-warn-card.pass, #ds-warn-card.warn, #ds-warn-card.fail { background: var(--side2) !important; }
-/* 위 두 카드에 .pass/.fail이 붙었을 때 전역 유틸리티(.pass/.fail)의 color 속성
-   (--pass-t #1E7E34 / --fail-t #C0392B)까지 그대로 남아있던 부분을 #FFFFFF로 지정.
-   자식 요소(.dash-stat-val 등)는 각자 자기 color를 갖고 있어 화면상 숫자색에는
-   영향이 없고, 카드 div 자신의 color 속성값만 바뀐다. */
-div#ds-warn-card.dash-stat-card.pass { color: #FFFFFF; }
-div#ds-overall-card.dash-stat-card.fail { color: #FFFFFF; }
+/* 위 두 카드에 pass/warn/fail 중 어떤 상태가 붙어도 전역 유틸리티(.pass/.warn/.fail)의
+   color 속성(--pass-t/--warn-t/--fail-t)이 카드 자신에 남지 않도록 #FFFFFF로 고정한다.
+   자식 요소(.dash-stat-val/.dash-stat-label/.dash-stat-sub/.dash-stat-link 등)는 각자
+   자기 color를 갖고 있어 화면상 텍스트색에는 영향이 없고, 카드 div 자신의 color
+   속성값만 바뀐다(전역 .pass/.warn/.fail 클래스 자체는 다른 화면에서 계속 쓰이므로
+   삭제하지 않고, 이 두 카드에만 스코프를 제한해 상속을 차단). */
+#ds-overall-card.pass, #ds-overall-card.warn, #ds-overall-card.fail,
+#ds-warn-card.pass, #ds-warn-card.warn, #ds-warn-card.fail { color: #FFFFFF; }
 
 /* ── 대시보드: 막대 차트(영양소/아미노산 충족률) ── */
 .dash-bar-list { display: flex; flex-direction: column; justify-content: center; gap: 7px; flex: 1; }
