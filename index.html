@@ -1231,23 +1231,33 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .gl-empty { text-align: center; padding: 10px 8px; color: var(--sub); font-size: 11px; }
 
 /* ── 제품 유형 자동 판정 카드 & 배너 ──
-   상단 KPI 카드(.dash-stat-card)와 같은 타이포그래피 위계(eyebrow → 큰 제목 → 차분한
-   메타 텍스트)로 정돈 — padding도 KPI 카드와 같은 20px, eyebrow의 청록 accent 점도
-   .dash-stat-label과 같은 표현을 재사용. 배경/border/radius/shadow 토큰은 변경 없음. */
-.ptype-card { display: flex; align-items: center; gap: 20px; background: var(--side2); border: 1px solid var(--border);
-              border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px;
-              box-shadow: var(--sh); flex-wrap: wrap; }
-.ptype-card-main { flex: 1; min-width: 240px; }
+   HEADER(eyebrow+accent dot / 신뢰도 pill) → 핵심 제품 유형명(카드의 주인공) → 보조
+   설명 → 통계(하단에서 얇은 구분선으로 분리된 독립 그룹) → ACTION(맨 아래 고정) 순의
+   세로 위계. 카드를 flex-column 컨테이너로 두고 .dash-stat-link(다른 KPI 카드와 공유)에
+   이미 있는 margin-top:auto가 그대로 작동해, 카드가 옆 KPI 그리드만큼 늘어나도 액션
+   링크는 항상 맨 아래에 붙는다. 배경/border/radius/shadow는 다른 대시보드 카드와 같은
+   --side2/--border/--radius-md/--sh 그대로, 새 색상 없음. */
+.ptype-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
+              border-radius: var(--radius-md); padding: 20px; margin-bottom: 14px; box-shadow: var(--sh); }
+/* HEADER — 왼쪽 eyebrow 라벨, 오른쪽 신뢰도 pill(+판정 근거 버튼). 얇은 구분선 하나로
+   카드 안에서 독립된 영역처럼 보이게 한다(색이 아니라 경계선으로 분리). */
+.ptype-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+                      padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
 .ptype-card-label { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--sub);
-                     font-weight: 600; letter-spacing: .5px; text-transform: uppercase; margin-bottom: 6px; }
+                     font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
 .ptype-card-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
+.ptype-card-side { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+/* 핵심 정보 — 제품 유형명이 카드의 시각적 중심. 24~26px/700로 확실히 크되 과하지 않게. */
 .ptype-card-type { font-size: 26px; font-weight: 700; color: var(--hdr); letter-spacing: -.3px; line-height: 1.2; }
-.ptype-card-type-en { font-size: 11px; color: var(--sub); font-weight: 600; margin-top: 3px; margin-bottom: 8px; }
-.ptype-card-desc { font-size: 11px; color: var(--sub); font-weight: 400; line-height: 1.5; margin-bottom: 10px; max-width: 560px; }
-.ptype-card-stats { display: flex; gap: 18px; flex-wrap: wrap; }
+.ptype-card-type-en { font-size: 11px; color: var(--sub); font-weight: 600; margin-top: 3px; margin-bottom: 10px; }
+.ptype-card-desc { font-size: 11px; color: var(--sub); font-weight: 400; line-height: 1.5; max-width: 480px; }
+/* 통계 그룹 — 위 설명과 얇은 구분선으로 분리된 독립 영역. 라벨은 작고 차분하게, 값은
+   아래 줄에 크고 진하게 둬서(숫자 → 라벨 순서가 아니라 라벨 → 숫자로 한 눈에 위계가
+   보이도록) 강조한다. 색상은 var(--hdr)/var(--sub)만 사용 — 새 색 없음. */
+.ptype-card-stats { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 16px; padding-top: 14px;
+                     border-top: 1px solid var(--border); }
 .ptype-card-stat { font-size: 10.5px; color: var(--sub); }
-.ptype-card-stat b { color: var(--hdr); font-size: 13px; margin-left: 5px; }
-.ptype-card-side { display: flex; flex-direction: column; align-items: flex-end; gap: 9px; flex-shrink: 0; margin-left: auto; }
+.ptype-card-stat b { display: block; color: var(--hdr); font-size: 14px; font-weight: 700; margin-top: 3px; }
 .ptype-confidence { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
 .ptype-confidence.conf-high   { background: var(--pass-bg); color: var(--pass-t); }
 .ptype-confidence.conf-medium { background: var(--warn-bg); color: var(--warn-t); }
@@ -1613,12 +1623,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="dash-panel">
         <div class="dash-top-row">
         <div class="ptype-card" id="ptype-card">
-          <div class="ptype-card-main">
+          <div class="ptype-card-header">
             <div class="ptype-card-label">제품 유형 분석</div>
-            <div class="ptype-card-type" style="color:var(--sub)">배합비를 입력하면 자동으로 분석됩니다</div>
-            <div class="ptype-card-desc">배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을 분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중 가장 적합한 제품 유형을 자동으로 추천합니다.</div>
-            <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
           </div>
+          <div class="ptype-card-type" style="color:var(--sub)">배합비를 입력하면 자동으로 분석됩니다</div>
+          <div class="ptype-card-desc">배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을 분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중 가장 적합한 제품 유형을 자동으로 추천합니다.</div>
+          <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
         </div>
         <div class="dash-stat-row">
           <div class="dash-stat-card" id="ds-overall-card">
@@ -5615,35 +5625,35 @@ function renderProductTypeCard(pc) {
   if (!pc || !pc.type) {
     card.className = 'ptype-card';
     card.innerHTML = `
-      <div class="ptype-card-main">
+      <div class="ptype-card-header">
         <div class="ptype-card-label">제품 유형 분석</div>
-        <div class="ptype-card-type" style="color:var(--sub)">배합비를 입력하면 자동으로 분석됩니다</div>
-        <div class="ptype-card-desc">배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을 분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중 가장 적합한 제품 유형을 자동으로 추천합니다.</div>
-        <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
-      </div>`;
+      </div>
+      <div class="ptype-card-type" style="color:var(--sub)">배합비를 입력하면 자동으로 분석됩니다</div>
+      <div class="ptype-card-desc">배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을 분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중 가장 적합한 제품 유형을 자동으로 추천합니다.</div>
+      <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>`;
     return;
   }
 
   card.className = 'ptype-card';
   card.innerHTML = `
-    <div class="ptype-card-main">
+    <div class="ptype-card-header">
       <div class="ptype-card-label">제품 유형 분석</div>
-      <div class="ptype-card-type">${pc.label}</div>
-      <div class="ptype-card-type-en">${pc.en}</div>
-      <div class="ptype-card-desc">${pc.desc}</div>
-      <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>
-      <div class="ptype-card-stats">
-        <span class="ptype-card-stat">평가 기준<b>${pc.evaluationPolicy ? pc.evaluationPolicy.summary.replace('평가 기준: ','') : '─'}</b></span>
-        <span class="ptype-card-stat">AAFCO 최소기준 충족률<b>${Math.round(pc.minPassRate * 100)}%</b></span>
-        <span class="ptype-card-stat">필수 영양소 충족<b>${pc.metMinCount} / ${pc.withDataCount}</b></span>
-        <span class="ptype-card-stat">입력 데이터 완전성<b>${Math.round(pc.completeness * 100)}%</b></span>
+      <div class="ptype-card-side">
+        <span class="ptype-confidence conf-${pc.confidence}">${pc.confidenceLabel}</span>
+        <button class="ptype-evidence-btn" onclick="openPtypeEvidence()">판정 근거 보기</button>
       </div>
-      ${pc.type === 'unsuitable' ? `<div style="margin-top:8px;padding:8px 10px;border-radius:6px;border-left:3px solid var(--fail-t);background:var(--gray-l);color:var(--text);font-size:11px;font-weight:600;line-height:1.5"><span style="color:var(--fail-t);display:inline-flex;vertical-align:-2px">${svgIcon('warning', 12)}</span> 직접 급여용 제품이 아닌 배합용 원료로 판단됩니다. 실제 제품에 사용할 경우 적정 배합비와 안전 사용량을 별도로 확인해야 합니다.</div>` : ''}
     </div>
-    <div class="ptype-card-side">
-      <span class="ptype-confidence conf-${pc.confidence}">${pc.confidenceLabel}</span>
-      <button class="ptype-evidence-btn" onclick="openPtypeEvidence()">판정 근거 보기</button>
-    </div>`;
+    <div class="ptype-card-type">${pc.label}</div>
+    <div class="ptype-card-type-en">${pc.en}</div>
+    <div class="ptype-card-desc">${pc.desc}</div>
+    <div class="ptype-card-stats">
+      <span class="ptype-card-stat">평가 기준<b>${pc.evaluationPolicy ? pc.evaluationPolicy.summary.replace('평가 기준: ','') : '─'}</b></span>
+      <span class="ptype-card-stat">AAFCO 최소기준 충족률<b>${Math.round(pc.minPassRate * 100)}%</b></span>
+      <span class="ptype-card-stat">필수 영양소 충족<b>${pc.metMinCount} / ${pc.withDataCount}</b></span>
+      <span class="ptype-card-stat">입력 데이터 완전성<b>${Math.round(pc.completeness * 100)}%</b></span>
+    </div>
+    ${pc.type === 'unsuitable' ? `<div style="margin-top:14px;padding:8px 10px;border-radius:6px;border-left:3px solid var(--fail-t);background:var(--gray-l);color:var(--text);font-size:11px;font-weight:600;line-height:1.5"><span style="color:var(--fail-t);display:inline-flex;vertical-align:-2px">${svgIcon('warning', 12)}</span> 직접 급여용 제품이 아닌 배합용 원료로 판단됩니다. 실제 제품에 사용할 경우 적정 배합비와 안전 사용량을 별도로 확인해야 합니다.</div>` : ''}
+    <span class="dash-stat-link" onclick="goTab('std-verify')">기준 검증 상세 보기 →</span>`;
 }
 
 function openPtypeEvidence() {
