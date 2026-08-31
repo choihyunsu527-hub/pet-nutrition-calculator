@@ -999,6 +999,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
                     letter-spacing: .5px; margin-bottom: 10px; }
 .ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+/* Ca:P 비율 / 원료 상위 구성 전용 — 위 아미노산 스코어처럼 키가 큰 카드와 같은 행에서
+   align-items:stretch로 늘어나지 않도록, .ana-group-grid 밖에서 독립된 flex 행으로 둔다.
+   flex-basis 1:1이라 두 카드가 항상 같은 폭이고, 내용이 적은 만큼 행 높이도 자연스럽게
+   낮아진다. align-items:flex-start를 명시해 flex의 기본값(stretch)을 꺼야, 두 카드 중
+   콘텐츠가 더 적은 쪽(주로 원료 상위 구성)이 옆 카드 높이에 맞춰 늘어나지 않고 자기
+   콘텐츠 높이만 차지한다 — height/min-height로 강제하지 않음. 좁은 화면에서는
+   flex-wrap으로 기존 다른 대시보드 행(.dash-top-row 등)과 같은 방식으로 세로 1열로
+   떨어진다(레이아웃 깨짐 없음). */
+.ana-pair-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+.ana-pair-row > .dash-section { flex: 1 1 240px; min-width: 0; }
 .dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
                  box-sizing: border-box; }
@@ -1019,6 +1029,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-kpi .kpi-label { font-size: var(--fs-meta); color: var(--sub); margin-bottom: 4px; }
 .dash-kpi .kpi-val { font-size: 18px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
 .dash-kpi .kpi-unit { font-size: var(--fs-meta); color: var(--sub); margin-top: 2px; }
+/* 분석 현황 탭("핵심 지표"/"일일 급여량")의 .dash-kpi만 미니 카드 chrome(배경/테두리/
+   shadow)을 걷어낸다 — .dash-kpi는 제품/에너지분석/기준검증 탭에서도 쓰는 공용
+   클래스라 그대로 두고, 탭 스코프로만 좁혀 "표 안에 카드가 여러 개" 인상을 없앤다.
+   label→숫자→단위 위계와 색은 그대로(각각 var(--sub)/var(--hdr)/var(--sub)). */
+#tab-analysis .dash-kpi { background: none; border: none; box-shadow: none; padding: 4px 6px; }
+#tab-analysis .dash-kpi .kpi-val { font-size: 19px; }
 
 /* ── 대시보드: 핵심 지표(위 dash-top-row) 아래의 프로필/설정 카드 — "기타 정보" 계층 ──
    기존 .dash-grid/.dash-section은 다른 탭에서도 공유하는 카드 시스템이라 그대로 두고,
@@ -1031,8 +1047,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
 .dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 #tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
-#tab-dash .dash-section h3 { font-size: 10.5px; font-weight: 700; color: var(--sub);
-                              text-transform: uppercase; letter-spacing: .4px; }
+/* 대시보드 하단(탭-대시보드)과 분석 현황 탭의 카드는 상단 KPI/Hero Card와 같은 톤으로 —
+   padding 22px, 제목은 eyebrow(작은 uppercase + 청록 accent dot)로 통일한다. .dash-section
+   자체는 다른 탭(제품/배합 등)에서도 쓰는 공용 클래스라 여기 두 탭에만 스코프를 좁힌다. */
+#tab-dash .dash-section, #tab-analysis .dash-section { padding: 22px; }
+#tab-dash .dash-section h3, #tab-analysis .dash-section h3 {
+  font-size: 10.5px; font-weight: 600; color: var(--sub);
+  text-transform: uppercase; letter-spacing: .4px; }
+#tab-dash .dash-section h3::before, #tab-analysis .dash-section h3::before {
+  content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--acc); margin-right: 6px; vertical-align: middle; }
 /* ── 왼쪽 컬럼("기본 정보"/"영양 계산 설정")만 — 공용 .settings-grid(다른 탭에서도
    쓰므로 그대로 둠)를 여기서만 minmax 하한을 200px로 올려 넓어진 카드 폭에서 auto-fill이
    안정적으로 2열이 되게 한다. 각 카드의 마지막 항목(기본 정보의 "현재 체중", 영양 계산
@@ -1044,32 +1068,44 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #tab-dash .dash-bottom-col:first-child .settings-grid > .sf-item:last-child {
   grid-column: 1 / -1;
 }
-/* ── 대시보드: 최근 레시피 카드 — 드롭다운이 아닌 세로 목록. 기존 .dash-section 톤 재사용 ── */
-.dash-recent-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* ── 대시보드: 최근 레시피 카드 — Hero/KPI 카드와 같은 디자인 언어로 정돈 ──
+   기존엔 항목 하나하나가 자기 border/배경/shadow를 가진 "미니 카드"였다(레시피 버튼 +
+   별 버튼이 각각 박스). 이제는 카드 자체(.dash-recent-card)만 하나의 Neutral 카드이고,
+   그 안의 목록 항목은 배경 없는 플랫 로우 + 얇은 divider + 미세한 hover 배경으로만
+   구분한다 — KPI 카드가 진행바/텍스트 위계만으로 상태를 표현하듯, 여기도 색 대신
+   여백/구분선으로 정보를 나눈다. 레시피명(.dash-recent-item)이 이 로우에서 가장 중요한
+   텍스트, 즐겨찾기 별은 절제된 아이콘 버튼으로만 존재한다. */
+.dash-recent-card { padding: 22px; }
+.dash-recent-list { display: flex; flex-direction: column; min-width: 0; }
 /* 항목 행 — 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 토글(.dash-fav-toggle-btn)을
    형제 요소로 나란히 둬, 별 클릭이 레시피 열기 이벤트와 완전히 분리되게 한다.
    min-width:0을 둬야 flex 자식(.dash-recent-item)의 기본 min-width:auto가 행 폭을
-   내용 길이만큼 늘리는 것을 막을 수 있다. */
-.dash-recent-row { display: flex; align-items: stretch; gap: 6px; min-width: 0; }
-.dash-recent-item { display: block; flex: 1; min-width: 0; text-align: left; background: var(--gray-grad);
-                     border: 1px solid var(--border); border-radius: var(--radius-md);
-                     padding: 9px 12px; font-size: 11.5px; font-weight: 600; color: var(--text);
-                     cursor: pointer; font-family: inherit; box-shadow: var(--sh);
-                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-                     transition: border-color .15s ease, color .15s ease; }
-.dash-recent-item:hover { border-color: var(--acc); color: var(--acc); }
+   내용 길이만큼 늘리는 것을 막을 수 있다. 행끼리는 카드가 아니라 얇은 구분선으로만
+   나뉘고, 행 전체에 아주 옅은 hover 배경만 준다(강한 색상 변화 없음). */
+.dash-recent-row { display: flex; align-items: center; gap: 4px; min-width: 0;
+                    padding: 9px 6px; margin: 0 -6px; border-radius: 8px;
+                    transition: background-color .15s ease; }
+.dash-recent-row:hover { background: var(--hover-tint); }
+.dash-recent-row + .dash-recent-row { border-top: 1px solid var(--border); }
+.dash-recent-item { display: block; flex: 1; min-width: 0; text-align: left; background: none;
+                     border: none; border-radius: 0; padding: 0; font-size: 12px; font-weight: 600;
+                     color: var(--text); cursor: pointer; font-family: inherit; box-shadow: none;
+                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dash-recent-empty { font-size: 11px; color: var(--sub); padding: 10px 8px; text-align: center; }
 /* ── 대시보드: 최근 레시피 카드 헤더 — 다른 3개 카드와 같이 h3에 고정 제목을 쓰고,
-   그 아래에 최근/즐겨찾기 탭(.seg-control 재사용)을 별도 줄로 둔다. ── */
-.dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 8px; }
+   그 아래에 최근/즐겨찾기 탭(.seg-control 재사용)을 별도 줄로 둔다. active 탭은
+   전역 .seg-btn.active(강한 accent 채움)를 이 카드 안에서만 옅은 톤으로 낮춘다
+   — .ing-toolbar button.active와 같은 절제된 패턴(포커스 링에 쓰는 --calc 재사용). */
+.dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 10px; }
 .dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
-/* 항목별 즐겨찾기 별 버튼(☆/★) — 배경이 있는 카드 톤에 맞춰 테두리를 두른 정사각 버튼 */
-.dash-fav-toggle-btn { width: 34px; flex-shrink: 0; padding: 0;
+.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); }
+/* 항목별 즐겨찾기 별 버튼(☆/★) — 더 이상 자기 박스를 갖지 않는 절제된 아이콘 버튼 */
+.dash-fav-toggle-btn { width: 26px; height: 26px; flex-shrink: 0; padding: 0;
                         display: flex; align-items: center; justify-content: center;
-                        background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
-                        color: var(--sub); cursor: pointer; box-shadow: var(--sh);
-                        transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
-.dash-fav-toggle-btn:hover { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
+                        background: none; border: none; border-radius: 6px;
+                        color: var(--sub); cursor: pointer; box-shadow: none;
+                        transition: background-color .15s ease, color .15s ease; }
+.dash-fav-toggle-btn:hover { background: var(--hover-tint); color: var(--acc); }
 .dash-fav-toggle-btn.active { color: var(--acc); }
 
 /* ── 기준 검증 탭 ── */
@@ -1086,11 +1122,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
              font-family: inherit; color: var(--text); background: var(--side2); outline: none; border-radius: 6px;
              transition: border-color .15s ease, box-shadow .15s ease; }
 .stdverify-cust-row input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
-.dash-compliance { display: flex; flex-direction: column; gap: 6px; }
+/* "기준 충족 현황"(NRC/AAFCO/FEDIAF) — 예전엔 기준마다 자기 배경/테두리/shadow를 가진
+   미니 카드 3개가 쌓여 있었다(카드 안에 카드). 이제는 배경 없이 얇은 구분선으로만
+   세 기준을 나누고, 여백으로 그룹을 구분한다. 기준명 색(comp-title, nrc/aa/fed-t)과
+   상태값 색(cs-pass/fail 등)은 원래 값 그대로 — 이건 "작은 텍스트 상태 표시"라 허용 범위. */
+.dash-compliance { display: flex; flex-direction: column; }
 .dash-section > .accent-card { flex: 1; display: flex; flex-direction: column; }
 .dash-section > .accent-card > .settings-actions { margin-top: auto; }
-.dash-comp-card { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
-                   padding: 12px 14px; box-shadow: var(--sh); }
+.dash-comp-card { background: none; border: none; box-shadow: none; padding: 8px 0; }
+.dash-comp-card + .dash-comp-card { border-top: 1px solid var(--border); }
 .comp-title { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
 .dash-comp-stat { display: flex; justify-content: space-between; align-items: center;
                    padding: 1px 0; font-size: 10px; }
@@ -1098,12 +1138,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cs-pass { color: var(--pass-t); }
 .cs-fail { color: var(--fail-t); }
 .cs-over { color: var(--fail-t); }
-.dash-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
-.dash-quick-item { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
-                    padding: 6px 6px; box-shadow: var(--sh);
+/* 영양소 13종이 각자 배경/테두리/shadow를 가진 미니 카드였던 것을 제거 — 셀 하나하나가
+   "표 안의 작은 카드"처럼 보이지 않도록 배경 없이 여백(gap)만으로 나눈다. 상태 표시는
+   이미 작은 요소(qi-badge 배지, qi-gauge 게이지)로만 되어 있어 그대로 유지(허용 범위). */
+.dash-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 8px; }
+.dash-quick-item { background: none; border: none; box-shadow: none; border-radius: 0;
+                    padding: 2px 4px;
                     display: flex; flex-direction: column; gap: 3px;
                     justify-content: center; align-items: center; text-align: center; }
-.qi-name { font-size: var(--fs-meta); color: var(--text); line-height: 1.2; }
+.qi-name { font-size: var(--fs-meta); color: var(--hdr); line-height: 1.2; }
 .qi-value { font-size: 10px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
 /* ── 상태 배지 표준 컴포넌트 — 정상/부족/초과/주의/참고/미함유(평가 제외 포함)를
    앱 전체에서 이 하나의 모양(아이콘+문구, radius 3px)으로 통일한다. 색은 기존
@@ -1556,6 +1599,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <svg class="nav-icon" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
       <span>경고 패널</span>
     </div>
+    <div class="nav-item" data-tab="history" data-label="변경 이력" onclick="showTab('history', this)" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+      <span>변경 이력</span>
+    </div>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">데이터</div>
@@ -1843,7 +1890,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             </div>
           </div>
         </div>
-        <div class="dash-section">
+        <div class="dash-section dash-recent-card">
           <h3>최근 레시피</h3>
           <div class="seg-control dash-recent-tabs">
             <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근 레시피</button>
@@ -2025,10 +2072,26 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="ana-group">
           <h4 class="ana-group-title">영양 상태</h4>
           <div class="ana-group-grid">
-        <div class="dash-section">
+        <div class="dash-section" style="grid-column:1/-1">
           <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 빠른 확인 (AAFCO 2023 <span id="dk-quick-species">성견</span> 기준)</span></h3>
           <div class="dash-quick-grid" id="dk-quick-grid"></div>
         </div>
+          </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">구성 분석</h4>
+          <div class="ana-group-grid">
+        <div class="dash-section" style="grid-column:1/-1">
+          <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
+          <div class="dash-bar-list" id="ds-amino-bars"></div>
+          <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
+        </div>
+        <!-- Ca:P 비율 / 원료 상위 구성 — 내용이 짧은 두 카드를 1:1 폭으로 나란히 붙여,
+             위(아미노산 스코어)처럼 키가 큰 카드에 맞춰 늘어나지 않고 자기 내용만큼의
+             자연스러운 높이를 갖게 한다(.ana-group-grid의 align-items:stretch 밖에서
+             독립된 flex 행으로 둠). 좁은 화면에서는 flex-wrap으로 세로 1열로 떨어진다. -->
+        <div class="ana-pair-row" style="grid-column:1/-1">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('warn')">Ca:P 비율</span></h3>
           <div class="dash-donut-wrap">
@@ -2039,23 +2102,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <span class="dash-donut-badge" id="ds-cap-badge">계산 대기</span>
           </div>
         </div>
-          </div>
-        </div>
-
-        <div class="ana-group">
-          <h4 class="ana-group-title">구성 분석</h4>
-          <div class="ana-group-grid">
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
-          <div class="dash-bar-list" id="ds-amino-bars"></div>
-          <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
-        </div>
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('mix')">원료 상위 구성 (TOP 5)</span></h3>
           <div class="dash-donut-wrap" style="flex-direction:row;align-items:center;gap:18px">
             <div class="dash-donut" id="ds-ing-donut" style="flex-shrink:0"></div>
             <div class="dash-legend" id="ds-ing-legend"></div>
           </div>
+        </div>
         </div>
           </div>
         </div>
@@ -2479,6 +2532,30 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             </tr>
           </thead>
           <tbody id="warn-body"></tbody>
+        </table>
+      </div>
+      </div>
+    </div>
+
+    <!-- ── 변경 이력 ── -->
+    <div class="tab-pane" id="tab-history">
+      <div class="hdr-bar hdr-bar-left">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--hdr)"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+        <span class="hdr-title">변경 이력</span>
+        <span class="hdr-desc">레시피 작업 기록을 확인할 수 있습니다</span>
+      </div>
+      <div class="tab-panel">
+      <div class="tbl-wrap">
+        <table id="change-history-table">
+          <thead>
+            <tr>
+              <th style="width:120px">시간</th>
+              <th style="width:200px">레시피명</th>
+              <th style="width:120px">변경 유형</th>
+              <th>변경 내용</th>
+            </tr>
+          </thead>
+          <tbody id="change-history-body"></tbody>
         </table>
       </div>
       </div>
@@ -5784,6 +5861,7 @@ function calculate() {
   saveToStorage();
   syncPanelWidths();
   recordUndoSnapshot();
+  chDetectRecipeChanges();
 }
 
 function syncPanelWidths() {
@@ -7499,7 +7577,7 @@ function renderDashIngredientDonut() {
     <div class="dash-legend-row">
       <span class="dash-legend-dot" style="background:${colors[i % colors.length]}"></span>
       <span class="dash-legend-name">${s.name}</span>
-      <span class="dash-legend-pct">${(s.pct/total*100).toFixed(0)}%</span>
+      <span class="dash-legend-pct">${s.pct.toFixed(0)}%</span>
     </div>`).join('');
 }
 
@@ -7524,7 +7602,7 @@ function renderDashWarnSummary(elId = 'ds-warn-list') {
 // ════════════════════════════════════════════════════════════════════════════
 const TAB_LABELS = {
   dash:'대시보드', product:'제품 / 정보', mix:'배합 설계', analysis:'분석 현황',
-  ana:'영양소 분석', 'ana-energy':'에너지 분석', 'std-verify':'기준 검증', amino:'아미노산 분석', warn:'경고 패널',
+  ana:'영양소 분석', 'ana-energy':'에너지 분석', 'std-verify':'기준 검증', amino:'아미노산 분석', warn:'경고 패널', history:'변경 이력',
   std:'영양 기준 DB', glossary:'전문 용어', calcbasis:'계산 기준',
   ing:'원료 DB', settings:'설정', admin:'관리자',
 };
@@ -7741,6 +7819,7 @@ function showTab(id, el) {
   // (goTab(savedTab)) 항상 최신 목록을 불러오도록 여기서 한 번만 트리거한다.
   if (id === 'admin') loadAdminUsers();
   if (id === 'mix') syncMixRecipeNameField();
+  if (id === 'history') renderChangeHistory();
 }
 
 // 배합 설계 탭의 "레시피명" 입력칸 — 제품/정보 탭의 sb-name과 같은 값을 가리키는
@@ -7948,6 +8027,110 @@ function initAllergyControl() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// 변경 이력 (Change History) — localStorage 전용. 기존 Undo/Redo(undoStack/redoStack)와
+// 완전히 분리된 별도 기록이다. calculate() 끝에서 배합 상태를 직전 스냅샷과 비교해
+// (원료 추가/삭제/배합비 변경/총 배합량 변경) 이벤트를 만들고, 저장/불러오기는 해당
+// 함수에서 직접 recordChangeHistory()를 호출한다.
+// ════════════════════════════════════════════════════════════════════════════
+const CHANGE_HISTORY_KEY = 'feedcalc_v4_change_history';
+const CHANGE_HISTORY_MAX = 200;
+
+let chBaseline = null;     // { rows: Map<원료명, 배합비%>, totalG:number } — 마지막으로 비교한 상태
+let chSuppressDetect = false; // 레시피 불러오기 등 일괄 변경 중에는 행 단위 감지를 끈다
+
+function getChangeHistory() {
+  try { return JSON.parse(localStorage.getItem(CHANGE_HISTORY_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function recordChangeHistory(type, recipeName, detail) {
+  try {
+    const list = getChangeHistory();
+    list.unshift({
+      ts: Date.now(),
+      recipe: (recipeName || '').trim() || '(제목 없음)',
+      type: type,
+      detail: detail || '',
+    });
+    if (list.length > CHANGE_HISTORY_MAX) list.length = CHANGE_HISTORY_MAX;
+    localStorage.setItem(CHANGE_HISTORY_KEY, JSON.stringify(list));
+  } catch (e) { /* 저장 실패는 조용히 무시 — 본 기능 흐름을 막지 않는다 */ }
+  renderChangeHistory();
+}
+
+function chFmtPct(v) { return (Math.round((Number(v) || 0) * 10) / 10) + '%'; }
+function chFmtG(v)   { return (Math.round((Number(v) || 0) * 10) / 10) + 'g'; }
+function chFmtTime(ts) {
+  const d = new Date(ts), now = new Date();
+  const hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const sameDay = d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  return sameDay ? hm : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + hm;
+}
+
+// 현재 배합 상태(원료명→배합비%, 총 배합량)를 스냅샷으로 만든다. 배합비 0%(아직 값을
+// 입력하지 않은 행)나 이름 없는 행은 "레시피에 없는 것"으로 취급한다.
+function chSnapshotMixState() {
+  const rows = new Map();
+  getMixRows().forEach(([nm, pct]) => {
+    const p = Number(pct) || 0;
+    if (!nm || !(p > 0)) return;
+    rows.set(nm, (rows.get(nm) || 0) + p);
+  });
+  return { rows, totalG: getMixTotalG() };
+}
+
+// calculate() 끝에서 호출 — 직전 스냅샷(chBaseline)과 비교해 변경 이벤트를 기록한다.
+function chDetectRecipeChanges() {
+  if (chSuppressDetect || isRestoringRecipeHistory) return;
+  const cur = chSnapshotMixState();
+  if (!chBaseline) { chBaseline = cur; return; } // 최초 1회는 기준점만 세운다
+  const prev = chBaseline;
+  const name = document.getElementById('sb-name')?.value || '';
+  const unit = document.getElementById('unit-select')?.value || 'pct';
+
+  cur.rows.forEach((pct, nm) => {
+    if (!prev.rows.has(nm)) {
+      recordChangeHistory('원료 추가', name, `${nm} ${chFmtPct(pct)}`);
+    } else {
+      const p0 = prev.rows.get(nm);
+      if (Math.abs(p0 - pct) >= 0.05 && chFmtPct(p0) !== chFmtPct(pct)) {
+        recordChangeHistory('배합비 변경', name, `${nm} ${chFmtPct(p0)} → ${chFmtPct(pct)}`);
+      }
+    }
+  });
+  prev.rows.forEach((pct, nm) => {
+    if (!cur.rows.has(nm)) {
+      recordChangeHistory('원료 삭제', name, `${nm} ${chFmtPct(pct)}`);
+    }
+  });
+
+  // 총 배합량은 사용자가 직접 편집하는 %모드에서만 기록한다(g/kg 모드에서는 원료 중량
+  // 합계로 자동 파생되므로 "배합비 변경"과 중복 기록되는 것을 피한다). 단위(g/kg/%)
+  // 전환 자체는 getMixRows()·getMixTotalG() 결과가 그대로라 아무 이벤트도 만들지 않는다.
+  if (unit === 'pct' && Math.abs(prev.totalG - cur.totalG) >= 0.5) {
+    recordChangeHistory('총 배합량 변경', name, `${chFmtG(prev.totalG)} → ${chFmtG(cur.totalG)}`);
+  }
+
+  chBaseline = cur;
+}
+
+function renderChangeHistory() {
+  const body = document.getElementById('change-history-body');
+  if (!body) return;
+  const list = getChangeHistory();
+  if (!list.length) {
+    body.innerHTML = '<tr><td colspan="4" class="table-empty-row">기록된 변경 이력이 없습니다.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(e => `<tr>
+      <td>${chFmtTime(e.ts)}</td>
+      <td>${escHtml(e.recipe)}</td>
+      <td>${escHtml(e.type)}</td>
+      <td class="left">${escHtml(e.detail)}</td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // 레시피 저장 / 불러오기
 // ════════════════════════════════════════════════════════════════════════════
 function collectRecipeData() {
@@ -7984,6 +8167,7 @@ async function saveRecipe() {
         await writable.close();
         document.getElementById('recipe-name').innerHTML = svgIcon('file', 12) + ' ' + escHtml(currentRecipeFilename);
         isDirty = false;
+        recordChangeHistory('레시피 저장', data.name, currentRecipeFilename);
         showToast('레시피를 업데이트했습니다: ' + currentRecipeFilename);
         return;
       } catch(e) {
@@ -8006,6 +8190,7 @@ async function saveRecipe() {
         const sel = document.getElementById('top-recipe-select');
         if (sel) sel.value = currentRecipeFilename;
         isDirty = false;
+        recordChangeHistory('레시피 저장', data.name, currentRecipeFilename);
         showToast('레시피를 업데이트했습니다: ' + currentRecipeFilename);
         return;
       } catch(e) {
@@ -8030,6 +8215,7 @@ async function saveRecipe() {
         currentRecipeFilename   = filename;
         currentRecipeFileHandle = null;
         isDirty = false;
+        recordChangeHistory('레시피 저장', data.name, filename);
         showToast('레시피를 폴더에 저장했습니다: ' + filename);
         return;
       } catch(e) {
@@ -8052,6 +8238,7 @@ async function saveRecipe() {
     currentRecipeFilename   = filename;
     currentRecipeFileHandle = null;
     isDirty = false;
+    recordChangeHistory('레시피 저장', data.name, filename);
     if (!recipeDirHandle) {
       // 폴더 직접 저장 API(File System Access) 자체를 지원하지 않는 브라우저(Chrome/Edge 외)에서는
       // 폴더 연결을 안내해도 chooseRecipeFolder()가 다시 안내 alert만 띄우므로, 원인이 "아직 연결
@@ -8094,6 +8281,19 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   // 이 레시피를 "연다" — 이후 저장 시 새 파일을 만들지 않고 이 문서를 업데이트한다.
   currentRecipeFilename   = displayName || null;
   currentRecipeFileHandle = fileHandle || null;
+
+  // 저장 데이터(collectRecipeData)는 항상 배합비(%) + totalG 기준이므로, 불러오기 시
+  // 입력 단위가 g/kg로 남아 있으면 복원한 숫자가 그램으로 오해되어 총 배치량이
+  // 행 합계로 덮어써진다 — 행을 다시 그리기 전에 단위 입력을 %로 되돌린다.
+  const unitSelEl = document.getElementById('unit-select');
+  if (unitSelEl && unitSelEl.value !== 'pct') {
+    unitSelEl.value = 'pct';
+    onUnitChange();
+  }
+
+  // 불러오기는 여러 행을 한꺼번에 다시 그리므로, 행 단위 변경 감지는 끄고 뒤에서
+  // "레시피 불러오기" 한 건만 기록한다(변경 이력 전용 — Undo/Redo와 무관).
+  chSuppressDetect = true;
 
   document.getElementById('sb-name').value   = data.name||'';
   syncMixRecipeNameField();
@@ -8146,6 +8346,14 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   recordRecentRecipe(displayName);
   updateUnitHint();
   calculate();
+
+  // 변경 이력: 일괄 렌더가 끝났으니 감지를 다시 켜고 기준점을 불러온 레시피 상태로
+  // 재설정한다. Undo/Redo 복원(restoreRecipeSnapshot) 경로에서는 이력을 남기지 않는다.
+  chSuppressDetect = false;
+  chBaseline = chSnapshotMixState();
+  if (!isRestoringRecipeHistory) {
+    recordChangeHistory('레시피 불러오기', data.name || displayName || '', displayName || '');
+  }
 
   // calculate() 내부의 saveToStorage()가 dirty 플래그를 세우지만, 방금 불러온 레시피는
   // 아직 아무것도 수정하지 않은 상태이므로 되돌린다(= 문서를 "연" 것이지 "수정"한 게 아니다).
