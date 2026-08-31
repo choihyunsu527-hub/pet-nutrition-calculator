@@ -999,6 +999,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
                     letter-spacing: .5px; margin-bottom: 10px; }
 .ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+/* 단독으로 두면 한 줄에 하나씩 떨어져 가로로 길어지는 요약 카드들(주요 영양소 빠른 확인 /
+   아미노산 스코어 / 경고 요약)을 데스크톱에서 2열 균등 배치. 900px 이하는 기존처럼 1열. */
+.ana-group-grid.ana-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) {
+  .ana-group-grid.ana-grid-2col { grid-template-columns: 1fr; }
+}
 /* Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 항상 3열 균등 배치.
    minmax(0,1fr)로 세 카드가 정확히 같은 폭을 갖고, align-items:stretch + 카드 자체
    height:100%로 한 행 안에서 높이가 동일하게 맞춰진다(내용이 짧은 원료 상위 구성도
@@ -2071,10 +2077,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
         <div class="ana-group">
           <h4 class="ana-group-title">영양 상태</h4>
-          <div class="ana-group-grid">
-        <div class="dash-section" style="grid-column:1/-1">
+          <div class="ana-group-grid ana-grid-2col">
+        <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 빠른 확인 (AAFCO 2023 <span id="dk-quick-species">성견</span> 기준)</span></h3>
           <div class="dash-quick-grid" id="dk-quick-grid"></div>
+        </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
+          <div class="dash-bar-list" id="ds-amino-bars"></div>
+          <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
+        </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
+          <div class="dash-warn-list" id="ds-warn-list"></div>
         </div>
           </div>
         </div>
@@ -2082,11 +2097,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="ana-group">
           <h4 class="ana-group-title">구성 분석</h4>
           <div class="ana-group-grid">
-        <div class="dash-section" style="grid-column:1/-1">
-          <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
-          <div class="dash-bar-list" id="ds-amino-bars"></div>
-          <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
-        </div>
         <!-- Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 3열 균등, 같은 높이.
              .ana-group-grid 밖의 독립 grid 행으로 둔다(≤900px에서 1열). -->
         <div class="ana-trio-row" style="grid-column:1/-1">
@@ -2131,16 +2141,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         </div>
           </div>
         </div>
-        </div>
-
-        <div class="ana-group">
-          <h4 class="ana-group-title">경고 및 기준</h4>
-          <div class="ana-group-grid">
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
-          <div class="dash-warn-list" id="ds-warn-list"></div>
-        </div>
-          </div>
         </div>
 
         <div class="ana-group">
