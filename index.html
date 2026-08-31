@@ -4658,6 +4658,15 @@ let mixRows = [];
 // unit-select의 onchange 시점엔 select.value가 이미 새 단위로 바뀌어 있어, 변경 "전" 단위를
 // 알기 위해 별도로 추적한다. onUnitChange()에서 환산 후 최신 단위로 갱신된다.
 let currentMixUnit = 'pct';
+// "기준 총량" — %↔g↔kg 환산의 분모(= 100% 에 해당하는 그램). mix-total-g 필드는 g/kg
+// 모드에서 syncTotalGFromRows()가 원료 합계로 계속 덮어쓰므로, 사용자가 정한 기준을
+// 잃지 않도록 별도로 보존한다. 단위 "전환"만으로는 절대 바뀌지 않고, (1) %모드에서
+// 사용자가 mix-total-g를 직접 편집할 때 (2) g/kg 모드에서 원료를 편집해 합계가 바뀔 때
+// (3) 레시피 로드 시 에만 갱신된다.
+let mixBasisTotalG = 1000;
+// onUnitChange() 실행 중에는 syncTotalGFromRows()가 mixBasisTotalG를 갱신하지 않도록 막는다
+// (전환 자체는 기준 총량을 바꾸면 안 됨).
+let mixUnitSwitching = false;
 
 function getSortedIngNames(query) {
   let names = allIngs().map(i => i[0]).sort((a, b) => a.localeCompare(b, 'ko'));
@@ -4990,6 +4999,9 @@ function syncTotalGFromRows() {
   const totalG = unit === 'kg' ? sumRaw * 1000 : sumRaw;
   const el = document.getElementById('mix-total-g');
   if (el) el.value = totalG > 0 ? +totalG.toFixed(3) : 0;
+  // g/kg 모드에서 사용자가 원료를 편집해 합계가 바뀌면 그 합계가 새 기준 총량이 된다.
+  // 단, 단위 전환 중(onUnitChange)에는 기준을 보존해야 하므로 건드리지 않는다.
+  if (!mixUnitSwitching && totalG > 0) mixBasisTotalG = totalG;
 }
 
 function getMixRows() {
@@ -5068,7 +5080,10 @@ function updateUnitHint() {
 function onUnitChange() {
   const unit = document.getElementById('unit-select')?.value || 'pct';
   const prevUnit = currentMixUnit;
-  const totalG = getMixTotalG();
+  mixUnitSwitching = true;
+  // 환산 분모는 "현재 필드값"(g/kg 모드에서 원료 합계로 덮어써짐)이 아니라 보존된 기준 총량.
+  // 이래야 1000g 기준 50% → g → kg → % 왕복 후에도 다시 50%가 된다.
+  const totalG = mixBasisTotalG;
   const stepMap = { pct: '0.5', g: '1', kg: '0.001' };
   mixRows.forEach(row => {
     const inp = row.querySelector('input[type=number]');
@@ -5098,14 +5113,21 @@ function onUnitChange() {
     totalEl.title = isAuto ? '원료 중량 합계로 자동 계산됩니다' : '';
     totalEl.style.background = isAuto ? 'var(--gray-l)' : '';
     totalEl.style.cursor = isAuto ? 'not-allowed' : '';
+    // %로 복귀할 땐 g/kg 모드가 덮어썼던 필드를 보존된 기준 총량으로 되돌린다.
+    if (!isAuto && mixBasisTotalG > 0) totalEl.value = mixBasisTotalG;
   }
 
   syncTotalGFromRows();
   updateUnitHint();
   calculate();
+  mixUnitSwitching = false;
 }
 
 function onTotalGChange() {
+  // %모드에서 사용자가 직접 편집한 총 배치량은 곧 새 기준 총량이다.
+  if ((document.getElementById('unit-select')?.value || 'pct') === 'pct') {
+    mixBasisTotalG = getMixTotalG();
+  }
   updateUnitHint();
   calculate();
   saveToStorage();
@@ -8309,6 +8331,7 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   document.getElementById('sb-moist').value  = data.moisture||10;
   document.getElementById('sb-bw').value     = data.bw||15;
   document.getElementById('mix-total-g').value = data.totalG||1000;
+  mixBasisTotalG = parseFloat(data.totalG) || 1000; // 저장된 기준 총량으로 초기화
   if (document.getElementById('vitk-inp')) document.getElementById('vitk-inp').value = data.vitk||0;
 
   applyPetProfileData(data.pet);
