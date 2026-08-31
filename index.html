@@ -1002,8 +1002,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 단독으로 두면 한 줄에 하나씩 떨어져 가로로 길어지는 요약 카드들(주요 영양소 빠른 확인 /
    아미노산 스코어 / 경고 요약)을 데스크톱에서 2열 균등 배치. 900px 이하는 기존처럼 1열. */
 .ana-group-grid.ana-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 주요 영양소 빠른 확인 / 핵심 지표 / 일일 급여량 — 데스크톱 3열 균등.
+   align-items:start로 세 카드가 각자 내용 높이만 차지(가장 큰 카드에 맞춰 늘어나지 않음).
+   900px 이하는 1열. */
+.ana-group-grid.ana-grid-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
 @media (max-width: 900px) {
   .ana-group-grid.ana-grid-2col { grid-template-columns: 1fr; }
+  .ana-group-grid.ana-grid-3col { grid-template-columns: 1fr; }
 }
 /* Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 항상 3열 균등 배치.
    minmax(0,1fr)로 세 카드가 정확히 같은 폭을 갖고, align-items:stretch + 카드 자체
@@ -2076,76 +2081,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="ana-group-list">
 
         <div class="ana-group">
-          <h4 class="ana-group-title">영양 상태</h4>
-          <div class="ana-group-grid ana-grid-2col">
-        <div class="dash-section" style="grid-column:1/-1">
+          <h4 class="ana-group-title">핵심 요약</h4>
+          <div class="ana-group-grid ana-grid-3col">
+        <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 빠른 확인 (AAFCO 2023 <span id="dk-quick-species">성견</span> 기준)</span></h3>
           <div class="dash-quick-grid" id="dk-quick-grid"></div>
         </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
-          <div class="dash-bar-list" id="ds-amino-bars"></div>
-          <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
-        </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
-          <div class="dash-warn-list" id="ds-warn-list"></div>
-        </div>
-          </div>
-        </div>
-
-        <div class="ana-group">
-          <h4 class="ana-group-title">구성 분석</h4>
-          <div class="ana-group-grid">
-        <!-- Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 3열 균등, 같은 높이.
-             .ana-group-grid 밖의 독립 grid 행으로 둔다(≤900px에서 1열). -->
-        <div class="ana-trio-row" style="grid-column:1/-1">
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('warn')">Ca:P 비율</span></h3>
-          <div class="dash-donut-wrap">
-            <div class="dash-donut" id="ds-cap-donut">
-              <div class="dash-donut-center"><div class="dash-donut-val" id="ds-cap-val">─</div></div>
-            </div>
-            <div class="dash-donut-sub">적정 범위 <span id="ds-cap-range">1.1:1 ~ 2:1</span></div>
-            <span class="dash-donut-badge" id="ds-cap-badge">계산 대기</span>
-          </div>
-        </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('mix')">원료 상위 구성 (TOP 5)</span></h3>
-          <div class="dash-donut-wrap" style="flex-direction:row;align-items:center;gap:18px">
-            <div class="dash-donut" id="ds-ing-donut" style="flex-shrink:0"></div>
-            <div class="dash-legend" id="ds-ing-legend"></div>
-          </div>
-        </div>
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('ana')">기준 충족 현황</span></h3>
-          <div class="dash-compliance">
-            <div class="dash-comp-card">
-              <div class="comp-title" style="color:var(--nrc-t)">NRC 2006</div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-nrc-pass">─</span></div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-nrc-fail">─</span></div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과</span><span class="cs-val cs-over" id="dc-nrc-over">─</span></div>
-            </div>
-            <div class="dash-comp-card">
-              <div class="comp-title" style="color:var(--aa-t)">AAFCO 2023</div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-aa-pass">─</span></div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-aa-fail">─</span></div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과</span><span class="cs-val cs-over" id="dc-aa-over">─</span></div>
-            </div>
-            <div class="dash-comp-card">
-              <div class="comp-title" style="color:var(--fed-t)">FEDIAF 2025</div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-fed-pass">─</span></div>
-              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
-            </div>
-          </div>
-        </div>
-          </div>
-        </div>
-        </div>
-
-        <div class="ana-group">
-          <h4 class="ana-group-title">계산 결과</h4>
-          <div class="ana-group-grid">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">핵심 지표</span></h3>
           <div class="dash-kpi-grid">
@@ -2210,6 +2151,70 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
           </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">영양 상태</h4>
+          <div class="ana-group-grid ana-grid-2col">
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('amino')">아미노산 스코어 (AAFCO 최소치 대비 %)</span></h3>
+          <div class="dash-bar-list" id="ds-amino-bars"></div>
+          <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
+        </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
+          <div class="dash-warn-list" id="ds-warn-list"></div>
+        </div>
+          </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">구성 분석</h4>
+          <div class="ana-group-grid">
+        <!-- Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 3열 균등, 같은 높이.
+             .ana-group-grid 밖의 독립 grid 행으로 둔다(≤900px에서 1열). -->
+        <div class="ana-trio-row" style="grid-column:1/-1">
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('warn')">Ca:P 비율</span></h3>
+          <div class="dash-donut-wrap">
+            <div class="dash-donut" id="ds-cap-donut">
+              <div class="dash-donut-center"><div class="dash-donut-val" id="ds-cap-val">─</div></div>
+            </div>
+            <div class="dash-donut-sub">적정 범위 <span id="ds-cap-range">1.1:1 ~ 2:1</span></div>
+            <span class="dash-donut-badge" id="ds-cap-badge">계산 대기</span>
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('mix')">원료 상위 구성 (TOP 5)</span></h3>
+          <div class="dash-donut-wrap" style="flex-direction:row;align-items:center;gap:18px">
+            <div class="dash-donut" id="ds-ing-donut" style="flex-shrink:0"></div>
+            <div class="dash-legend" id="ds-ing-legend"></div>
+          </div>
+        </div>
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('ana')">기준 충족 현황</span></h3>
+          <div class="dash-compliance">
+            <div class="dash-comp-card">
+              <div class="comp-title" style="color:var(--nrc-t)">NRC 2006</div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-nrc-pass">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-nrc-fail">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과</span><span class="cs-val cs-over" id="dc-nrc-over">─</span></div>
+            </div>
+            <div class="dash-comp-card">
+              <div class="comp-title" style="color:var(--aa-t)">AAFCO 2023</div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-aa-pass">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-aa-fail">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-over"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>초과</span><span class="cs-val cs-over" id="dc-aa-over">─</span></div>
+            </div>
+            <div class="dash-comp-card">
+              <div class="comp-title" style="color:var(--fed-t)">FEDIAF 2025</div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-pass"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M20 6 9 17l-5-5"/></svg>정상</span><span class="cs-val cs-pass" id="dc-fed-pass">─</span></div>
+              <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
+            </div>
+          </div>
+        </div>
+          </div>
+        </div>
         </div>
 
         </div>
