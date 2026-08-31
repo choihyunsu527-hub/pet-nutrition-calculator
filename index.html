@@ -999,16 +999,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
                     letter-spacing: .5px; margin-bottom: 10px; }
 .ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
-/* Ca:P 비율 / 원료 상위 구성 전용 — 위 아미노산 스코어처럼 키가 큰 카드와 같은 행에서
-   align-items:stretch로 늘어나지 않도록, .ana-group-grid 밖에서 독립된 flex 행으로 둔다.
-   flex-basis 1:1이라 두 카드가 항상 같은 폭이고, 내용이 적은 만큼 행 높이도 자연스럽게
-   낮아진다. align-items:flex-start를 명시해 flex의 기본값(stretch)을 꺼야, 두 카드 중
-   콘텐츠가 더 적은 쪽(주로 원료 상위 구성)이 옆 카드 높이에 맞춰 늘어나지 않고 자기
-   콘텐츠 높이만 차지한다 — height/min-height로 강제하지 않음. 좁은 화면에서는
-   flex-wrap으로 기존 다른 대시보드 행(.dash-top-row 등)과 같은 방식으로 세로 1열로
-   떨어진다(레이아웃 깨짐 없음). */
-.ana-pair-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 16px; }
-.ana-pair-row > .dash-section { flex: 1 1 240px; min-width: 0; }
+/* Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 항상 3열 균등 배치.
+   minmax(0,1fr)로 세 카드가 정확히 같은 폭을 갖고, align-items:stretch + 카드 자체
+   height:100%로 한 행 안에서 높이가 동일하게 맞춰진다(내용이 짧은 원료 상위 구성도
+   옆 카드 높이에 맞춰 늘어남). 좁은 화면(≤900px)에서는 1열로 떨어진다.
+   .ana-group-grid의 stretch와 무관하게 두도록 독립된 grid 행으로 유지. */
+.ana-trio-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.ana-trio-row > .dash-section { min-width: 0; height: 100%; }
+@media (max-width: 900px) {
+  .ana-trio-row { grid-template-columns: 1fr; }
+}
 .dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
                  box-sizing: border-box; }
@@ -2087,11 +2087,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <div class="dash-bar-list" id="ds-amino-bars"></div>
           <div class="dash-bar-axis"><span>0%</span><span>50%</span><span>100%</span><span>150%</span></div>
         </div>
-        <!-- Ca:P 비율 / 원료 상위 구성 — 내용이 짧은 두 카드를 1:1 폭으로 나란히 붙여,
-             위(아미노산 스코어)처럼 키가 큰 카드에 맞춰 늘어나지 않고 자기 내용만큼의
-             자연스러운 높이를 갖게 한다(.ana-group-grid의 align-items:stretch 밖에서
-             독립된 flex 행으로 둠). 좁은 화면에서는 flex-wrap으로 세로 1열로 떨어진다. -->
-        <div class="ana-pair-row" style="grid-column:1/-1">
+        <!-- Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 3열 균등, 같은 높이.
+             .ana-group-grid 밖의 독립 grid 행으로 둔다(≤900px에서 1열). -->
+        <div class="ana-trio-row" style="grid-column:1/-1">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('warn')">Ca:P 비율</span></h3>
           <div class="dash-donut-wrap">
@@ -2108,17 +2106,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <div class="dash-donut" id="ds-ing-donut" style="flex-shrink:0"></div>
             <div class="dash-legend" id="ds-ing-legend"></div>
           </div>
-        </div>
-        </div>
-          </div>
-        </div>
-
-        <div class="ana-group">
-          <h4 class="ana-group-title">경고 및 기준</h4>
-          <div class="ana-group-grid">
-        <div class="dash-section">
-          <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
-          <div class="dash-warn-list" id="ds-warn-list"></div>
         </div>
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">기준 충족 현황</span></h3>
@@ -2141,6 +2128,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
               <div class="dash-comp-stat"><span class="qi-badge qi-fail"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>부족</span><span class="cs-val cs-fail" id="dc-fed-fail">─</span></div>
             </div>
           </div>
+        </div>
+          </div>
+        </div>
+        </div>
+
+        <div class="ana-group">
+          <h4 class="ana-group-title">경고 및 기준</h4>
+          <div class="ana-group-grid">
+        <div class="dash-section">
+          <h3><span class="linkable" onclick="goTab('warn')">경고 요약</span></h3>
+          <div class="dash-warn-list" id="ds-warn-list"></div>
         </div>
           </div>
         </div>
