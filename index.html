@@ -1002,13 +1002,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 단독으로 두면 한 줄에 하나씩 떨어져 가로로 길어지는 요약 카드들(주요 영양소 빠른 확인 /
    아미노산 스코어 / 경고 요약)을 데스크톱에서 2열 균등 배치. 900px 이하는 기존처럼 1열. */
 .ana-group-grid.ana-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-/* 주요 영양소 빠른 확인 / 핵심 지표 / 일일 급여량 — 데스크톱 3열 균등.
-   align-items:start로 세 카드가 각자 내용 높이만 차지(가장 큰 카드에 맞춰 늘어나지 않음).
-   900px 이하는 1열. */
-.ana-group-grid.ana-grid-3col { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+/* 좌 2/3 = 주요 영양소 빠른 확인(세로 2행 span), 우 1/3 = 핵심 지표 / 일일 급여량 위·아래.
+   align-items:start로 각 카드가 내용 높이만 차지. 900px 이하는 1열. */
+.ana-group-grid.ana-grid-hero { grid-template-columns: 2fr 1fr; align-items: start; }
+.ana-group-grid.ana-grid-hero > .dash-section:first-child { grid-row: 1 / span 2; }
 @media (max-width: 900px) {
   .ana-group-grid.ana-grid-2col { grid-template-columns: 1fr; }
-  .ana-group-grid.ana-grid-3col { grid-template-columns: 1fr; }
+  .ana-group-grid.ana-grid-hero { grid-template-columns: 1fr; }
+  .ana-group-grid.ana-grid-hero > .dash-section:first-child { grid-row: auto; }
 }
 /* Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 항상 3열 균등 배치.
    minmax(0,1fr)로 세 카드가 정확히 같은 폭을 갖고, align-items:stretch + 카드 자체
@@ -2082,7 +2083,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
         <div class="ana-group">
           <h4 class="ana-group-title">핵심 요약</h4>
-          <div class="ana-group-grid ana-grid-3col">
+          <div class="ana-group-grid ana-grid-hero">
         <div class="dash-section">
           <h3><span class="linkable" onclick="goTab('ana')">주요 영양소 빠른 확인 (AAFCO 2023 <span id="dk-quick-species">성견</span> 기준)</span></h3>
           <div class="dash-quick-grid" id="dk-quick-grid"></div>
