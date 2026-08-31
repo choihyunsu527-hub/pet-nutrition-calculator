@@ -7337,8 +7337,8 @@ function updateDashboard(result, pc) {
       .forEach(id => { const el = document.getElementById(id); el.textContent = '평가 제외'; el.title = note; });
   }
 
-  const keyNutrients = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)',
-                        '비타민A','비타민D','비타민E(α-TE)','철(Fe)','아연(Zn)','리놀레산(LA,n-6)','ALA(α-리놀렌,n-3)'];
+  const keyNutrients = ['조단백','조지방','칼슘(Ca)','인(P)','나트륨(Na)','칼륨(K)','마그네슘(Mg)',
+                        '비타민A','비타민D','비타민E(α-TE)','철(Fe)','아연(Zn)','리놀레산(LA,n-6)','ALA(α-리놀렌,n-3)','콜린'];
   document.getElementById('dk-quick-grid').innerHTML = buildNutrientQuickHtml(stds, policy, keyNutrients);
   const cap = dmb.cap;
 
