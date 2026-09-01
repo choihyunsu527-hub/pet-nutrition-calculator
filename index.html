@@ -1548,6 +1548,47 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
     min-height: 0 !important; }
   body.mixreport-printing .mr-info-val[contenteditable]:empty::before { content: "" !important; }
+
+  /* ── A4 1페이지 배치 — 화면 미리보기 디자인은 그대로 두고 인쇄본에서만 여백/간격을 줄여서
+     실제 내용이 자연스럽게 1페이지 안에 들어갈 여지를 넓힌다(글자 크기는 줄이지 않음). ── */
+  body.mixreport-printing #mixreport-page { padding: 4mm 7mm !important; font-size: 9px !important; line-height: 1.1 !important; }
+  body.mixreport-printing .mr-header { margin-bottom: 4px !important; padding-bottom: 3px !important; }
+  body.mixreport-printing .mr-title { font-size: 15px !important; }
+  body.mixreport-printing .mr-subtitle { margin-top: 1px !important; }
+  body.mixreport-printing .mr-info-grid { gap: 0 14px !important; }
+  body.mixreport-printing .mr-info-row { padding: 0.5px 0 !important; }
+  body.mixreport-printing .mr-section-title { margin: 4px 0 2px !important; padding: 1.5px 8px !important; }
+  body.mixreport-printing .mr-table td, body.mixreport-printing .mr-table th { padding: 0.5px 5px !important; }
+  body.mixreport-printing .mr-table tr.mr-cat-row td { padding: 0.5px 5px !important; }
+  body.mixreport-printing .mr-comp-chip { padding: 1.5px 6px !important; }
+  body.mixreport-printing .mr-notes { margin-top: 3px !important; padding-top: 2px !important; }
+  body.mixreport-printing .mr-notes div { margin-bottom: 0 !important; }
+  body.mixreport-printing .mr-foot { margin-top: 2px !important; }
+
+  /* ── 페이지 나눔 규칙 — 표/제목이 페이지 경계에서 어색하게 잘리지 않도록 한다.
+     데이터가 많아 1페이지를 넘으면 표 자체는 다음 페이지로 자연스럽게 이어지되(break-inside:auto),
+     "행 하나가 두 페이지로 쪼개지는 것"과 "제목/표 헤더만 페이지 끝에 홀로 남는 것"만 막는다. ── */
+  body.mixreport-printing .mr-header,
+  body.mixreport-printing .mr-info-grid,
+  body.mixreport-printing .mr-comp-row,
+  body.mixreport-printing .mr-notes,
+  body.mixreport-printing .mr-comp-chip,
+  body.mixreport-printing .mr-table tr {
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  body.mixreport-printing .mr-section-title {
+    break-after: avoid; page-break-after: avoid;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  body.mixreport-printing .mr-table {
+    break-inside: auto; page-break-inside: auto;
+  }
+  body.mixreport-printing .mr-table thead {
+    display: table-header-group; /* 표가 페이지를 넘기면 헤더 행이 다음 페이지 상단에 자동으로 반복됨 */
+  }
+  body.mixreport-printing .mr-table tr.mr-cat-row {
+    break-after: avoid; page-break-after: avoid; /* 카테고리 구분행이 페이지 끝에 혼자 남지 않게 */
+  }
 }
 </style>
 </head>
@@ -9082,9 +9123,20 @@ function openMixPreview() {
   document.getElementById('mixreport-overlay').classList.add('open');
 }
 
+// 브라우저의 "PDF로 저장" 인쇄 대화상자는 document.title을 기본 파일명으로 제안한다 —
+// exportExcel()의 safeName 치환(Windows 금지문자 \/:*?"<>|)과 동일한 규칙을 재사용해
+// "{제품명} - 배합설계.pdf"가 되도록 인쇄 직전에만 title을 바꾸고 끝나면 원래대로 되돌린다.
 function printMixReport() {
+  const rawName  = (document.getElementById('sb-name').value || '').trim();
+  const safeName = rawName.replace(/[\\/:*?"<>|]/g, '_').trim();
+  const prevTitle = document.title;
+  document.title = safeName ? `${safeName} - 배합설계` : '배합설계';
+
   document.body.classList.add('mixreport-printing');
-  const cleanup = () => document.body.classList.remove('mixreport-printing');
+  const cleanup = () => {
+    document.body.classList.remove('mixreport-printing');
+    document.title = prevTitle;
+  };
   window.addEventListener('afterprint', cleanup, { once: true });
   window.print();
   // afterprint가 지원되지 않는 환경 대비 안전장치
