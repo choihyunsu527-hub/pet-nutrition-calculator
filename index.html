@@ -1514,8 +1514,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mr-info-row { display: flex; border-bottom: 1px solid #e1e5e9; padding: 3px 0; gap: 6px; }
 .mr-info-label { flex: 0 0 72px; color: #5c6773; font-weight: 700; }
 .mr-info-val { flex: 1; color: #1e2733; word-break: break-all; }
-.mr-info-val[contenteditable="true"] { outline: none; border-bottom: 1px dashed #b7c0c8; min-height: 12px; }
-.mr-info-val[contenteditable="true"]:empty::before { content: attr(data-ph); color: #a9b2ba; }
+.mr-info-val[contenteditable="true"] { outline: none; min-height: 12px; }
+.mr-info-val[contenteditable="true"]:empty::before { content: ""; }
 .mr-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
 .mr-table th { background: #1e2733; color: #fff; font-weight: 700; padding: 3px 5px; text-align: center; border: 1px solid #1e2733; }
 .mr-table td { padding: 2.5px 5px; border: 1px solid #d6dbe0; text-align: center; }
@@ -1537,7 +1537,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mr-foot { display: flex; justify-content: space-between; font-size: 7.5px; color: #8892a0; margin-top: 6px; }
 
 @media print {
-  @page { size: A4 portrait; margin: 10mm; }
+  /* 브라우저 기본 인쇄 머릿글/바닥글(제목·URL·날짜)은 @page 여백 공간에 그려지므로 그 공간을
+     0으로 없애 표시되지 않게 하고, 보고서가 보여주던 여백은 #mixreport-page 자체 padding에
+     그대로 옮겨(14mm+10mm=24mm, 12mm+10mm=22mm) 화면에 보이는 여백 크기는 바꾸지 않는다. */
+  @page { size: A4 portrait; margin: 0; }
   body.mixreport-printing > *:not(#mixreport-overlay) { display: none !important; }
   body.mixreport-printing #mixreport-overlay { position: static !important; inset: auto !important;
     background: #fff !important; display: block !important; }
@@ -1546,8 +1549,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   body.mixreport-printing .mixreport-modal .modal-body { background: #fff !important; padding: 0 !important; }
   body.mixreport-printing .mixreport-nochrome { display: none !important; }
   body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
-    min-height: 0 !important; }
-  body.mixreport-printing .mr-info-val[contenteditable]:empty::before { content: "" !important; }
+    min-height: 0 !important; padding: 24mm 22mm !important; }
 
   /* ── 페이지 나눔 규칙 — 글자 크기·여백·줄간격·표 크기는 화면 디자인 그대로 두고, 표가 페이지
      경계를 넘어갈 때 "행이 반으로 잘리는 것"과 "제목/헤더만 페이지 끝에 홀로 남는 것"만 막는다.
