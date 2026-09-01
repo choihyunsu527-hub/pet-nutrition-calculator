@@ -1486,6 +1486,69 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                    margin-bottom: 8px; text-align: left; }
 .auth-check-row input[type=checkbox] { margin: 0; cursor: pointer; accent-color: var(--acc); }
 .auth-check-row label { cursor: pointer; }
+
+/* ── 배합표 미리보기(A4 보고서) — 항상 화이트 배경·네이비 톤으로 고정(다크 테마와 무관하게
+   출력물은 동일해야 하므로 var(--acc) 등 테마 변수 대신 이 블록 안에서만 색을 직접 지정한다).
+   .modal-overlay/.modal 기본 세트는 그대로 재사용하되 폭만 A4에 맞게 이 클래스로 덮어쓴다. */
+.mixreport-modal { width: 900px; max-width: 96vw; background: #fff; }
+.mixreport-modal .modal-hdr { background: #1e2733; color: #fff; }
+.mixreport-modal .modal-hdr button { color: rgba(255,255,255,0.8); }
+.mixreport-modal .modal-hdr button:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.mixreport-modal .modal-body { padding: 20px; background: #dfe3e8; }
+.mixreport-modal .modal-footer { background: #fff; border-top: 1px solid #e1e5e9; }
+.mixreport-modal .modal-footer .btn-cancel { border-color: #cfd6dc !important; }
+.mixreport-modal .modal-footer .btn-save { background: #1e2733; }
+
+#mixreport-page { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; color: #1e2733;
+                   padding: 14mm 12mm; box-sizing: border-box; box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+                   font-size: 9px; line-height: 1.4; }
+.mr-header { display: flex; justify-content: space-between; align-items: flex-start;
+             border-bottom: 2px solid #1e2733; padding-bottom: 8px; margin-bottom: 10px; }
+.mr-header-center { flex: 1; text-align: center; }
+.mr-title { font-size: 19px; font-weight: 800; color: #1e2733; letter-spacing: .5px; }
+.mr-subtitle { font-size: 10px; color: #5c6773; margin-top: 3px; font-weight: 600; }
+.mr-brand { font-size: 10px; font-weight: 700; color: #1e2733; text-align: right; white-space: nowrap; padding-top: 2px; }
+.mr-section-title { font-size: 11px; font-weight: 800; color: #fff; background: #1e2733;
+                     padding: 4px 8px; margin: 12px 0 6px; }
+.mr-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.mr-info-row { display: flex; border-bottom: 1px solid #e1e5e9; padding: 3px 0; gap: 6px; }
+.mr-info-label { flex: 0 0 72px; color: #5c6773; font-weight: 700; }
+.mr-info-val { flex: 1; color: #1e2733; word-break: break-all; }
+.mr-info-val[contenteditable="true"] { outline: none; border-bottom: 1px dashed #b7c0c8; min-height: 12px; }
+.mr-info-val[contenteditable="true"]:empty::before { content: attr(data-ph); color: #a9b2ba; }
+.mr-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+.mr-table th { background: #1e2733; color: #fff; font-weight: 700; padding: 3px 5px; text-align: center; border: 1px solid #1e2733; }
+.mr-table td { padding: 2.5px 5px; border: 1px solid #d6dbe0; text-align: center; }
+.mr-table td.mr-left { text-align: left; }
+.mr-table tr.mr-cat-row td { background: #eef1f3; color: #5c6773; font-weight: 700; text-align: left; }
+.mr-table tr.mr-sum-row td { background: #dbe6f5; color: #1e2733; font-weight: 800; }
+.mr-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 8px; }
+.mr-badge-pass { background: rgba(46,160,67,0.14); color: #1E7E34; }
+.mr-badge-fail { background: rgba(211,47,47,0.14); color: #C0392B; }
+.mr-badge-over { background: rgba(211,47,47,0.14); color: #C0392B; }
+.mr-badge-none { background: #eef1f3; color: #5c6773; }
+.mr-comp-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.mr-comp-chip { flex: 0 0 auto; border: 1px solid #d6dbe0; border-radius: 4px; padding: 4px 8px;
+                background: #f5f6f8; min-width: 74px; }
+.mr-comp-name { font-weight: 700; color: #1e2733; display: block; }
+.mr-comp-pct { color: #1565C0; font-weight: 800; }
+.mr-notes { font-size: 8px; color: #5c6773; border-top: 1px solid #e1e5e9; margin-top: 10px; padding-top: 6px; }
+.mr-notes div { margin-bottom: 2px; }
+.mr-foot { display: flex; justify-content: space-between; font-size: 7.5px; color: #8892a0; margin-top: 6px; }
+
+@media print {
+  @page { size: A4 portrait; margin: 10mm; }
+  body.mixreport-printing > *:not(#mixreport-overlay) { display: none !important; }
+  body.mixreport-printing #mixreport-overlay { position: static !important; inset: auto !important;
+    background: #fff !important; display: block !important; }
+  body.mixreport-printing #mixreport-overlay .mixreport-modal { width: auto !important; max-width: none !important;
+    max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0; }
+  body.mixreport-printing .mixreport-modal .modal-body { background: #fff !important; padding: 0 !important; }
+  body.mixreport-printing .mixreport-nochrome { display: none !important; }
+  body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
+    min-height: 0 !important; }
+  body.mixreport-printing .mr-info-val[contenteditable]:empty::before { content: "" !important; }
+}
 </style>
 </head>
 <body>
@@ -2025,6 +2088,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <button class="mix-btn-primary" onclick="addMixRow()">행 추가</button>
           <button class="mix-btn-danger" onclick="deleteSelectedMix()">선택 삭제</button>
           <button onclick="loadRecipe()" title="내 컴퓨터의 레시피 파일(.json)을 열기 — 상단의 폴더 목록과는 별개입니다"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/></svg>파일에서 열기</button>
+          <button onclick="openMixPreview()" title="현재 배합·영양분석 결과를 A4 배합 설계 보고서로 미리보고 인쇄합니다"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>배합표 미리보기</button>
         </div>
       </div>
       <div class="ptype-banner" id="mix-ptype-banner"></div>
@@ -3098,6 +3162,24 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div class="modal-body" id="ptype-evidence-body"></div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('ptype-evidence-modal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 배합표 미리보기(A4 배합 설계 보고서) — 기존 계산 결과(lastResult/lastProductClass)만 읽어서
+     화면에 다시 배치할 뿐, 새 계산식은 만들지 않는다. openMixPreview()가 #mixreport-page를 채운다. ══ -->
+<div class="modal-overlay" id="mixreport-overlay" role="dialog" aria-modal="true" aria-labelledby="mixreport-modal-title">
+  <div class="modal mixreport-modal">
+    <div class="modal-hdr mixreport-nochrome">
+      <span id="mixreport-modal-title">배합표 미리보기 — A4 배합 설계 보고서</span>
+      <button onclick="closeModal('mixreport-overlay')" aria-label="닫기">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="mixreport-page"></div>
+    </div>
+    <div class="modal-footer mixreport-nochrome">
+      <button class="btn-cancel" onclick="closeModal('mixreport-overlay')">닫기</button>
+      <button class="btn-save" onclick="printMixReport()">인쇄</button>
     </div>
   </div>
 </div>
@@ -8867,6 +8949,146 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb, wsAna, '영양분석');
 
   XLSX.writeFile(wb, `${safeName}_영양계산.xlsx`);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 배합표 미리보기 (A4 배합 설계 보고서)
+// ── exportExcel()과 동일하게 lastResult/lastProductClass/getMixRows()/getMixTotalG()/
+//    computeFeedingPlan()만 읽어서 재배치한다 — 새 계산식·새 판정 로직은 만들지 않는다.
+//    "기준/판정" 열은 대시보드 "주요 영양소 빠른 확인"과 같은 방식으로 AAFCO 기준(s.aa_min/aa_max) +
+//    gateJudge(s.aafco_j, policy)를 그대로 재사용한다.
+// ════════════════════════════════════════════════════════════════════════════
+function buildMixReportHtml() {
+  const result  = lastResult;
+  const pc      = lastProductClass;
+  const policy  = getEvaluationPolicy(pc);
+  const totalG  = getMixTotalG();
+  const feed    = computeFeedingPlan(result);
+  const rows    = getMixRows().filter(([nm]) => nm);
+
+  const name   = escHtml(document.getElementById('sb-name').value || '');
+  const maker  = escHtml(document.getElementById('sb-maker').value || '');
+  const ptype  = escHtml(document.getElementById('sb-ptype').value || '');
+  const recipeName = escHtml(document.getElementById('mix-recipe-name')?.value || '');
+  const today  = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+
+  // ── 1. 배합비 ──
+  let mixRowsHtml = '';
+  rows.forEach(([nm, pct], i) => {
+    const kg = pct / 100 * totalG / 1000;
+    mixRowsHtml += `<tr>
+      <td>${i+1}</td>
+      <td class="mr-left">${escHtml(nm)}</td>
+      <td>${pct.toFixed(2)}</td>
+      <td>${kg.toFixed(3)}</td>
+    </tr>`;
+  });
+  const sumPct = result.totalRatio;
+  const sumKg  = sumPct / 100 * totalG / 1000;
+  mixRowsHtml += `<tr class="mr-sum-row">
+    <td colspan="2" class="mr-left">합계</td>
+    <td>${sumPct.toFixed(1)}%</td>
+    <td>${sumKg.toFixed(3)} kg</td>
+  </tr>`;
+
+  // ── 2. 영양성분 분석 ──
+  let anaRowsHtml = '';
+  let curCat = '';
+  result.standards.forEach(s => {
+    if (s.cat !== curCat) {
+      curCat = s.cat;
+      anaRowsHtml += `<tr class="mr-cat-row"><td colspan="4">${escHtml(curCat)}</td></tr>`;
+    }
+    const j = gateJudge(s.aafco_j, policy);
+    // tone은 STATUS_TONE 4종(pass/fail/over/gated) 그대로 — gated(평가 제외)를 미함유(none)와 섞지 않는다.
+    const tone = (j === 'pass' || j === 'fail' || j === 'over' || j === 'gated') ? j : 'none';
+    const t = STATUS_TONE[tone] || STATUS_TONE.none;
+    const badgeCls = tone === 'gated' ? 'none' : tone;
+    const valTxt = (typeof s.value === 'number' && !Number.isNaN(s.value)) ? `${s.value.toFixed(2)} ${s.unit || ''}`.trim() : '─';
+    let stdTxt = '─';
+    if (s.aa_min != null && s.aa_max != null) stdTxt = `${s.aa_min}~${s.aa_max} ${s.unit || ''}`.trim();
+    else if (s.aa_min != null) stdTxt = `≥${s.aa_min} ${s.unit || ''}`.trim();
+    anaRowsHtml += `<tr>
+      <td class="mr-left">${escHtml(s.name)}</td>
+      <td>${valTxt}</td>
+      <td>${stdTxt}</td>
+      <td><span class="mr-badge mr-badge-${badgeCls}">${t.label}</span></td>
+    </tr>`;
+  });
+
+  // ── 3. 원료 구성 비율 ──
+  let compHtml = '';
+  rows.forEach(([nm, pct]) => {
+    compHtml += `<div class="mr-comp-chip"><span class="mr-comp-name">${escHtml(nm)}</span><span class="mr-comp-pct">${pct.toFixed(1)}%</span></div>`;
+  });
+
+  // ── 참고 사항 (기존에 이미 쓰이는 정책 문구·기준 문구만 재사용, 새 문구를 지어내지 않음) ──
+  const notesHtml = `
+    <div>· 본 보고서의 영양성분 값은 건물기준(DMB)이며, NRC 2006 · AAFCO 2023 · FEDIAF 2025 기준을 근거로 합니다.</div>
+    <div>· ${escHtml(policy.summary)}</div>
+    <div>· "기준/판정" 열은 AAFCO ${((document.getElementById('sb-species')?.value||'개')==='고양이') ? '성묘' : '성견'} 최소~최대 기준과 본 프로그램의 판정 로직을 그대로 사용한 결과입니다.</div>
+  `;
+
+  return `
+    <div class="mr-header">
+      <div style="width:120px"></div>
+      <div class="mr-header-center">
+        <div class="mr-title">배합 설계 보고서</div>
+        <div class="mr-subtitle">Nutri Circulator</div>
+      </div>
+      <div class="mr-brand" style="width:120px">Nutri Circulator</div>
+    </div>
+
+    <div class="mr-info-grid">
+      <div>
+        <div class="mr-info-row"><span class="mr-info-label">제품명</span><span class="mr-info-val">${name || '─'}</span></div>
+        <div class="mr-info-row"><span class="mr-info-label">제품 유형</span><span class="mr-info-val">${ptype || '─'}</span></div>
+        <div class="mr-info-row"><span class="mr-info-label">배합 총량</span><span class="mr-info-val">${totalG.toLocaleString('ko')} g</span></div>
+        <div class="mr-info-row"><span class="mr-info-label">작성자</span><span class="mr-info-val" contenteditable="true" data-ph="직접 입력"></span></div>
+        <div class="mr-info-row"><span class="mr-info-label">메모</span><span class="mr-info-val" contenteditable="true" data-ph="직접 입력"></span></div>
+      </div>
+      <div>
+        <div class="mr-info-row"><span class="mr-info-label">작성일</span><span class="mr-info-val">${today}</span></div>
+        <div class="mr-info-row"><span class="mr-info-label">버전</span><span class="mr-info-val" contenteditable="true" data-ph="직접 입력"></span></div>
+        <div class="mr-info-row"><span class="mr-info-label">적용 기준</span><span class="mr-info-val">NRC 2006 · AAFCO 2023 · FEDIAF 2025</span></div>
+        <div class="mr-info-row"><span class="mr-info-label">설계 목적</span><span class="mr-info-val" contenteditable="true" data-ph="직접 입력"></span></div>
+        <div class="mr-info-row"><span class="mr-info-label">비고</span><span class="mr-info-val" contenteditable="true" data-ph="직접 입력">${recipeName ? `레시피명: ${recipeName}` : ''}</span></div>
+      </div>
+    </div>
+
+    <div class="mr-section-title">1. 배합비</div>
+    <table class="mr-table">
+      <thead><tr><th style="width:8%">No.</th><th style="width:42%">원료명</th><th style="width:25%">배합비 (%)</th><th style="width:25%">투입량 (kg)</th></tr></thead>
+      <tbody>${mixRowsHtml}</tbody>
+    </table>
+
+    <div class="mr-section-title">2. 영양성분 분석 (배합 결과)</div>
+    <table class="mr-table">
+      <thead><tr><th style="width:34%">영양성분</th><th style="width:22%">배합 결과</th><th style="width:26%">기준</th><th style="width:18%">판정</th></tr></thead>
+      <tbody>${anaRowsHtml}</tbody>
+    </table>
+
+    <div class="mr-section-title">3. 원료 구성 비율</div>
+    <div class="mr-comp-row">${compHtml || '<span style="color:#8892a0">등록된 원료가 없습니다.</span>'}</div>
+
+    <div class="mr-notes">${notesHtml}</div>
+    <div class="mr-foot"><span>Nutri Circulator</span><span>생성 시각: ${new Date().toLocaleString('ko-KR')}</span></div>
+  `;
+}
+
+function openMixPreview() {
+  if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
+  document.getElementById('mixreport-page').innerHTML = buildMixReportHtml();
+  document.getElementById('mixreport-overlay').classList.add('open');
+}
+
+function printMixReport() {
+  document.body.classList.add('mixreport-printing');
+  const cleanup = () => document.body.classList.remove('mixreport-printing');
+  window.addEventListener('afterprint', cleanup, { once: true });
+  window.print();
+  // afterprint가 지원되지 않는 환경 대비 안전장치
+  setTimeout(cleanup, 3000);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
