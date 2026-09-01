@@ -1549,7 +1549,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   body.mixreport-printing .mixreport-modal .modal-body { background: #fff !important; padding: 0 !important; }
   body.mixreport-printing .mixreport-nochrome { display: none !important; }
   body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
-    min-height: 0 !important; padding: 24mm 22mm !important; }
+    min-height: 0 !important; padding: 24mm 22mm !important;
+    /* 표가 페이지 경계에서 갈릴 때도 이 padding이 매 페이지 조각의 위/아래에 반복되도록 한다
+       (기본값 slice는 padding을 박스 전체 시작/끝에만 한 번 준다) — 새 여백값을 만드는 대신
+       이미 페이지 가장자리에 쓰던 24mm/22mm를 그대로 재사용해 "잘린 표" 위·아래에도 같은
+       호흡을 준다. 값은 그대로 두고 이 표시 방식만 바꾸는 것이므로 기존 여백 설정과 동일하다. */
+    -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
   /* ── 페이지 나눔 규칙 — 글자 크기·여백·줄간격·표 크기는 화면 디자인 그대로 두고, 표가 페이지
      경계를 넘어갈 때 "행이 반으로 잘리는 것"과 "제목/헤더만 페이지 끝에 홀로 남는 것"만 막는다.
