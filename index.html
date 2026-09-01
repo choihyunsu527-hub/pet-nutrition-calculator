@@ -7,6 +7,10 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="css/variables.css">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<!-- 배합표 Excel 다운로드(exportMixExcel) 전용 — 기존 xlsx.js(SheetJS 무료판)는 셀 서식(굵게/배경색/숫자
+     서식/틀고정/인쇄설정)을 쓰기 단계에서 지원하지 않아, 서식이 필요한 이 기능에만 ExcelJS를 추가로 사용한다.
+     기존 exportExcel()(xlsx.js 기반, 서식 없는 3시트 내보내기)은 그대로 두고 건드리지 않는다. -->
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 (function () {
   var reveal = function () { document.documentElement.classList.add('fonts-ready'); };
@@ -2127,6 +2131,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           <button class="mix-btn-danger" onclick="deleteSelectedMix()">선택 삭제</button>
           <button onclick="loadRecipe()" title="내 컴퓨터의 레시피 파일(.json)을 열기 — 상단의 폴더 목록과는 별개입니다"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/></svg>파일에서 열기</button>
           <button onclick="openMixPreview()" title="현재 배합·영양분석 결과를 A4 배합 설계 보고서로 미리보고 인쇄합니다"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>배합표 미리보기</button>
+          <button onclick="exportMixExcel()" title="현재 배합·영양분석 결과를 Excel(.xlsx) 파일로 다운로드합니다"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0"><path d="M4 22h16a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m5 12-2 5 2 5"/><path d="m2 17 3 0"/></svg>Excel 다운로드</button>
         </div>
       </div>
       <div class="ptype-banner" id="mix-ptype-banner"></div>
@@ -9138,6 +9143,165 @@ function printMixReport() {
   window.print();
   // afterprint가 지원되지 않는 환경 대비 안전장치
   setTimeout(cleanup, 3000);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 배합표 Excel 다운로드 (ExcelJS, 서식 있는 단일 시트 "배합설계")
+// ── buildMixReportHtml()/printMixReport()와 마찬가지로 lastResult/lastProductClass/
+//    getMixRows()/getMixTotalG()만 읽어 시트에 옮겨 적을 뿐, 배합·영양성분 계산식이나
+//    판정 로직(gateJudge/STATUS_TONE)은 새로 만들지 않고 그대로 재사용한다.
+// ════════════════════════════════════════════════════════════════════════════
+async function exportMixExcel() {
+  if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
+  if (typeof ExcelJS === 'undefined') { alert('Excel 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
+
+  const result = lastResult;
+  const policy = getEvaluationPolicy(lastProductClass);
+  const totalG = getMixTotalG();
+  const rows   = getMixRows().filter(([nm]) => nm);
+
+  const rawName  = (document.getElementById('sb-name').value || '').trim();
+  const safeName = rawName.replace(/[\\/:*?"<>|]/g, '_').trim();
+  const today    = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+  const COLS = 5;
+  const NAVY = 'FF1E2733', WHITE = 'FFFFFFFF', SUM_BG = 'FFDBE6F5', SUB = 'FF5C6773', BORDER = 'FFD6DBE0';
+  const thinBorder = () => ({
+    top: { style: 'thin', color: { argb: BORDER } }, left: { style: 'thin', color: { argb: BORDER } },
+    bottom: { style: 'thin', color: { argb: BORDER } }, right: { style: 'thin', color: { argb: BORDER } },
+  });
+  function styleHeaderRow(r) {
+    r.eachCell(c => {
+      c.font = { bold: true, color: { argb: WHITE } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+      c.alignment = { horizontal: 'center', vertical: 'middle' };
+      c.border = thinBorder();
+    });
+    r.height = 18;
+  }
+  function styleDataRow(r) {
+    r.eachCell((c, colNum) => {
+      c.border = thinBorder();
+      c.alignment = { horizontal: colNum === 2 ? 'left' : 'center', vertical: 'middle' };
+    });
+  }
+  function styleSumRow(r) {
+    r.eachCell(c => {
+      c.font = { bold: true, color: { argb: NAVY } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: SUM_BG } };
+      c.border = thinBorder();
+      c.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+  }
+  function mergedBarRow(ws, text, size) {
+    const r = ws.addRow([text]);
+    ws.mergeCells(r.number, 1, r.number, COLS);
+    const cell = r.getCell(1);
+    cell.font = { bold: true, size: size || 11, color: { argb: WHITE } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: NAVY } };
+    cell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+    r.height = 20;
+    return r;
+  }
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Nutri Circulator';
+  wb.created = new Date();
+  const ws = wb.addWorksheet('배합설계', {
+    pageSetup: {
+      paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0,
+      margins: { left: 0.5, right: 0.5, top: 0.6, bottom: 0.6, header: 0.3, footer: 0.3 },
+      showGridLines: false,
+    },
+  });
+  ws.columns = [{ width: 6 }, { width: 26 }, { width: 14 }, { width: 14 }, { width: 16 }];
+
+  // ── 상단 ──
+  const titleRow = ws.addRow(['배합 설계 보고서']);
+  ws.mergeCells(titleRow.number, 1, titleRow.number, COLS);
+  titleRow.getCell(1).font = { bold: true, size: 18, color: { argb: NAVY } };
+  titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+  titleRow.height = 28;
+  ws.addRow([]);
+
+  [
+    ['제품명', rawName || '─'],
+    ['제품 유형', document.getElementById('sb-ptype').value || '─'],
+    ['배합 총량', `${totalG.toLocaleString('ko')} g`],
+    ['작성일', today],
+  ].forEach(([label, val]) => {
+    const r = ws.addRow([label, val]);
+    r.getCell(1).font = { bold: true, color: { argb: SUB } };
+    r.getCell(2).font = { color: { argb: NAVY } };
+    ws.mergeCells(r.number, 2, r.number, COLS);
+  });
+  ws.addRow([]);
+
+  // ── 1. 배합비 ──
+  mergedBarRow(ws, '1. 배합비');
+  styleHeaderRow(ws.addRow(['No.', '원료명', '배합비 (%)', '투입량 (g)', '투입량 (kg)']));
+
+  rows.forEach(([nm, pct], i) => {
+    const g = pct / 100 * totalG;
+    const r = ws.addRow([i + 1, nm, pct / 100, g, g / 1000]);
+    r.getCell(3).numFmt = '0.00%';
+    r.getCell(4).numFmt = '#,##0.0';
+    r.getCell(5).numFmt = '#,##0.000';
+    styleDataRow(r);
+  });
+  const sumRow = ws.addRow(['', '합계', result.totalRatio / 100, totalG, totalG / 1000]);
+  sumRow.getCell(3).numFmt = '0.00%';
+  sumRow.getCell(4).numFmt = '#,##0.0';
+  sumRow.getCell(5).numFmt = '#,##0.000';
+  styleSumRow(sumRow);
+  ws.addRow([]);
+
+  // ── 2. 영양성분 분석 ── (판정: 대시보드 "주요 영양소 빠른 확인"과 동일하게
+  //    gateJudge(s.aafco_j, policy) + STATUS_TONE 라벨을 그대로 재사용 — 새 판정 로직 없음)
+  mergedBarRow(ws, '2. 영양성분 분석');
+  const anaHeaderRowNum = ws.rowCount + 1;
+  styleHeaderRow(ws.addRow(['영양성분', '배합 결과', '기준', '판정', '단위']));
+
+  result.standards.forEach(s => {
+    const j = gateJudge(s.aafco_j, policy);
+    const tone = (j === 'pass' || j === 'fail' || j === 'over' || j === 'gated') ? j : 'none';
+    const label = (STATUS_TONE[tone] || STATUS_TONE.none).label;
+    let stdTxt = '─';
+    if (s.aa_min != null && s.aa_max != null) stdTxt = `${s.aa_min}~${s.aa_max}`;
+    else if (s.aa_min != null) stdTxt = `≥${s.aa_min}`;
+    const hasVal = typeof s.value === 'number' && !Number.isNaN(s.value);
+    const r = ws.addRow([s.name, hasVal ? s.value : null, stdTxt, label, s.unit || '']);
+    if (hasVal) r.getCell(2).numFmt = '#,##0.0000';
+    styleDataRow(r);
+    if (tone === 'fail' || tone === 'over') r.getCell(4).font = { bold: true, color: { argb: 'FFC0392B' } };
+    else if (tone === 'pass') r.getCell(4).font = { bold: true, color: { argb: 'FF1E7E34' } };
+  });
+
+  // 표가 페이지를 넘어가도 이 헤더 행이 반복 인쇄되도록, 화면에서도 스크롤 시 고정되도록
+  ws.pageSetup.printTitlesRow = `${anaHeaderRowNum}:${anaHeaderRowNum}`;
+  ws.views = [{ showGridLines: false, state: 'frozen', ySplit: anaHeaderRowNum }];
+
+  // 열 너비: 실제 내용 길이에 맞춰(긴 원료명·영양성분명이 잘리지 않도록) 최소/최대 폭 안에서 자동 조정
+  for (let i = 1; i <= COLS; i++) {
+    const col = ws.getColumn(i);
+    let max = 8;
+    col.eachCell({ includeEmpty: true }, cell => {
+      const v = cell.value == null ? '' : String(cell.value);
+      max = Math.max(max, v.length);
+    });
+    col.width = Math.min(Math.max(max + 2, i === 2 ? 20 : 8), 40);
+  }
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${safeName ? safeName + ' - 배합설계' : '배합설계'}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
