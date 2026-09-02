@@ -1552,6 +1552,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0; }
   body.mixreport-printing .mixreport-modal .modal-body { background: #fff !important; padding: 0 !important; }
   body.mixreport-printing .mixreport-nochrome { display: none !important; }
+  /* Chrome은 인쇄/PDF 저장 시 배경색을 기본적으로 생략한다(잉크 절약) — .mr-section-title,
+     .mr-table th 등이 쓰는 background:#1e2733 같은 진한 배경이 화면 미리보기와 달리 흰색으로
+     바뀌는 원인. #mixreport-page와 그 하위 요소 전체에 색 보존을 지시해 화면과 동일하게 만든다
+     (색상값 자체는 그대로 두고, 인쇄 시 생략되지 않도록 보존 여부만 지정). */
+  body.mixreport-printing #mixreport-page,
+  body.mixreport-printing #mixreport-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
     min-height: 0 !important; padding: 24mm 22mm !important;
     /* 표가 페이지 경계에서 갈릴 때도 이 padding이 매 페이지 조각의 위/아래에 반복되도록 한다
@@ -4556,7 +4565,73 @@ const BUILTIN_ING_SEED = ING_DB.filter(ing => ing[0] === '타피오카 전분' |
 // 사용자 추가 원료
 let customIngs = [];
 let editingIngName = null;
-function allIngs() { return [...ING_DB, ...customIngs]; }
+
+// 확장 원료 DB(data/ingredients_ext.json, 국가표준식품성분DB 기반 2천여 종) — 앱 시작 시
+// 가져오지 않고, 원료 검색/선택이 실제로 필요해지는 시점(검색창 입력, 원료 선택 드롭다운 열기)에
+// 1회만 fetch해 메모리에 캐시한다. 정렬은 로드 시 딱 1번만 수행해 검색할 때마다 다시 정렬하지
+// 않도록 한다. fetch 실패 시에도 ING_DB+customIngs만으로 기존 기능이 그대로 동작해야 하므로
+// 오류를 삼키고 빈 배열로 남겨둔다.
+let extIngs = null;           // null = 아직 로드 안 됨. 로드 후 배열(실패 시 빈 배열)
+let extIngsSorted = null;     // extIngs를 이름순('ko')으로 1회 정렬해 캐시한 것
+let extIngsLoadPromise = null;
+
+function loadExtIngsOnce() {
+  if (extIngsLoadPromise) return extIngsLoadPromise;
+  setExtIngsLoadingIndicator(true);
+  extIngsLoadPromise = fetch('data/ingredients_ext.json')
+    .then(res => { if (!res.ok) throw new Error('ingredients_ext.json HTTP ' + res.status); return res.json(); })
+    .then(list => {
+      if (!Array.isArray(list)) throw new Error('ingredients_ext.json 형식 오류');
+      extIngs = list;
+      extIngsSorted = [...list].sort((a, b) => a[0].localeCompare(b[0], 'ko'));
+    })
+    .catch(err => {
+      console.warn('확장 원료 DB를 불러오지 못했습니다 — 기본 원료만으로 계속 동작합니다.', err);
+      extIngs = [];
+      extIngsSorted = [];
+    })
+    .finally(() => { onExtIngsSettled(); });
+  return extIngsLoadPromise;
+}
+
+// 확장 DB 로딩 중임을 이미 열려 있는 검색 입력의 placeholder로만 알려준다(레이아웃 변경 없음).
+function setExtIngsLoadingIndicator(loading) {
+  const ingSearchEl = document.getElementById('ing-search');
+  if (ingSearchEl) ingSearchEl.placeholder = loading ? '원료명 검색... (확장 DB 불러오는 중)' : '원료명 검색...';
+  const mixSearchEl = mixIngListEl && mixIngListEl.querySelector('.mix-ing-search-input');
+  if (mixSearchEl) mixSearchEl.placeholder = loading ? '원료 검색... (확장 DB 불러오는 중)' : '원료 검색...';
+}
+
+// 확장 DB 로드가 끝나면(성공/실패 모두) 현재 열려 있는 원료 관련 화면만 그 결과를 반영해
+// 다시 그린다 — 로드 시점에 다른 화면을 보고 있었다면 다음에 그 화면을 쓸 때 자연히 반영된다.
+function onExtIngsSettled() {
+  setExtIngsLoadingIndicator(false);
+  if (document.getElementById('ing-search')) filterIng();
+  if (mixIngOpenWrap && mixIngListEl) {
+    const searchInput = mixIngListEl.querySelector('.mix-ing-search-input');
+    mixIngListEl.querySelector('.mix-ing-options').innerHTML = ingListItemsHTML(searchInput.value);
+  }
+}
+
+// extIngsSorted처럼 이미 정렬된 두 이름 배열을 매번 재정렬하지 않고 병합해 하나의
+// 알파벳순 목록으로 만든다(검색 성능 개선의 핵심 — 정렬은 O(n log n), 병합은 O(n)).
+function mergeSortedNames(a, b) {
+  const out = [];
+  let i = 0, j = 0;
+  while (i < a.length && j < b.length) {
+    out.push(a[i].localeCompare(b[j], 'ko') <= 0 ? a[i++] : b[j++]);
+  }
+  while (i < a.length) out.push(a[i++]);
+  while (j < b.length) out.push(b[j++]);
+  return out;
+}
+
+// 확장 DB 검색 결과 중 화면(원료 목록 테이블/선택 드롭다운)에 한 번에 반영할 상한 —
+// 수천 개 매칭 결과를 그대로 DOM에 렌더링하지 않기 위함. 전역 검색용 SEARCH_MAX_PER_GROUP
+// (카테고리별 소수 요약용)과는 별개의 용도라 값도 따로 둔다.
+const EXT_ING_SEARCH_CAP = 300;
+
+function allIngs() { return extIngs && extIngs.length ? [...ING_DB, ...customIngs, ...extIngs] : [...ING_DB, ...customIngs]; }
 function getIng(name) { return allIngs().find(i => i[0] === name); }
 
 // 영양소 기준 DB
@@ -4850,10 +4925,21 @@ let mixBasisTotalG = 1000;
 let mixUnitSwitching = false;
 
 function getSortedIngNames(query) {
-  let names = allIngs().map(i => i[0]).sort((a, b) => a.localeCompare(b, 'ko'));
   const q = (query || '').trim().toLowerCase();
-  if (q) names = names.filter(n => n.toLowerCase().includes(q));
-  return names;
+  // ING_DB+customIngs는 소수(수백 이하)라 매번 새로 정렬해도 비용이 거의 없다 — 기존 동작 그대로.
+  const baseNames = [...ING_DB, ...customIngs].map(i => i[0]).sort((a, b) => a.localeCompare(b, 'ko'));
+  const baseFiltered = q ? baseNames.filter(n => n.toLowerCase().includes(q)) : baseNames;
+  // 검색어가 없을 때는 기존과 동일하게 기본/사용자 원료만 보여준다 — 확장 DB는 검색 시에만 노출.
+  if (!q || !extIngsSorted || !extIngsSorted.length) return baseFiltered;
+
+  const baseSet = new Set(baseNames); // 동일 이름은 기존 원료가 우선되도록 확장 DB 쪽에서 제외
+  const extFiltered = [];
+  for (const ing of extIngsSorted) {
+    if (extFiltered.length >= EXT_ING_SEARCH_CAP) break;
+    if (baseSet.has(ing[0])) continue;
+    if (ing[0].toLowerCase().includes(q)) extFiltered.push(ing[0]);
+  }
+  return mergeSortedNames(baseFiltered, extFiltered);
 }
 
 function buildIngOptions() {
@@ -4976,8 +5062,22 @@ function positionIngList(list, trigger) {
   return targetMaxHeight;
 }
 
+// 숨겨진 select는 기본적으로 ING_DB+customIngs 옵션만 담고 있다(확장 DB 수천 개를 매번
+// <option>으로 전부 렌더링하지 않기 위함 — buildIngOptions() 참고). 확장 DB에서 고른
+// 원료처럼 옵션이 없는 이름을 select.value에 대입하면 브라우저가 조용히 무시해 선택이
+// 풀려버리므로, 그 경우에만 실제 선택된 값 하나만 옵션으로 추가해준다.
+function ensureIngOptionInSelect(select, name) {
+  if (!name) return;
+  if (Array.from(select.options).some(o => o.value === name)) return;
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  select.appendChild(opt);
+}
+
 function setIngComboValue(wrap, name) {
   const select = wrap.querySelector('select');
+  ensureIngOptionInSelect(select, name);
   select.value = name;
   syncIngDisplayFromSelect(select);
 }
@@ -4995,6 +5095,7 @@ function syncIngDisplayFromSelect(select) {
 }
 
 function openIngDropdown(wrap, onSelect) {
+  loadExtIngsOnce(); // 원료 선택 드롭다운을 여는 시점에만 확장 DB를 1회 lazy-load
   const display = wrap.querySelector('.mix-ing-display');
   const list = getMixIngListEl();
   const searchInput = list.querySelector('.mix-ing-search-input');
@@ -5131,7 +5232,11 @@ function addMixRow(name='', ratio=0) {
     <span class="mix-actual-g" style="width:90px">─</span>
     ${MIX_HDR.map((h, i) => `<span class="mix-val" data-idx="${i}" style="width:${h.w}px${MIX_HDR_GROUP_END.has(i) ? ';border-right:2px solid var(--border)' : ''}">─</span>`).join('')}
   `;
-  if (name) div.querySelector('select').value = name;
+  if (name) {
+    const select = div.querySelector('select');
+    ensureIngOptionInSelect(select, name);
+    select.value = name;
+  }
   initIngCombo(div.querySelector('.mix-ing-wrap'));
   document.getElementById('mix-body').appendChild(div);
   mixRows.push(div);
@@ -6951,9 +7056,25 @@ function getSortedIngs(data) {
 }
 
 function filterIng() {
+  loadExtIngsOnce(); // 원료 검색창 입력 시점에만 확장 DB를 1회 lazy-load
   const q = document.getElementById('ing-search').value.toLowerCase().trim();
-  let data = allIngs();
-  if (q) data = data.filter(i => i[0].toLowerCase().includes(q));
+  const baseData = [...ING_DB, ...customIngs];
+  let data;
+  if (!q) {
+    // 검색어가 없을 때는 기존과 동일하게 기본/사용자 원료만 보여준다(확장 DB는 검색 시에만 노출).
+    data = baseData;
+  } else {
+    data = baseData.filter(i => i[0].toLowerCase().includes(q));
+    if (extIngs && extIngs.length) {
+      const baseSet = new Set(baseData.map(i => i[0])); // 동일 이름은 기존 원료 우선, 중복 표시 방지
+      let n = 0;
+      for (const ing of extIngsSorted) {
+        if (n >= EXT_ING_SEARCH_CAP) break;
+        if (baseSet.has(ing[0])) continue;
+        if (ing[0].toLowerCase().includes(q)) { data.push(ing); n++; }
+      }
+    }
+  }
   data = getSortedIngs(data);
   buildIngTable(data);
 }
@@ -7069,7 +7190,7 @@ function deleteSelectedIng() {
   document.querySelectorAll('#mix-body select').forEach(sel => {
     const cur = sel.value;
     sel.innerHTML = buildIngOptions();
-    if (!names.includes(cur)) sel.value = cur;
+    if (!names.includes(cur)) { ensureIngOptionInSelect(sel, cur); sel.value = cur; }
     syncIngDisplayFromSelect(sel);
   });
   const selAll = document.getElementById('ing-select-all');
@@ -7107,6 +7228,7 @@ function saveNewIng() {
   document.querySelectorAll('#mix-body select').forEach(sel => {
     const cur = sel.value;
     sel.innerHTML = buildIngOptions();
+    ensureIngOptionInSelect(sel, cur);
     sel.value = cur;
     syncIngDisplayFromSelect(sel);
   });
@@ -7824,6 +7946,7 @@ function escHtml(s) {
 function collectGlobalSearchResults(query) {
   const q = query.trim().toLowerCase();
   if (!q) return [];
+  loadExtIngsOnce(); // 아직 로드 전이면 이번 검색은 기존 데이터로만 응답하고, 다음 검색부터 반영
   const results = [];
 
   let n = 0;
