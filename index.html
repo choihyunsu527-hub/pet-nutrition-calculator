@@ -632,6 +632,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    한눈에 나눠 보이게 한다(아래 sticky 처리와 같은 경계). */
 #mix-hdr span[style*="width:200px"] { border-right-color: var(--border); }
 #mix-hdr #mix-hdr-ratio { border-right-color: var(--border); }
+/* 배합표 컬럼 정렬 아이콘 — 헤더 라벨(.mix-hdr-label) 옆에 붙는 작은 버튼 하나.
+   기본은 muted(--sub), 정렬이 걸린 컬럼만 accent(--acc)로 강조한다. */
+.mix-hdr-label { white-space: nowrap; }
+.mix-sort-btn { display: inline-flex; align-items: center; justify-content: center; margin-left: 2px;
+                padding: 0; border: none; background: none; color: var(--sub); cursor: pointer; flex-shrink: 0; }
+.mix-sort-btn:hover { color: var(--hdr); }
+.mix-sort-btn.active { color: var(--acc); }
 #mix-body { flex: 0 1 auto; overflow-y: auto; min-width: max-content; }
 .mix-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--mix-line);
            transition: background-color .15s ease; padding-right: 20px; }
@@ -1561,6 +1568,31 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+  /* 인쇄/PDF에서만 일반 데이터 행에 zebra striping 적용 — 화면 미리보기는 그대로 흰 배경.
+     .mr-cat-row/.mr-sum-row는 제외해 기존 색(#eef1f3/#dbe6f5)을 그대로 유지한다.
+     짝수 행 색은 .mr-cat-row가 쓰는 #eef1f3보다 살짝 옅게(#f5f7f8) 둬서 카테고리 구분행과
+     구별되게 한다. */
+  body.mixreport-printing .mr-table tr:not(.mr-cat-row):not(.mr-sum-row):nth-child(even) td {
+    background: #f5f7f8;
+  }
+  body.mixreport-printing .mr-table tr:not(.mr-cat-row):not(.mr-sum-row):nth-child(odd) td {
+    background: #fff;
+  }
+  /* 전역 표 줄무늬 규칙(:not(.cat-row):not(.sec-row), 이 파일 앞부분)은 클래스명이 달라
+     .mr-cat-row/.mr-sum-row를 걸러내지 못하고, 명시도(specificity)까지 더 높아 그 배경(#eef1f3/
+     #dbe6f5)을 흰색(--even/--odd)으로 덮어써버린다 — 이 문서 편집과 무관한 기존 동작이지만,
+     "카테고리/합계 행은 기존 색상 유지"를 인쇄에서 실제로 지키려면 여기서 다시 지정해야 한다. */
+  /* 인쇄에서만 대분류(.mr-cat-row) 가독성 보강 — 배경(#eef1f3) + 굵은 글씨(800) + 위아래
+     가로 구분선(1px solid #b8c0c8, 기본 세로 격자선 #d6dbe0보다 살짝 진해 카테고리 경계만
+     또렷하게 보임)만 쓴다. border-left/right는 절대 추가하지 않는다 — 셀 끝에서 끊겨 박스처럼
+     보이는 문제가 있어, 좌우 테두리는 .mr-table td 기본 세로 격자선(위쪽 base 규칙)만 쓴다. */
+  body.mixreport-printing .mr-table tr.mr-cat-row td {
+    background: #eef1f3 !important;
+    border-top: 1px solid #b8c0c8;
+    border-bottom: 1px solid #b8c0c8;
+    font-weight: 800;
+  }
+  body.mixreport-printing .mr-table tr.mr-sum-row td { background: #dbe6f5 !important; }
   body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
     min-height: 0 !important; padding: 24mm 22mm !important;
     /* 표가 페이지 경계에서 갈릴 때도 이 padding이 매 페이지 조각의 위/아래에 반복되도록 한다
@@ -2175,9 +2207,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
             <input type="checkbox" id="mix-select-all" onchange="toggleAllMixChk(this)">
           </span>
           <span style="width:32px">#</span>
-          <span style="width:200px">원료명</span>
+          <span id="mix-hdr-name" style="width:200px">원료명</span>
           <span id="mix-hdr-ratio" style="width:100px">배합비(%)</span>
-          <span style="width:90px">실제 중량(g)</span>
+          <span id="mix-hdr-actualg" style="width:90px">실제 중량(g)</span>
         </div>
         <div id="mix-body"></div>
       </div>
@@ -3300,6 +3332,10 @@ const ICON_PATHS = {
   bone: '<path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z"/>',
   ban: '<circle cx="12" cy="12" r="10"/><path d="M4.929 4.929 19.07 19.071"/>',
   star: '<path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.74a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.86l-3.735-3.64a.53.53 0 0 1 .293-.905l5.166-.755a2.122 2.122 0 0 0 1.597-1.16z"/>',
+  // 배합표 컬럼 정렬 아이콘 3종(기본/오름차순/내림차순) — 다른 아이콘과 같은 Lucide 24×24 stroke path.
+  'chevrons-up-down': '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+  'arrow-up': '<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+  'arrow-down': '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
 };
 function svgIcon(name, size) {
   size = size || 14;
@@ -4911,6 +4947,7 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
 // 배합 설계 탭
 // ════════════════════════════════════════════════════════════════════════════
 let mixRows = [];
+let mixRowSeq = 0; // 행 생성 순서 카운터 — 정렬을 "기본 상태"로 되돌릴 때 이 순서로 복원한다
 // unit-select의 onchange 시점엔 select.value가 이미 새 단위로 바뀌어 있어, 변경 "전" 단위를
 // 알기 위해 별도로 추적한다. onUnitChange()에서 환산 후 최신 단위로 갱신된다.
 let currentMixUnit = 'pct';
@@ -5193,8 +5230,109 @@ const MIX_HDR = [
 // 그룹 마지막 열 인덱스(기본정보/미네랄/비타민/지방산/조섬유 뒤에 구분선)
 const MIX_HDR_GROUP_END = new Set([6, 18, 31, 35, 36]);
 
+// ════════════════════════════════════════════════════════════════════════════
+// 배합표 컬럼 정렬 — 화면 표시 순서만 바꾼다. calculate()/원료DB/저장 데이터는 그대로 두고,
+// #mix-body 안의 .mix-row DOM 요소(선택된 원료·배합비 입력을 그대로 담고 있는 행 통째)만
+// 재배치한다 — 각 행은 자기 값을 스스로 들고 있어 순서와 무관하게 항상 올바르게 계산되므로
+// (calculate()는 합계일 뿐 행 순서에 의존하지 않음), 재배치만으로 안전하게 정렬된다.
+// mixSortKey===null(기본)일 때는 각 행에 생성 시 매긴 mixSeq 순으로 되돌려 "최초 순서"를 복원한다.
+// ════════════════════════════════════════════════════════════════════════════
+let mixSortKey = null; // null=기본, 'name'/'ratio'/'actualG'/'mixhdr:N'
+let mixSortDir = 0;    // 1=오름차순, -1=내림차순 (mixSortKey가 있을 때만 의미 있음)
+
+function mixSortIconSvg(state) {
+  const name = state === 'asc' ? 'arrow-up' : state === 'desc' ? 'arrow-down' : 'chevrons-up-down';
+  return svgIcon(name, 11);
+}
+
+// 헤더 span(기존 텍스트를 이미 담고 있는 상태)에, 그 텍스트를 라벨용 span으로 감싸고
+// 정렬 아이콘 버튼을 옆에 붙인다 — 원본 문구·폭·스타일은 건드리지 않는다.
+function makeMixHeaderSortable(span, sortKey, labelId) {
+  if (!span) return;
+  const label = document.createElement('span');
+  label.className = 'mix-hdr-label';
+  if (labelId) label.id = labelId;
+  while (span.firstChild) label.appendChild(span.firstChild);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'mix-sort-btn';
+  btn.title = '정렬';
+  btn.setAttribute('aria-label', '정렬');
+  btn.dataset.sortKey = sortKey;
+  btn.innerHTML = mixSortIconSvg('neutral');
+  btn.onclick = (e) => { e.stopPropagation(); onMixSortClick(sortKey); };
+  span.appendChild(label);
+  span.appendChild(btn);
+}
+
+function onMixSortClick(key) {
+  if (mixSortKey !== key) { mixSortKey = key; mixSortDir = 1; }
+  else if (mixSortDir === 1) { mixSortDir = -1; }
+  else { mixSortKey = null; mixSortDir = 0; }
+  applyMixSort();
+}
+
+// 정렬 기준 컬럼의 "화면에 표시된 값"을 읽는다 — 계산 로직을 따로 타지 않고 이미 렌더링된
+// 텍스트/입력값을 그대로 읽으므로 계산 결과에는 전혀 영향이 없다. 원료 미선택/값 없음('─')은
+// null로 반환해 정렬 시 항상 마지막으로 보낸다.
+function mixColValue(row, key) {
+  if (key === 'name') {
+    const sel = row.querySelector('select');
+    return (sel && sel.value) ? sel.value : null;
+  }
+  let text = null;
+  if (key === 'ratio') text = row.querySelector('input[type=number]')?.value;
+  else if (key === 'actualG') text = row.querySelector('.mix-actual-g')?.textContent;
+  else if (key.startsWith('mixhdr:')) text = row.querySelectorAll('.mix-val')[+key.slice(7)]?.textContent;
+  if (text === undefined || text === null) return null;
+  const n = parseFloat(String(text).replace(/,/g, '')); // 실제중량(g)은 천단위 콤마가 붙어 표시됨
+  return Number.isFinite(n) ? n : null;
+}
+
+function applyMixSort() {
+  const body = document.getElementById('mix-body');
+  let ordered;
+  if (!mixSortKey) {
+    ordered = mixRows.slice().sort((a, b) => (+a.dataset.mixSeq) - (+b.dataset.mixSeq));
+  } else {
+    const key = mixSortKey, dir = mixSortDir;
+    ordered = mixRows.slice().sort((a, b) => {
+      const va = mixColValue(a, key), vb = mixColValue(b, key);
+      if (va === null && vb === null) return (+a.dataset.mixSeq) - (+b.dataset.mixSeq);
+      if (va === null) return 1;  // 빈 값/잘못된 값은 정렬 방향과 무관하게 항상 마지막
+      if (vb === null) return -1;
+      const cmp = typeof va === 'string' ? va.localeCompare(vb, 'ko') : va - vb;
+      return dir === 1 ? cmp : -cmp;
+    });
+  }
+  // appendChild는 이미 DOM에 있는 노드를 "이동"시킬 뿐 새로 만들지 않으므로, 각 행의
+  // select/input 값과 이벤트 리스너가 그대로 유지된다.
+  ordered.forEach(row => body.appendChild(row));
+  mixRows = ordered;
+  document.querySelectorAll('.mix-no').forEach((el, i) => el.textContent = i + 1);
+  document.querySelectorAll('.mix-row').forEach((row, i) => {
+    const wrap = row.querySelector('.mix-ing-wrap');
+    if (wrap) wrap.style.background = i % 2 === 0 ? 'var(--odd)' : 'var(--even)';
+  });
+  refreshMixSortIcons();
+}
+
+function refreshMixSortIcons() {
+  document.querySelectorAll('#mix-hdr .mix-sort-btn').forEach(btn => {
+    const key = btn.dataset.sortKey;
+    const state = key !== mixSortKey ? 'neutral' : (mixSortDir === 1 ? 'asc' : 'desc');
+    btn.innerHTML = mixSortIconSvg(state);
+    btn.classList.toggle('active', state !== 'neutral');
+  });
+}
+
 function buildMixHdr() {
   const hdr = document.getElementById('mix-hdr');
+  // 고정 3개 컬럼(원료명/배합비/실제 중량)에도 나머지 영양소 컬럼과 같은 정렬 UI를 붙인다.
+  makeMixHeaderSortable(document.getElementById('mix-hdr-name'), 'name');
+  makeMixHeaderSortable(document.getElementById('mix-hdr-ratio'), 'ratio', 'mix-hdr-ratio-label');
+  makeMixHeaderSortable(document.getElementById('mix-hdr-actualg'), 'actualG');
+
   MIX_HDR.forEach((h, i) => {
     const sp = document.createElement('span');
     const div = MIX_HDR_GROUP_END.has(i) ? 'border-right:2px solid var(--border);' : '';
@@ -5203,6 +5341,7 @@ function buildMixHdr() {
     // 라벨(예: "수분<br>(g)")은 폭 제약상 그대로 두고, 값의 의미(원료 100g당이 아니라
     // "최종 배합 100g당 이 원료의 기여량")는 툴크립으로만 보강한다 — 헤더 텍스트/폭은 미변경.
     sp.title = `${h.label.replace(/<br>/g, ' ')} — 최종 배합 100g 기준 이 원료의 기여량`;
+    makeMixHeaderSortable(sp, 'mixhdr:' + i);
     hdr.appendChild(sp);
   });
 }
@@ -5213,6 +5352,7 @@ function addMixRow(name='', ratio=0) {
   const bg = idx % 2 === 0 ? 'var(--odd)' : 'var(--even)';
   const div = document.createElement('div');
   div.className = 'mix-row';
+  div.dataset.mixSeq = mixRowSeq++;
   div.innerHTML = `
     <span style="width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center">
       <input type="checkbox" class="mix-chk">
@@ -5264,6 +5404,7 @@ function deleteSelectedMix() {
 function clearMix() {
   document.getElementById('mix-body').innerHTML = '';
   mixRows = [];
+  mixSortKey = null; mixSortDir = 0; refreshMixSortIcons();
   addMixRow(); addMixRow(); addMixRow();
   addMixRow(); addMixRow(); addMixRow();
   calculate();
@@ -5359,7 +5500,10 @@ function updateUnitHint() {
   if (hint) hint.textContent = hintMap[unit];
 
   const labelMap = { pct: '배합비(%)', g: '중량(g)', kg: '중량(kg)' };
-  const rl = document.getElementById('mix-hdr-ratio');
+  // #mix-hdr-ratio 자체가 아니라 그 안의 라벨 전용 span만 바꾼다 — buildMixHdr()가 이 span
+  // 옆에 정렬 아이콘 버튼을 함께 넣어두므로, 여기서 textContent를 통째로 덮어쓰면 그 버튼도
+  // 같이 지워진다.
+  const rl = document.getElementById('mix-hdr-ratio-label');
   if (rl) rl.textContent = labelMap[unit];
 }
 
@@ -8652,6 +8796,7 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   // 배합 복원
   document.getElementById('mix-body').innerHTML = '';
   mixRows = [];
+  mixSortKey = null; mixSortDir = 0; refreshMixSortIcons();
   const savedRows = data.rows || [];
   const rowCount = Math.max(savedRows.length, 6);
   for (let i=0;i<rowCount;i++) {
