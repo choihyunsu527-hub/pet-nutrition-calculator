@@ -58,6 +58,18 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
   if (req.method !== 'POST') return json({ error: 'POST만 지원합니다.' }, 405);
 
+  // 아래 로직에서 예기치 못한 예외(환경변수 누락, 네트워크 오류 등)가 던져지면 Deno.serve가
+  // JSON이 아닌 빈 500 응답을 내보내 프런트에서 원인을 전혀 알 수 없게 된다 — 항상 원인이
+  // 담긴 JSON을 반환하도록 전체를 try/catch로 감싼다.
+  try {
+    return await handle(req, json);
+  } catch (err) {
+    console.error('create-user 처리 중 예외:', err);
+    return json({ error: err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.' }, 500);
+  }
+});
+
+async function handle(req: Request, json: (body: unknown, status?: number) => Response) {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
   // 1) 호출자 신원 확인 — 프런트가 supabase.functions.invoke()로 호출하면
@@ -125,4 +137,4 @@ Deno.serve(async (req) => {
   }
 
   return json({ ok: true, user: { id: newUserId, username } });
-});
+}

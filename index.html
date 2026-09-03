@@ -9964,6 +9964,20 @@ const SUPABASE_ANON_KEY = 'sb_publishable_JoBouB63T2DPWnsWc_y9ag_fSB0LX87';   //
 const AUTH_ID_EMAIL_DOMAIN = 'id.nutricirc.local';
 function idToAuthEmail(id) { return id.trim().toLowerCase() + '@' + AUTH_ID_EMAIL_DOMAIN; }
 
+// supabase-js는 Edge Function이 4xx/5xx를 반환하면 항상 error.message를 고정 문구
+// ("Edge Function returned a non-2xx status code")로 채우고, 우리가 Edge Function에서
+// json({error: '...'})로 보낸 실제 메시지는 error.context(원본 Response)에만 남긴다.
+// 여기서 그 본문을 다시 읽어 실제 에러 메시지를 꺼낸다.
+async function extractFnError(error, fallbackMsg) {
+  if (error && error.context && typeof error.context.json === 'function') {
+    try {
+      const body = await error.context.json();
+      if (body && body.error) return body.error;
+    } catch {}
+  }
+  return (error && error.message) || fallbackMsg;
+}
+
 // "로그인 유지하기" 체크박스 상태 저장용 키(순수 로컬 설정값 — Supabase 세션 자체와는 별개)
 const KEEP_LOGIN_KEY = 'feedcalc_v4_keep_login';
 const REMEMBER_EMAIL_KEY = 'feedcalc_v4_remember_email';
@@ -10278,7 +10292,7 @@ async function createUserAccount() {
     const { data, error } = await supabaseClient.functions.invoke('create-user', { body: { username: id, password, role } });
     if (error || data?.error) {
       msg.style.color = '#B03A2E';
-      msg.textContent = (data && data.error) || error.message || '계정 생성 중 오류가 발생했습니다.';
+      msg.textContent = (data && data.error) || await extractFnError(error, '계정 생성 중 오류가 발생했습니다.');
       return;
     }
     msg.style.color = 'var(--pass-t)';
@@ -10449,7 +10463,7 @@ async function saveEditUser() {
   try {
     const { data, error } = await supabaseClient.functions.invoke('update-user', { body });
     if (error || data?.error) {
-      err.textContent = (data && data.error) || error.message || '저장 중 오류가 발생했습니다.';
+      err.textContent = (data && data.error) || await extractFnError(error, '저장 중 오류가 발생했습니다.');
       return;
     }
     closeModal('admin-edit-modal');
@@ -10468,7 +10482,7 @@ async function deleteUserAccount(row) {
 
   const { data, error } = await supabaseClient.functions.invoke('delete-user', { body: { targetUserId: row.id } });
   if (error || data?.error) {
-    alert((data && data.error) || error.message || '삭제 중 오류가 발생했습니다.');
+    alert((data && data.error) || await extractFnError(error, '삭제 중 오류가 발생했습니다.'));
     return;
   }
   loadAdminUsers();
