@@ -1514,9 +1514,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #login-brand-standards { position: relative; z-index: 1; max-width: 620px; margin: 0 auto;
                           padding: 20px 40px 26px; text-align: center;
                           border-top: 1px solid rgba(255,255,255,0.1); }
-#login-standards-label { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 16px; }
-#login-standards-row { display: flex; align-items: center; justify-content: center; gap: 52px; flex-wrap: wrap; }
-.login-standard-logo { height: 40px; width: auto; display: block; opacity: .92; }
+#login-standards-label { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 16px; text-align: center; }
+/* 안내 문구와 로고 그룹이 정확히 같은 중앙축을 쓰도록 row에도 max-width + margin auto 를 준다.
+   로고 3개는 각각 동일 너비(flex:1 1 0)의 item 안에 들어가고, 이미지는 item 내부에서 center
+   정렬되며 width:auto 로 원본 비율을 유지한다. 이렇게 하면 실제 가로폭이 달라도 시각적 간격이
+   균등하게 보인다. */
+#login-standards-row { display: flex; align-items: center; justify-content: center;
+                        gap: 28px; max-width: 400px; margin: 0 auto; }
+.login-standard-item { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+.login-standard-logo { height: 40px; width: auto; max-width: 100%; display: block; opacity: .92; }
 
 /* RIGHT — 로그인 폼(약 45%) */
 #login-right { flex: 1 1 45%; min-width: 0; display: flex; align-items: center; justify-content: center;
@@ -1749,9 +1755,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     <div id="login-brand-standards">
       <div id="login-standards-label">Based on Global Nutrition Standards</div>
       <div id="login-standards-row">
-        <img class="login-standard-logo" src="aafco-logo.png" alt="AAFCO — Association of American Feed Control Officials">
-        <img class="login-standard-logo" src="fediaf-logo.png" alt="FEDIAF — The European Pet Food Industry">
-        <img class="login-standard-logo" src="nrc-logo.png" alt="NRC — National Research Council">
+        <span class="login-standard-item"><img class="login-standard-logo" src="aafco-logo.png" alt="AAFCO — Association of American Feed Control Officials"></span>
+        <span class="login-standard-item"><img class="login-standard-logo" src="fediaf-logo.png" alt="FEDIAF — The European Pet Food Industry"></span>
+        <span class="login-standard-item"><img class="login-standard-logo" src="nrc-logo.png" alt="NRC — National Research Council"></span>
       </div>
     </div>
   </div>
