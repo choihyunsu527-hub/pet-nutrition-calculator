@@ -1488,17 +1488,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* LEFT — 브랜드 패널(약 55%) */
 #login-brand { flex: 0 0 55%; max-width: 55%; min-width: 0; position: relative; overflow: hidden;
-               background: var(--topbar-bg); display: flex; flex-direction: column; }
+               background: var(--topbar-bg); display: flex; flex-direction: column; justify-content: center; }
 #login-brand-deco { position: absolute; inset: 0; width: 100%; height: 100%; }
 
 /* 콘텐츠 위치 — 브랜드 블록을 LEFT PANEL 내부 수평 중앙에 놓는다. 좌우 padding을 대칭으로
    주고 max-width + margin auto로 패널(55vw) 안에서 가운데 정렬한다. 브랜드/헤드라인/설명/
    divider/standards가 전부 같은 중앙 축을 공유한다. 세로로는 justify-content:center 를 쓰되
    padding-bottom 을 top 보다 크게 줘서 시각적으로 화면 세로 중앙보다 약간 위에 오도록 한다. */
-#login-brand-main { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column;
+#login-brand-main { position: relative; z-index: 1; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
                      align-items: center; justify-content: center; text-align: center;
                      max-width: 620px; margin: 0 auto;
-                     padding: 0 40px clamp(80px, 12vh, 150px); }
+                     padding: 0 40px; }
 #login-brand-logo-row { display: flex; align-items: center; justify-content: center; gap: 22px; margin-bottom: 22px; }
 #login-brand-mark-img { height: 80px; width: auto; flex: 0 0 auto; display: block; }
 #login-brand-name { font-size: 42px; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.15; }
@@ -1511,8 +1511,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* LEFT bottom — 국제 영양기준(AAFCO/FEDIAF/NRC) — Logo 2.png에서 크롭한 실제 로고 이미지.
    왼쪽 패널 하단에 중앙 정렬로 안정적으로 배치. 왜곡 방지를 위해 width는 auto로 두고 height만
    통일해 서로 다른 aspect ratio를 유지한 채 시각적 높이만 맞춘다. */
-#login-brand-standards { position: relative; z-index: 1; max-width: 620px; margin: 0 auto;
-                          padding: 20px 40px 26px; text-align: center;
+#login-brand-standards { position: relative; z-index: 1; max-width: 620px;
+                          margin: clamp(44px, 7vh, 72px) auto 0;
+                          padding: 24px 40px 0; text-align: center;
                           border-top: 1px solid rgba(255,255,255,0.1); }
 #login-standards-label { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 16px; text-align: center; }
 /* 안내 문구와 로고 그룹이 정확히 같은 중앙축을 쓰도록 row에도 max-width + margin auto 를 준다.
