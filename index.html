@@ -1479,9 +1479,31 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 
 /* ── 로그인 ── */
-#login-overlay { position: fixed; inset: 0; background: #FFFFFF; z-index: 3000;
-                  display: flex; align-items: center; justify-content: center; }
+/* 좌(브랜드)/우(로그인 폼) 2분할 — 좌측은 사이드바/탑바와 같은 --topbar-bg(다크 네이비)를
+   테마와 무관하게 항상 사용해 "브랜드 존"으로 고정하고, 우측은 기존처럼 --body-bg/--panel-grad
+   등 테마 토큰을 그대로 써서 light/dark 전환에 자연스럽게 따라가도록 한다. */
+#login-overlay { position: fixed; inset: 0; background: var(--body-bg); z-index: 3000;
+                  display: flex; align-items: stretch; overflow: hidden; }
 #login-overlay.hidden { display: none; }
+
+#login-brand { flex: 0 0 55%; max-width: 55%; min-width: 0; position: relative; overflow: hidden;
+               background: var(--topbar-bg); display: flex; align-items: center; }
+#login-brand-deco { position: absolute; inset: 0; width: 100%; height: 100%; }
+#login-brand-content { position: relative; z-index: 1; padding: 0 7%; max-width: 460px; }
+#login-brand-name { font-size: 36px; font-weight: 800; letter-spacing: -.02em; color: #fff; margin-bottom: 10px; }
+#login-brand-sub { font-size: 12.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+                    color: var(--acc); margin-bottom: 24px; }
+#login-brand-desc { font-size: 13px; line-height: 1.75; color: rgba(255,255,255,0.6); max-width: 300px; margin-bottom: 56px; }
+#login-brand-badges { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: rgba(255,255,255,0.38); }
+
+#login-right { flex: 1 1 45%; min-width: 0; display: flex; align-items: center; justify-content: center;
+               padding: 24px; overflow-y: auto; }
+
+@media (max-width: 860px) {
+  #login-brand { display: none; }
+  #login-right { flex: 1 1 100%; }
+}
+
 #login-box { background: var(--panel-grad); border: 1px solid var(--panel-border); border-radius: var(--radius-lg);
              box-shadow: var(--sh-md); padding: 32px 36px; width: 280px; text-align: center; }
 #login-title { font-size: 16px; font-weight: 800; color: var(--hdr); margin-bottom: 6px; }
@@ -1648,8 +1670,50 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 </head>
 <body>
 <div id="login-overlay">
+  <div id="login-brand" aria-hidden="true">
+    <svg id="login-brand-deco" viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="loginGrid" width="46" height="46" patternUnits="userSpaceOnUse">
+          <path d="M 46 0 L 0 0 0 46" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.05"/>
+        </pattern>
+      </defs>
+      <rect x="380" y="520" width="520" height="480" fill="url(#loginGrid)"/>
+      <circle cx="140" cy="150" r="220" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.08"/>
+      <circle cx="140" cy="150" r="150" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.10"/>
+      <circle cx="760" cy="880" r="260" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.07"/>
+      <g stroke="#ffffff" stroke-width="1" opacity="0.16">
+        <line x1="120" y1="620" x2="230" y2="560"/>
+        <line x1="230" y1="560" x2="330" y2="640"/>
+        <line x1="230" y1="560" x2="260" y2="440"/>
+        <line x1="330" y1="640" x2="440" y2="600"/>
+        <line x1="260" y1="440" x2="380" y2="400"/>
+      </g>
+      <g fill="#ffffff" opacity="0.28">
+        <circle cx="120" cy="620" r="3.5"/>
+        <circle cx="230" cy="560" r="4.5"/>
+        <circle cx="330" cy="640" r="3.5"/>
+        <circle cx="260" cy="440" r="3.5"/>
+        <circle cx="440" cy="600" r="3.5"/>
+        <circle cx="380" cy="400" r="3.5"/>
+      </g>
+      <g fill="#ffffff" font-family="Pretendard, sans-serif" font-weight="700" letter-spacing="2">
+        <text x="60" y="330" font-size="20" opacity="0.055">PROTEIN</text>
+        <text x="500" y="220" font-size="17" opacity="0.05">FAT</text>
+        <text x="560" y="760" font-size="18" opacity="0.055">FIBER</text>
+        <text x="90" y="820" font-size="16" opacity="0.05">Ca</text>
+        <text x="180" y="870" font-size="16" opacity="0.05">P</text>
+      </g>
+    </svg>
+    <div id="login-brand-content">
+      <div id="login-brand-name">Nutri Circulator</div>
+      <div id="login-brand-sub">Pet Nutrition Platform</div>
+      <div id="login-brand-desc">반려동물 영양 설계 및 배합 관리</div>
+      <div id="login-brand-badges">NRC · AAFCO · FEDIAF</div>
+    </div>
+  </div>
+  <div id="login-right">
   <div id="login-box">
-    <div id="login-title">Nutri Circulator</div>
+    <div id="login-title">로그인</div>
 
     <div id="auth-view-login" class="auth-view show">
       <div class="auth-sub">관리자가 발급한 계정으로 로그인하세요.</div>
@@ -1687,6 +1751,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <button id="reset-btn" class="auth-btn" onclick="trySetNewPassword()">비밀번호 설정</button>
       <div id="reset-err" class="auth-err"></div>
     </div>
+  </div>
   </div>
 </div>
 <div id="app">
