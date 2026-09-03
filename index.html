@@ -1172,19 +1172,37 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                     padding: 9px 6px; margin: 0 -6px; border-radius: 8px;
                     transition: background-color .15s ease; }
 .dash-recent-row:hover { background: var(--hover-tint); }
+.dash-recent-row[hidden] { display: none; }
+/* 검색으로 숨겨진 행은 divider 계산에서 빠지도록, 보이는 첫 행 위에는 선을 그리지 않는다 */
 .dash-recent-row + .dash-recent-row { border-top: 1px solid var(--border); }
-.dash-recent-item { display: block; flex: 1; min-width: 0; text-align: left; background: none;
-                     border: none; border-radius: 0; padding: 0; font-size: 12px; font-weight: 600;
-                     color: var(--text); cursor: pointer; font-family: inherit; box-shadow: none;
+.dash-recent-row[hidden] + .dash-recent-row { border-top: 0; }
+/* 레시피 열기 버튼 — 이름(1순위) + 부가정보(2순위, 시간)를 세로로 쌓는다.
+   버튼 자체 동작(onRecentRecipeSelect=불러오기)은 그대로, 표시 구조만 바꾼다. */
+.dash-recent-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+                     flex: 1; min-width: 0; text-align: left; background: none;
+                     border: none; border-radius: 0; padding: 0; cursor: pointer; font-family: inherit; box-shadow: none; }
+.dash-recent-name { max-width: 100%; font-size: 12.5px; font-weight: 700; color: var(--hdr);
                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dash-recent-empty { font-size: 11px; color: var(--sub); padding: 10px 8px; text-align: center; }
+.dash-recent-meta { font-size: 10px; font-weight: 500; color: var(--sub); }
+/* 레시피 이름 검색 — 카드 안에서만 쓰는 로컬 필터(저장/불러오기 로직과 무관, 표시만 걸러냄).
+   앱 표준 입력 포커스 톤(--acc 테두리 + --calc 링) 재사용. */
+.dash-recent-search { display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+                       border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+                       background: var(--inp); transition: border-color .15s ease, box-shadow .15s ease; }
+.dash-recent-search:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-recent-search svg { width: 13px; height: 13px; color: var(--sub); flex-shrink: 0; }
+.dash-recent-search input { flex: 1; min-width: 0; border: none; background: none; outline: none;
+                             font-family: inherit; font-size: 11px; color: var(--text); }
+.dash-recent-empty { display: flex; flex-direction: column; align-items: center; gap: 6px;
+                      font-size: 11px; color: var(--sub); padding: 20px 8px; text-align: center; }
+.dash-recent-empty svg { width: 20px; height: 20px; opacity: .7; }
 /* ── 대시보드: 최근 레시피 카드 헤더 — 다른 3개 카드와 같이 h3에 고정 제목을 쓰고,
    그 아래에 최근/즐겨찾기 탭(.seg-control 재사용)을 별도 줄로 둔다. active 탭은
    전역 .seg-btn.active(강한 accent 채움)를 이 카드 안에서만 옅은 톤으로 낮춘다
    — .ing-toolbar button.active와 같은 절제된 패턴(포커스 링에 쓰는 --calc 재사용). */
 .dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 10px; }
 .dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
-.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); }
+.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); font-weight: 700; }
 /* 항목별 즐겨찾기 별 버튼(☆/★) — 더 이상 자기 박스를 갖지 않는 절제된 아이콘 버튼 */
 .dash-fav-toggle-btn { width: 26px; height: 26px; flex-shrink: 0; padding: 0;
                         display: flex; align-items: center; justify-content: center;
@@ -2245,13 +2263,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </div>
         </div>
         <div class="dash-section dash-recent-card">
-          <h3>최근 레시피</h3>
+          <h3>레시피 관리</h3>
           <div class="seg-control dash-recent-tabs">
-            <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근 레시피</button>
+            <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근</button>
             <button type="button" class="seg-btn" data-view="favorite" onclick="setDashRecipeView('favorite')">즐겨찾기</button>
           </div>
+          <div class="dash-recent-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
+            <input type="text" id="dash-recipe-search" placeholder="레시피 이름 검색…" autocomplete="off" oninput="applyDashRecipeFilter()" aria-label="레시피 이름 검색">
+          </div>
           <div class="dash-recent-list" id="dash-recent-recipe-list">
-            <div class="dash-recent-empty">최근 레시피가 없습니다.</div>
+            <div class="dash-recent-empty">저장된 레시피가 없습니다.</div>
           </div>
         </div>
         </div>
@@ -8315,13 +8337,29 @@ function recordRecentRecipe(name) {
 
 // 대시보드의 세로 목록으로 렌더링한다(드롭다운 대신 클릭 가능한 항목 리스트).
 // 즐겨찾기 탭이 보이는 중이면 그 목록을 덮어쓰지 않는다(renderFavoriteRecipes()가 담당).
+// 표시용 상대 시간(부가정보) — 저장된 ts(Date.now())를 사람이 읽는 문구로만 바꾼다.
+function dashRelTime(ts) {
+  if (!ts) return '';
+  const s = Math.max(0, (Date.now() - ts) / 1000);
+  if (s < 60) return '방금 전';
+  if (s < 3600) return `${Math.floor(s/60)}분 전`;
+  if (s < 86400) return `${Math.floor(s/3600)}시간 전`;
+  if (s < 86400*7) return `${Math.floor(s/86400)}일 전`;
+  return new Date(ts).toLocaleDateString('ko-KR');
+}
+// 목록이 비어 있을 때의 Empty State(아이콘 + 안내 한 줄) — 새 색상/카드 없이 기존 톤.
+function dashRecipeEmptyHtml(msg) {
+  return `<div class="dash-recent-empty">${svgIcon('file', 20)}<span>${escHtml(msg)}</span></div>`;
+}
+
 function renderRecentRecipes() {
   const box = document.getElementById('dash-recent-recipe-list');
   if (!box || dashRecipeView !== 'recent') return;
   const list = getRecentRecipes();
   box.innerHTML = !list.length
-    ? '<div class="dash-recent-empty">최근 레시피가 없습니다.</div>'
-    : list.map(r => dashRecipeRowHtml(r.name)).join('');
+    ? dashRecipeEmptyHtml('최근 불러온 레시피가 없습니다.')
+    : list.map(r => dashRecipeRowHtml(r.name, r.ts)).join('');
+  applyDashRecipeFilter();
 }
 
 // 최근 레시피 클릭 — 연결된 폴더 안에서 같은 파일명을 찾아 여는 기존 onTopRecipeChange를 그대로 재사용한다.
@@ -8364,19 +8402,54 @@ function renderFavoriteRecipes() {
   if (!box || dashRecipeView !== 'favorite') return;
   const list = getFavoriteRecipes();
   box.innerHTML = !list.length
-    ? '<div class="dash-recent-empty">즐겨찾기한 레시피가 없습니다.</div>'
-    : list.map(r => dashRecipeRowHtml(r.name)).join('');
+    ? dashRecipeEmptyHtml('즐겨찾기한 레시피가 없습니다.')
+    : list.map(r => dashRecipeRowHtml(r.name, r.ts)).join('');
+  applyDashRecipeFilter();
 }
 
 // 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 별 버튼(.dash-fav-toggle-btn)을 형제로
 // 묶어 한 행을 그린다(최근/즐겨찾기 탭 공용) — 별 클릭이 레시피 열기 이벤트와 완전히 분리된다.
-function dashRecipeRowHtml(name) {
+// 이름(.dash-recent-name)이 1순위, 시간(.dash-recent-meta)이 2순위. onclick/데이터는 그대로.
+function dashRecipeRowHtml(name, ts) {
   const safe = escHtml(name).replace(/'/g, "\\'");
   const fav = isFavoriteRecipe(name);
+  const meta = dashRelTime(ts);
   return `<div class="dash-recent-row">
-    <button type="button" class="dash-recent-item" onclick="onRecentRecipeSelect('${safe}')" title="${escHtml(name)}">${escHtml(name.replace(/\.json$/i,''))}</button>
-    <button type="button" class="dash-fav-toggle-btn${fav ? ' active' : ''}" onclick="toggleRecentFavorite('${safe}')" aria-label="${fav ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}">${svgStarIcon(fav, 14)}</button>
+    <button type="button" class="dash-recent-item" onclick="onRecentRecipeSelect('${safe}')" title="${escHtml(name)} — 클릭하면 불러옵니다">
+      <span class="dash-recent-name">${escHtml(name.replace(/\.json$/i,''))}</span>
+      ${meta ? `<span class="dash-recent-meta">${escHtml(meta)}</span>` : ''}
+    </button>
+    <button type="button" class="dash-fav-toggle-btn${fav ? ' active' : ''}" aria-pressed="${fav}" onclick="toggleRecentFavorite('${safe}')" aria-label="${fav ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}">${svgStarIcon(fav, 14)}</button>
   </div>`;
+}
+
+// 카드 안 검색 — 목록을 다시 그리지 않고 현재 DOM 행만 이름으로 보이기/숨기기 한다.
+// 저장/불러오기/삭제/즐겨찾기/스토리지 로직과 무관한 순수 표시 필터.
+function applyDashRecipeFilter() {
+  const box = document.getElementById('dash-recent-recipe-list');
+  const inp = document.getElementById('dash-recipe-search');
+  if (!box || !inp) return;
+  const q = inp.value.trim().toLowerCase();
+  const rows = [...box.querySelectorAll('.dash-recent-row')];
+  let shown = 0;
+  rows.forEach(row => {
+    const nm = (row.querySelector('.dash-recent-name')?.textContent || '').toLowerCase();
+    const hit = !q || nm.includes(q);
+    row.hidden = !hit;
+    if (hit) shown++;
+  });
+  let noHit = box.querySelector('.dash-recent-empty.is-search');
+  if (rows.length && shown === 0) {
+    if (!noHit) {
+      noHit = document.createElement('div');
+      noHit.className = 'dash-recent-empty is-search';
+      box.appendChild(noHit);
+    }
+    noHit.innerHTML = `${svgIcon('file', 20)}<span>${escHtml('"' + inp.value.trim() + '"에 해당하는 레시피가 없습니다.')}</span>`;
+    noHit.hidden = false;
+  } else if (noHit) {
+    noHit.hidden = true;
+  }
 }
 
 // 목록 항목의 별 버튼 클릭 — feedcalc_v4_favorite_recipes에 추가/제거하고,
