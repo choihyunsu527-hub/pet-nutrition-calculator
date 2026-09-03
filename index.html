@@ -685,10 +685,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                 box-shadow: inset 0 0 0 1px transparent; transition: box-shadow .15s ease; }
 .mix-ing-wrap:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
 .mix-ing-wrap:focus-within { box-shadow: inset 0 0 0 1px var(--acc); }
-.mix-ing-display { width: 100%; height: 34px; border: none; background: transparent; font-size: 11.5px;
+.mix-ing-display { width: 100%; height: 34px; border: none; background: transparent; font-size: 12px;
                   font-weight: 600; padding: 0 8px; font-family: inherit; outline: none; color: var(--hdr); box-sizing: border-box;
                   display: flex; align-items: center; justify-content: space-between; gap: 6px;
                   cursor: pointer; text-align: left; }
+/* 원료명·배합비는 이 행에서 사용자가 "무엇을·얼마나" 결정하는 핵심 두 축이라 헤더도
+   나머지 분석값 헤더보다 또렷하게(색 --hdr, weight 800). 값·색상 로직은 미변경. */
+#mix-hdr-name, #mix-hdr-ratio { color: var(--hdr); font-weight: 800; }
 .mix-ing-display .mix-ing-display-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mix-ing-display.placeholder .mix-ing-display-txt { color: var(--sub); }
 .mix-ing-display .mix-ing-arrow { flex-shrink: 0; font-size: 9px; color: var(--sub); }
@@ -734,13 +737,22 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                                box-shadow: inset 0 0 0 1px transparent;
                                transition: box-shadow .15s ease, background-color .15s ease; }
 .mix-row input[type=number]:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
-.mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 3px var(--calc); background: var(--side2); }
+/* 포커스 강조 — 앱 표준 입력(.auth-input/.mix-ing-search-input)과 같은 accent 테두리 + --calc 링.
+   sticky 이웃 셀에 링이 가리지 않도록 이 순간에만 위로 띄운다. */
+.mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 3px var(--calc); background: var(--side2);
+                                     position: relative; z-index: 3; }
 /* 배합비 입력칸은 sticky 구간의 마지막 열이라, 뒤에 스크롤되는 분석값 구간과의 경계를
    원료명 칼럼과 같은 진한 구분선(var(--border))으로 표시한다(border:none으로 리셋된
    border-right만 다시 지정 — 다른 스타일은 위 규칙 그대로). */
 .mix-row input[type=number] { border-right: 1px solid var(--border); }
 .mix-row .mix-val, .mix-row .mix-actual-g { display: flex; align-items: center; justify-content: flex-end; align-self: stretch;
-                     font-size: 10px; color: var(--sub); padding: 0 4px; flex-shrink: 0; box-sizing: border-box; }
+                     font-size: 10px; color: var(--sub); padding: 0 4px; flex-shrink: 0; box-sizing: border-box;
+                     white-space: nowrap; overflow: hidden; }
+/* 행 선택 상태(선택 삭제 대상) — "선택 삭제" 버튼과 같은 위험색으로 묶어 무엇이 지워질지
+   한눈에 보이게 한다(JS 미변경, :has()로만 강조). */
+.mix-row .mix-chk { accent-color: var(--fail-t); cursor: pointer; }
+.mix-row:has(.mix-chk:checked) { background: color-mix(in srgb, var(--fail-t) 12%, transparent) !important;
+                                  box-shadow: inset 3px 0 0 var(--fail-t); }
 /* 실측 배합 결과가 있는 셀은 조금 더 또렷하게, 비어서 "─"만 있는 셀은 기존처럼 옅게 —
    판정/계산 로직이 아니라 updateMixRowVals()가 값 유무에 따라 붙이는 표시용 클래스만 본다. */
 .mix-row .mix-val.mix-val-filled, .mix-row .mix-actual-g.mix-val-filled { color: var(--text); font-weight: 600; }
@@ -2353,7 +2365,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="mix-unit-item">
           <label for="mix-total-g">총 배치량</label>
           <div style="display:flex;align-items:center;gap:4px">
-            <input type="number" id="mix-total-g" value="1000" min="1" step="10" oninput="debouncedTotalGChange()" onchange="onTotalGChange()">
+            <input type="number" id="mix-total-g" value="1000" min="1" step="10" oninput="debouncedTotalGChange()" onchange="onTotalGChange()" onfocus="this.select()">
             <span style="font-size:11px;color:var(--sub)">g</span>
           </div>
         </div>
@@ -4442,7 +4454,7 @@ function addMixRow(name='', ratio=0) {
       </select>
     </span>
     <input type="number" value="${ratio}" min="0" step="0.5"
-           oninput="debouncedMixChange()" style="width:100px">
+           oninput="debouncedMixChange()" onfocus="this.select()" style="width:100px">
     <span class="mix-actual-g" style="width:90px">─</span>
     ${MIX_HDR.map((h, i) => `<span class="mix-val" data-idx="${i}" style="width:${h.w}px${MIX_HDR_GROUP_END.has(i) ? ';border-right:2px solid var(--border)' : ''}">─</span>`).join('')}
   `;
