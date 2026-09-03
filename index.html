@@ -520,15 +520,16 @@ tr:nth-child(odd):not(.cat-row):not(.sec-row) td { background: var(--odd); }
 tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !important; }
 /* 관리자 페이지 "사용자 목록" 표 — 아이디/이메일 길이에 따라 표·열 너비가 늘었다 줄었다 하는
    문제 방지: table-layout:fixed로 열 너비를 고정하고, 넘치는 텍스트는 말줄임표로 자른다.
-   좁은 화면에서는 표를 깨뜨리는 대신 wrap이 가로 스크롤되게 한다. */
-#admin-user-table-wrap { overflow-x: auto; max-width: 100%; }
-#admin-user-table { table-layout: fixed; width: 650px; max-width: none; }
-#admin-user-table th:nth-child(1), #admin-user-table td:nth-child(1) { width: 210px; }
-#admin-user-table th:nth-child(2), #admin-user-table td:nth-child(2) { width: 90px; }
-#admin-user-table th:nth-child(3), #admin-user-table td:nth-child(3) { width: 150px; }
-#admin-user-table th:nth-child(4), #admin-user-table td:nth-child(4) { width: 70px; }
-#admin-user-table th:nth-child(5), #admin-user-table td:nth-child(5) { width: 130px; }
-#admin-user-table td, #admin-user-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+   표는 항상 부모(콘텐츠 영역, max-width:640px) 폭 100%를 넘지 않는다 — 고정 폭(650px)을
+   주면 부모보다 넓어져 가로 스크롤이 생기므로 폭을 직접 지정하지 않는다. 아이디 열만 너비를
+   지정하지 않아 나머지 4개 고정 열을 뺀 남은 공간을 자동으로 차지한다(반응형). */
+#admin-user-table-wrap { width: 100%; max-width: 100%; overflow-x: hidden; }
+#admin-user-table { table-layout: fixed; width: 100%; max-width: 100%; }
+#admin-user-table th:nth-child(2), #admin-user-table td:nth-child(2) { width: 85px; }
+#admin-user-table th:nth-child(3), #admin-user-table td:nth-child(3) { width: 145px; }
+#admin-user-table th:nth-child(4), #admin-user-table td:nth-child(4) { width: 60px; }
+#admin-user-table th:nth-child(5), #admin-user-table td:nth-child(5) { width: 135px; }
+#admin-user-table td, #admin-user-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 /* 상태 셀 색상 — "초과"는 최소/최대 기준을 실제로 벗어난 상태이므로 --fail(빨강)을 쓴다.
    "주의"(근접이지만 아직 벗어나지 않음, 경고 패널 전용)만 별도 .warn 클래스로 --warn(노랑)을 쓴다
    — 예전엔 이 둘이 같은 .over 클래스를 공유해서 탭마다 "초과"의 색이 반대로 보였다(판정값 자체는
