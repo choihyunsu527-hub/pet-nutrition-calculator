@@ -3647,9 +3647,9 @@ function mergeSortedNames(a, b) {
 // (카테고리별 소수 요약용)과는 별개의 용도라 값도 따로 둔다.
 const EXT_ING_SEARCH_CAP = 300;
 
-// 2단계: 검색 결과를 실제로 DOM에 그리는 최대 개수. 매칭 계산(데이터·정렬·우선순위)은
+// 검색 결과를 실제로 DOM에 그리는 최대 개수. 매칭 계산(데이터·정렬·우선순위)은
 // 그대로 두고, 이 개수를 넘으면 잘라서 렌더링하고 "검색어를 좁혀 달라"는 안내만 덧붙인다.
-const ING_SEARCH_RENDER_CAP = 20;
+const ING_SEARCH_RENDER_CAP = 100;
 
 function allIngs() { return extIngs && extIngs.length ? [...ING_DB, ...customIngs, ...extIngs] : [...ING_DB, ...customIngs]; }
 function getIng(name) { return allIngs().find(i => i[0] === name); }
