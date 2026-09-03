@@ -39,6 +39,13 @@ function buildCorsHeaders(origin: string | null) {
 
 const ALLOWED_ROLES = ['user', 'super_admin'];
 
+// Supabase Auth는 이메일이 필수라, 관리자가 입력하는 "아이디"를 결정적으로(항상 같은 결과로)
+// 내부용 가짜 이메일로 변환해 auth.users에 저장한다 — 실제 사용자에게는 절대 노출되지 않고
+// 프런트(index.html의 idToAuthEmail)도 로그인 시 동일한 규칙으로 이메일을 계산한다.
+const AUTH_ID_EMAIL_DOMAIN = 'id.nutricirc.local';
+function idToAuthEmail(id: string) { return id.trim().toLowerCase() + '@' + AUTH_ID_EMAIL_DOMAIN; }
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+
 Deno.serve(async (req) => {
   const CORS_HEADERS = buildCorsHeaders(req.headers.get('Origin'));
   function json(body: unknown, status = 200) {
@@ -73,39 +80,49 @@ Deno.serve(async (req) => {
   }
 
   // 3) 입력 검증
-  let email = '';
+  let username = '';
   let password = '';
   let role = 'user';
   try {
     const body = await req.json();
-    email = typeof body?.email === 'string' ? body.email.trim() : '';
+    username = typeof body?.username === 'string' ? body.username.trim() : '';
     password = typeof body?.password === 'string' ? body.password : '';
     role = typeof body?.role === 'string' ? body.role : 'user';
   } catch {
     return json({ error: '요청 본문이 올바르지 않습니다.' }, 400);
   }
-  if (!email) return json({ error: '이메일을 입력하세요.' }, 400);
-  if (!password || password.length < 6) return json({ error: '비밀번호는 6자 이상이어야 합니다.' }, 400);
+  if (!username) return json({ error: '아이디를 입력하세요.' }, 400);
+  if (!USERNAME_RE.test(username)) return json({ error: '아이디는 영문/숫자/밑줄(_) 3~20자여야 합니다.' }, 400);
+  if (!password || password.length < 4) return json({ error: '비밀번호는 4자 이상이어야 합니다.' }, 400);
   if (!ALLOWED_ROLES.includes(role)) return json({ error: '올바르지 않은 권한입니다.' }, 400);
 
-  // 4) 계정 즉시 생성 — 이메일 인증 없이 바로 로그인 가능하도록 email_confirm: true
+  // 4) 계정 즉시 생성 — 이메일 인증 없이 바로 로그인 가능하도록 email_confirm: true.
+  //    실제 이메일 대신 아이디를 결정적으로 변환한 내부용 이메일을 사용하고, user_metadata에
+  //    원래 아이디를 남겨 화면 표시(currentUserLabel())에 쓴다.
+  const authEmail = idToAuthEmail(username);
   const { data, error } = await admin.auth.admin.createUser({
-    email,
+    email: authEmail,
     password,
     email_confirm: true,
+    user_metadata: { username },
   });
-  if (error) return json({ error: error.message }, 400);
+  if (error) {
+    if (/already.*registered|already exists/i.test(error.message)) {
+      return json({ error: '이미 사용 중인 아이디입니다.' }, 400);
+    }
+    return json({ error: error.message }, 400);
+  }
 
   const newUserId = data.user?.id;
 
-  // 5) profiles.role 반영 — on_auth_user_created 트리거가 이미 role='user'로 행을 만들었으므로,
-  //    관리자로 생성 요청된 경우 여기서 다시 덮어써야 한다.
+  // 5) profiles.username/role 반영 — on_auth_user_created 트리거가 이미 role='user'로 행을
+  //    만들었으므로, 관리자로 생성 요청된 경우 여기서 다시 덮어써야 한다.
   if (newUserId) {
     const { error: roleErr } = await admin
       .from('profiles')
-      .upsert({ id: newUserId, email, role }, { onConflict: 'id' });
+      .upsert({ id: newUserId, username, email: null, role }, { onConflict: 'id' });
     if (roleErr) return json({ error: `계정은 생성됐지만 권한 저장에 실패했습니다: ${roleErr.message}` }, 500);
   }
 
-  return json({ ok: true, user: { id: newUserId, email: data.user?.email } });
+  return json({ ok: true, user: { id: newUserId, username } });
 });

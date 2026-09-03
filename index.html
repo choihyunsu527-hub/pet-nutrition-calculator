@@ -1641,7 +1641,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <div id="auth-view-login" class="auth-view show">
       <div class="auth-sub">관리자가 발급한 계정으로 로그인하세요.</div>
-      <input type="email" id="login-email" class="auth-input" placeholder="이메일" autocomplete="username">
+      <input type="text" id="login-email" class="auth-input" placeholder="아이디" autocomplete="username">
       <input type="password" id="login-pw" class="auth-input" placeholder="비밀번호" autocomplete="current-password">
       <div class="auth-check-row">
         <input type="checkbox" id="login-remember-id">
@@ -1670,7 +1670,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
     <div id="auth-view-reset" class="auth-view">
       <div class="auth-sub" id="reset-sub">새로운 비밀번호를 설정하세요</div>
-      <input type="password" id="reset-pw" class="auth-input" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password">
+      <input type="password" id="reset-pw" class="auth-input" placeholder="새 비밀번호 (4자 이상)" autocomplete="new-password">
       <input type="password" id="reset-pw2" class="auth-input" placeholder="새 비밀번호 확인" autocomplete="new-password">
       <button id="reset-btn" class="auth-btn" onclick="trySetNewPassword()">비밀번호 설정</button>
       <div id="reset-err" class="auth-err"></div>
@@ -3054,16 +3054,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <div class="dash-section">
           <h3>사용자 추가</h3>
           <p style="font-size:11px;color:var(--sub);line-height:1.6;margin-bottom:10px">
-            이메일과 초기 비밀번호를 입력하면 계정이 즉시 생성되며, 해당 정보로 바로 로그인할 수 있습니다.
+            아이디와 초기 비밀번호를 입력하면 계정이 즉시 생성되며, 해당 정보로 바로 로그인할 수 있습니다.
           </p>
           <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
             <div class="sf-item" style="flex:1;min-width:200px;margin-bottom:0">
-              <label for="create-user-email">이메일</label>
-              <input type="email" id="create-user-email" placeholder="user@example.com">
+              <label for="create-user-email">아이디</label>
+              <input type="text" id="create-user-email" placeholder="user01">
             </div>
             <div class="sf-item" style="flex:1;min-width:200px;margin-bottom:0">
               <label for="create-user-password">초기 비밀번호</label>
-              <input type="text" id="create-user-password" placeholder="6자 이상">
+              <input type="text" id="create-user-password" placeholder="4자 이상">
             </div>
             <div class="sf-item" style="min-width:120px;margin-bottom:0">
               <label for="create-user-role">권한</label>
@@ -3184,7 +3184,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     </div>
     <div class="modal-body">
       <div class="pw-field">
-        <label for="my-info-email">이메일</label>
+        <label for="my-info-email">아이디</label>
         <input type="text" id="my-info-email" readonly disabled>
       </div>
       <div class="pw-field">
@@ -3213,7 +3213,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
     </div>
     <div class="modal-body">
       <div class="pw-field">
-        <label for="edit-user-email">이메일</label>
+        <label for="edit-user-email">아이디</label>
         <input type="text" id="edit-user-email" readonly disabled>
       </div>
       <div class="pw-field">
@@ -3226,7 +3226,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       </div>
       <div class="pw-field">
         <label for="edit-user-password">새 비밀번호 (변경할 때만 입력)</label>
-        <input type="text" id="edit-user-password" placeholder="6자 이상, 비워두면 변경 안 함" autocomplete="off">
+        <input type="text" id="edit-user-password" placeholder="4자 이상, 비워두면 변경 안 함" autocomplete="off">
       </div>
       <div id="edit-user-err" style="font-size:10px;color:#B03A2E;min-height:14px;margin-top:4px"></div>
     </div>
@@ -9958,6 +9958,12 @@ function loadIngDBFromStorage() {
 const SUPABASE_URL = 'https://kvxlpuagwmfbylgzpvuo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_JoBouB63T2DPWnsWc_y9ag_fSB0LX87';   // Publishable(anon) key
 
+// Supabase Auth는 이메일이 필수라, 사용자가 입력하는 "아이디"를 결정적으로(항상 같은 결과로)
+// 내부용 가짜 이메일로 변환해 auth.users에 저장한다. 사용자·관리자 화면에는 이 이메일이
+// 절대 노출되지 않고 항상 아이디만 보인다 — create-user Edge Function도 동일한 규칙을 쓴다.
+const AUTH_ID_EMAIL_DOMAIN = 'id.nutricirc.local';
+function idToAuthEmail(id) { return id.trim().toLowerCase() + '@' + AUTH_ID_EMAIL_DOMAIN; }
+
 // "로그인 유지하기" 체크박스 상태 저장용 키(순수 로컬 설정값 — Supabase 세션 자체와는 별개)
 const KEEP_LOGIN_KEY = 'feedcalc_v4_keep_login';
 const REMEMBER_EMAIL_KEY = 'feedcalc_v4_remember_email';
@@ -10006,6 +10012,14 @@ const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
   : null;
 
 let currentUser = null;   // 로그인된 Supabase 사용자 — 로그아웃 상태면 null
+
+// 화면에 표시할 사용자 식별자 — create-user가 auth 계정의 user_metadata.username에 저장해둔
+// 아이디가 있으면 그걸 쓰고(가짜 이메일은 절대 화면에 보이지 않게), 없으면(레거시 이메일 계정)
+// 이메일을 그대로 보여준다.
+function currentUserLabel() {
+  if (!currentUser) return '';
+  return currentUser.user_metadata?.username || currentUser.email || '';
+}
 let appStarted  = false;  // init()이 이미 실행됐는지(세션 확인·로그인 이벤트가 겹쳐도 init()은 1회만 실행)
 
 // 현재 작업(레시피 배합) 변경 여부 — true면 창을 닫거나 새로고침할 때 확인창을 띄운다.
@@ -10018,10 +10032,10 @@ function markDirty() { if (appReady) isDirty = true; }
 function friendlyAuthError(err) {
   if (!supabaseClient) return 'Supabase 연결 정보(Project URL/Publishable key)가 설정되지 않았습니다.';
   const msg = (err && err.message) || '';
-  if (/Invalid login credentials/i.test(msg)) return '이메일 또는 비밀번호가 올바르지 않습니다.';
+  if (/Invalid login credentials/i.test(msg)) return '아이디 또는 비밀번호가 올바르지 않습니다.';
   if (/Email not confirmed/i.test(msg))       return '이메일 인증이 완료되지 않은 계정입니다. 메일함을 확인해주세요.';
-  if (/Unable to validate email address|invalid format|Invalid email/i.test(msg)) return '올바른 이메일 형식이 아닙니다.';
-  if (/Password should be at least|Password.*characters/i.test(msg)) return '비밀번호가 너무 짧습니다(6자 이상 입력해주세요).';
+  if (/Unable to validate email address|invalid format|Invalid email/i.test(msg)) return '올바르지 않은 아이디 형식입니다.';
+  if (/Password should be at least|Password.*characters/i.test(msg)) return '비밀번호가 너무 짧습니다(4자 이상 입력해주세요).';
   if (/Signups? (is|not) disabled|Signups not allowed|signups_disabled/i.test(msg)) return '이 계정으로는 로그인할 수 없습니다. 관리자에게 계정 발급을 문의하세요.';
   if (/rate limit/i.test(msg))                return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
   if (/Failed to fetch|NetworkError/i.test(msg)) return '네트워크 연결을 확인해주세요.';
@@ -10029,24 +10043,24 @@ function friendlyAuthError(err) {
 }
 
 async function tryLogin() {
-  const emailInput  = document.getElementById('login-email');
+  const idInput     = document.getElementById('login-email');
   const pwInput     = document.getElementById('login-pw');
   const rememberEl  = document.getElementById('login-remember-id');
   const keepLoginEl = document.getElementById('login-keep');
   const btn         = document.getElementById('login-btn');
   const err         = document.getElementById('login-err');
-  const email = emailInput.value.trim();
+  const id = idInput.value.trim();
   const password = pwInput.value;
 
   if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
-  if (!email || !password) { err.textContent = '이메일과 비밀번호를 모두 입력하세요.'; return; }
+  if (!id || !password) { err.textContent = '아이디와 비밀번호를 모두 입력하세요.'; return; }
 
   // "로그인 유지하기" 체크 상태를 세션 발급 전에 먼저 저장해야, authStorage가 이번 로그인 결과를
   // 올바른 저장소(localStorage/sessionStorage)에 기록한다.
   localStorage.setItem(KEEP_LOGIN_KEY, keepLoginEl.checked ? 'true' : 'false');
 
   btn.disabled = true; btn.textContent = '로그인 중...'; err.textContent = '';
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email: idToAuthEmail(id), password });
   btn.disabled = false; btn.textContent = '로그인';
 
   if (error) {
@@ -10056,7 +10070,7 @@ async function tryLogin() {
     return;
   }
 
-  if (rememberEl.checked) localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+  if (rememberEl.checked) localStorage.setItem(REMEMBER_EMAIL_KEY, id);
   else localStorage.removeItem(REMEMBER_EMAIL_KEY);
 
   authLog('6. 메인 화면 표시 이유: signInWithPassword() 로그인 성공 → enterApp() 호출');
@@ -10105,7 +10119,7 @@ async function trySetNewPassword() {
   err.className = 'auth-err';
   if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
   if (!password) { err.textContent = '새 비밀번호를 입력하세요.'; return; }
-  if (password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (password.length < 4) { err.textContent = '비밀번호는 4자 이상이어야 합니다.'; return; }
   if (password !== password2) { err.textContent = '비밀번호가 일치하지 않습니다.'; return; }
 
   btn.disabled = true; btn.textContent = '설정 중...'; err.textContent = '';
@@ -10143,7 +10157,7 @@ async function savePasswordChange() {
   if (!supabaseClient || !currentUser) { err.textContent = '로그인 상태가 아닙니다.'; return; }
   if (!cur) { err.textContent = '현재 비밀번호를 입력하세요.'; return; }
   if (!nw)  { err.textContent = '새 비밀번호를 입력하세요.'; return; }
-  if (nw.length < 6) { err.textContent = '새 비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (nw.length < 4) { err.textContent = '새 비밀번호는 4자 이상이어야 합니다.'; return; }
   if (nw !== nw2) { err.textContent = '새 비밀번호가 일치하지 않습니다.'; return; }
 
   const { error: verifyErr } = await supabaseClient.auth.signInWithPassword({ email: currentUser.email, password: cur });
@@ -10160,7 +10174,7 @@ async function savePasswordChange() {
 // 설정 탭의 savePasswordChange()(현재 비밀번호 재인증 방식)와는 별개의 화면이며,
 // 여기서는 이미 로그인된 세션 기준으로 auth.updateUser()만 호출한다(본인 계정에만 영향).
 function openMyInfoModal() {
-  document.getElementById('my-info-email').value = currentUser ? currentUser.email : '';
+  document.getElementById('my-info-email').value = currentUserLabel();
   document.getElementById('my-info-pw').value = '';
   document.getElementById('my-info-pw2').value = '';
   document.getElementById('my-info-err').textContent = '';
@@ -10185,7 +10199,7 @@ async function saveMyInfoPassword() {
   err.textContent = '';
   if (!supabaseClient || !currentUser) { err.textContent = '로그인 상태가 아닙니다.'; return; }
   if (!password) { err.textContent = '새 비밀번호를 입력하세요.'; return; }
-  if (password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (password.length < 4) { err.textContent = '비밀번호는 4자 이상이어야 합니다.'; return; }
   if (password !== password2) { err.textContent = '비밀번호가 일치하지 않습니다.'; return; }
 
   btn.disabled = true; btn.textContent = '변경 중...';
@@ -10249,26 +10263,26 @@ async function createUserAccount() {
   const roleSelect = document.getElementById('create-user-role');
   const btn = document.getElementById('create-user-btn');
   const msg = document.getElementById('create-user-msg');
-  const email = emailInput.value.trim();
+  const id = emailInput.value.trim();
   const password = pwInput.value;
   const role = roleSelect.value;
 
   msg.style.color = '#B03A2E';
   if (!isSuperAdmin()) { msg.textContent = 'super_admin 권한이 필요합니다.'; return; }
-  if (!email) { msg.textContent = '이메일을 입력하세요.'; return; }
-  if (!password || password.length < 6) { msg.textContent = '초기 비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (!id) { msg.textContent = '아이디를 입력하세요.'; return; }
+  if (!password || password.length < 4) { msg.textContent = '초기 비밀번호는 4자 이상이어야 합니다.'; return; }
   if (!supabaseClient) { msg.textContent = friendlyAuthError(); return; }
 
   btn.disabled = true; btn.textContent = '생성 중...'; msg.textContent = '';
   try {
-    const { data, error } = await supabaseClient.functions.invoke('create-user', { body: { email, password, role } });
+    const { data, error } = await supabaseClient.functions.invoke('create-user', { body: { username: id, password, role } });
     if (error || data?.error) {
       msg.style.color = '#B03A2E';
       msg.textContent = (data && data.error) || error.message || '계정 생성 중 오류가 발생했습니다.';
       return;
     }
     msg.style.color = 'var(--pass-t)';
-    msg.textContent = `계정이 생성되었습니다.\n아이디: ${email}\n초기 비밀번호: ${password}`;
+    msg.textContent = `계정이 생성되었습니다.\n아이디: ${id}\n초기 비밀번호: ${password}`;
     emailInput.value = ''; pwInput.value = ''; roleSelect.value = 'user';
     loadAdminUsers();
   } finally {
@@ -10293,7 +10307,7 @@ async function loadAdminUsers() {
 
   const { data, error } = await supabaseClient
     .from('profiles')
-    .select('id, email, role, created_at')
+    .select('id, username, email, role, created_at')
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -10322,7 +10336,7 @@ function renderAdminUserTable(box, rows) {
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  ['이메일', 'Role', '생성일', '상태', '관리'].forEach(text => {
+  ['아이디', 'Role', '생성일', '상태', '관리'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.appendChild(th);
@@ -10336,7 +10350,7 @@ function renderAdminUserTable(box, rows) {
 
     const tdEmail = document.createElement('td');
     tdEmail.className = 'left';
-    tdEmail.textContent = row.email || '─';
+    tdEmail.textContent = row.username || row.email || '─';
 
     const tdRole = document.createElement('td');
     tdRole.className = 'center';
@@ -10394,7 +10408,7 @@ let editUserTargetId = null;
 
 function openEditUserModal(row) {
   editUserTargetId = row.id;
-  document.getElementById('edit-user-email').value = row.email || '';
+  document.getElementById('edit-user-email').value = row.username || row.email || '';
   const roleSelect = document.getElementById('edit-user-role');
   roleSelect.value = row.role || 'user';
   const isSelf = row.id === (currentUser && currentUser.id);
@@ -10419,7 +10433,7 @@ async function saveEditUser() {
   err.textContent = '';
   if (!isSuperAdmin()) { err.textContent = 'super_admin 권한이 필요합니다.'; return; }
   if (!editUserTargetId) { err.textContent = '대상 사용자를 확인할 수 없습니다.'; return; }
-  if (password && password.length < 6) { err.textContent = '비밀번호는 6자 이상이어야 합니다.'; return; }
+  if (password && password.length < 4) { err.textContent = '비밀번호는 4자 이상이어야 합니다.'; return; }
   if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
 
   const body = { targetUserId: editUserTargetId };
@@ -10449,7 +10463,7 @@ async function saveEditUser() {
 // 목록 렌더링 단계에서 이미 삭제 버튼이 비활성화되지만, 서버(delete-user)에서도 다시 검증한다.
 async function deleteUserAccount(row) {
   if (!isSuperAdmin()) return;
-  if (!confirm(`정말 '${row.email}' 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
+  if (!confirm(`정말 '${row.username || row.email}' 계정을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) return;
   if (!supabaseClient) { alert(friendlyAuthError()); return; }
 
   const { data, error } = await supabaseClient.functions.invoke('delete-user', { body: { targetUserId: row.id } });
@@ -10466,11 +10480,11 @@ async function enterApp(session) {
   document.getElementById('login-overlay').classList.add('hidden');
   document.getElementById('login-err').textContent = '';
   const emailEl = document.getElementById('account-email');
-  if (emailEl) emailEl.textContent = currentUser ? `로그인 계정: ${currentUser.email}` : '';
+  if (emailEl) emailEl.textContent = currentUser ? `로그인 계정: ${currentUserLabel()}` : '';
   const initialEl = document.getElementById('profile-initial');
-  if (initialEl) initialEl.textContent = currentUser ? currentUser.email.charAt(0).toUpperCase() : '?';
+  if (initialEl) initialEl.textContent = currentUser ? currentUserLabel().charAt(0).toUpperCase() : '?';
   const dropdownEmailEl = document.getElementById('profile-dropdown-email');
-  if (dropdownEmailEl) dropdownEmailEl.textContent = currentUser ? currentUser.email : '';
+  if (dropdownEmailEl) dropdownEmailEl.textContent = currentUser ? currentUserLabel() : '';
   await fetchCurrentUserRole();
   applyRoleUI();
   if (!appStarted) { appStarted = true; init(); }

@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
   }
   if (!targetUserId) return json({ error: '대상 사용자를 확인할 수 없습니다.' }, 400);
   if (role !== undefined && !ALLOWED_ROLES.includes(role)) return json({ error: '올바르지 않은 권한입니다.' }, 400);
-  if (password !== undefined && password.length < 6) return json({ error: '비밀번호는 6자 이상이어야 합니다.' }, 400);
+  if (password !== undefined && password.length < 4) return json({ error: '비밀번호는 4자 이상이어야 합니다.' }, 400);
   if (role === undefined && password === undefined) return json({ error: '변경할 내용이 없습니다.' }, 400);
 
   // 4) 본인 권한 변경 차단 — 실수로 스스로를 강등/승급시키는 것을 막는다.
