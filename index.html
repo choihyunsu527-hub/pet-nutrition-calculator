@@ -6250,7 +6250,9 @@ const TOP100_SNACK_ING = [
   ['해바라기씨, 말린것', '해바라기씨, 말린것'],
 ];
 
-function buildIngTable(data) {
+// rowCap을 넘기면 카테고리 헤더(이름·실제 개수)는 그대로 두되, 실제 원료 <tr>는 전체에서
+// rowCap개까지만 DOM에 만든다 — 검색 전 초기 상태에서 수백 개 행을 한꺼번에 렌더링하지 않기 위함.
+function buildIngTable(data, rowCap) {
   const groups = {};
   CAT_ORDER.forEach(c => { groups[c] = []; });
   data.forEach(ing => {
@@ -6259,6 +6261,7 @@ function buildIngTable(data) {
   });
 
   const colSpan = ING_SHOW.length + 2;
+  const isCapped = rowCap != null;
   let html = '';
   let rowIdx = 0;
 
@@ -6266,7 +6269,8 @@ function buildIngTable(data) {
     const ings = groups[cat];
     if (!ings || ings.length === 0) return;
     html += `<tr class="cat-row"><td colspan="${colSpan}" style="font-size:11px"><span class="cat-row-label">${svgIcon(CAT_ICONS[cat], 13)} ${cat} <span style="font-weight:normal;font-size:10px;opacity:0.75">(${ings.length}종)</span></span></td></tr>`;
-    ings.forEach(ing => {
+    for (const ing of ings) {
+      if (isCapped && rowIdx >= rowCap) break; // 헤더는 이미 찍었고, 행은 상한까지만 생성
       const vals = ING_SHOW.map(j => ing[j]);
       const escName = ing[0].replace(/"/g, '&quot;');
       const bg = rowIdx % 2 === 0 ? '' : 'style="background:var(--even)"';
@@ -6280,11 +6284,16 @@ function buildIngTable(data) {
       </td>
       </tr>`;
       rowIdx++;
-    });
+    }
   });
 
   document.getElementById('ing-body').innerHTML = html;
-  document.getElementById('ing-count').textContent = `총 ${data.length}개 원료`;
+  const cntEl = document.getElementById('ing-count');
+  if (isCapped && data.length > rowIdx) {
+    cntEl.textContent = `총 ${data.length}개 · 상위 ${rowIdx}개 표시 — 검색해 원료를 찾으세요`;
+  } else {
+    cntEl.textContent = `총 ${data.length}개 원료`;
+  }
 }
 
 // TOP 100 간식 원료 전용 렌더링 — buildIngTable()과 같은 행 구조·스타일(ING_SHOW 컬럼,
@@ -6357,34 +6366,38 @@ function filterIng() {
   }
 
   const baseData = [...ING_DB, ...customIngs];
-  let data;
   if (!q) {
-    // 검색어가 없을 때는 기존과 동일하게 기본/사용자 원료만 보여준다(확장 DB는 검색 시에만 노출).
-    data = baseData;
-  } else {
-    data = baseData.filter(i => i[0].toLowerCase().includes(q));
-    if (extIngs && extIngs.length) {
-      const baseSet = new Set(baseData.map(i => i[0])); // 동일 이름은 기존 원료 우선, 중복 표시 방지
-      let n = 0;
-      for (const ing of extIngsSorted) {
-        if (n >= EXT_ING_SEARCH_CAP) break;
-        if (baseSet.has(ing[0])) continue;
-        if (ing[0].toLowerCase().includes(q)) { data.push(ing); n++; }
-      }
+    // 검색 전 초기 상태 — 카테고리 요약(이름·개수)만 남기고 실제 원료 행은 상한선까지만 생성한다.
+    // 확장 DB는 여기서 건드리지 않는다(검색 시에만 노출).
+    buildIngTable(getSortedIngs(baseData), ING_SEARCH_RENDER_CAP);
+    return;
+  }
+  let data = baseData.filter(i => i[0].toLowerCase().includes(q));
+  if (extIngs && extIngs.length) {
+    const baseSet = new Set(baseData.map(i => i[0])); // 동일 이름은 기존 원료 우선, 중복 표시 방지
+    let n = 0;
+    for (const ing of extIngsSorted) {
+      if (n >= EXT_ING_SEARCH_CAP) break;
+      if (baseSet.has(ing[0])) continue;
+      if (ing[0].toLowerCase().includes(q)) { data.push(ing); n++; }
     }
   }
   data = getSortedIngs(data);
-  // 2단계: 매칭은 그대로 계산하되 표에 실제로 그리는 행은 상한선까지만 — 검색 전 전체(수백 종)나
-  // 흔한 검색어의 대량 결과를 한꺼번에 DOM으로 만들지 않는다.
+  // 2단계: 매칭은 그대로 계산하되 표에 실제로 그리는 행은 상한선까지만.
   const matched = data.length;
   const capped = matched > ING_SEARCH_RENDER_CAP ? data.slice(0, ING_SEARCH_RENDER_CAP) : data;
   buildIngTable(capped);
   if (matched > capped.length) {
     const cntEl = document.getElementById('ing-count');
-    if (cntEl) cntEl.textContent = q
-      ? `${matched}개 일치 · 상위 ${capped.length}개 표시 — 검색어를 좁혀주세요`
-      : `총 ${matched}개 · 상위 ${capped.length}개 표시 — 검색해 원료를 찾으세요`;
+    if (cntEl) cntEl.textContent = `${matched}개 일치 · 상위 ${capped.length}개 표시 — 검색어를 좁혀주세요`;
   }
+}
+
+// 원료 DB 탭 초기 렌더 — 검색 전 상태. 확장 DB를 건드리지 않고(지연 로딩 유지) 기본+커스텀
+// 원료만으로 카테고리 요약 + 상위 N행만 그린다(filterIng()의 검색어 없는 경로와 동일 결과).
+function renderIngInitial() {
+  if (top100Mode) { filterIng(); return; }
+  buildIngTable(getSortedIngs([...ING_DB, ...customIngs]), ING_SEARCH_RENDER_CAP);
 }
 
 // 타이핑 중 매 입력마다 표 전체를 다시 만들지 않도록 디바운스한다(정렬·TOP100 토글은 즉시 filterIng()).
@@ -7349,6 +7362,9 @@ function goToGlobalSearchResult(r) {
   document.getElementById('top-search-input').value = '';
   if (r.type === 'ing') {
     goTab('ing');
+    // 초기 목록이 축약(상위 N행)되므로, 대상 원료가 표에 그려지도록 검색어를 채워 필터링한 뒤 하이라이트한다.
+    const si = document.getElementById('ing-search');
+    if (si) { si.value = r.name; filterIng(); }
     setTimeout(() => highlightSearchTarget(`#ing-body tr[data-ing-name="${CSS.escape(r.name)}"]`), 50);
   } else if (r.type === 'std') {
     goTab('std');
@@ -7957,7 +7973,7 @@ function applyRecipeData(data, displayName, fileHandle=null) {
 
   if (data.customIngs) {
     customIngs = data.customIngs;
-    buildIngTable(getSortedIngs(allIngs()));
+    renderIngInitial();
   }
 
   // 배합 복원
@@ -9653,7 +9669,7 @@ async function init() {
   buildMixHdr();
   buildAminoGrid();
   buildStdTable();
-  buildIngTable(getSortedIngs(allIngs()));
+  renderIngInitial();
   renderCalcBasisPage();
   buildGlossaryChips();
   renderGlossary();
@@ -9665,7 +9681,7 @@ async function init() {
   loadIngDBFromStorage();
   for (let i = 0; i < 6; i++) addMixRow();
 
-  buildIngTable(getSortedIngs(allIngs()));
+  renderIngInitial();
   updateUnitHint();
   calculate();
   initRecipeFolder();
