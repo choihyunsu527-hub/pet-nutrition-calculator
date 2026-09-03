@@ -10074,7 +10074,11 @@ async function tryLogin() {
   localStorage.setItem(KEEP_LOGIN_KEY, keepLoginEl.checked ? 'true' : 'false');
 
   btn.disabled = true; btn.textContent = '로그인 중...'; err.textContent = '';
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email: idToAuthEmail(id), password });
+  // '@'가 있으면 기존 이메일 기반 계정으로 보고 입력값을 그대로 이메일로 쓴다 — 무조건
+  // idToAuthEmail()을 적용하면 레거시 이메일 계정이 "이메일@도메인" 형태의 존재하지 않는
+  // 주소로 뒤바뀌어 로그인이 막힌다. '@'가 없는 순수 아이디만 가짜 이메일로 변환한다.
+  const loginEmail = id.includes('@') ? id.toLowerCase() : idToAuthEmail(id);
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email: loginEmail, password });
   btn.disabled = false; btn.textContent = '로그인';
 
   if (error) {
