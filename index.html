@@ -718,8 +718,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-options { flex: 1; overflow-y: auto; }
 .mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
 .mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
+.mix-ing-opt.active { box-shadow: inset 2px 0 0 var(--acc); }
 .mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
+.mix-ing-hl { color: var(--acc); font-weight: 700; }
 .mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); text-align: center; }
+/* 검색 결과 없음 — 원료 DB 탭 Empty State와 같은 톤(아이콘+안내, 기존 토큰만) */
+.mix-ing-noresult { display: flex; flex-direction: column; align-items: center; gap: 6px;
+                    padding: 18px 8px; font-size: 11px; color: var(--sub); text-align: center; }
 /* 배합비(%) 입력은 이 행에서 실제로 "입력"하는 유일한 값이라 실제중량(자동 계산, 보조 정보)보다
    또렷하게 — font-weight/크기만 올리고 색은 그대로(계산 로직·값 자체는 미변경). */
 .mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
@@ -3643,6 +3648,7 @@ function onExtIngsSettled() {
   if (mixIngOpenWrap && mixIngListEl) {
     const searchInput = mixIngListEl.querySelector('.mix-ing-search-input');
     mixIngListEl.querySelector('.mix-ing-options').innerHTML = ingListItemsHTML(searchInput.value);
+    resetMixIngActive();
   }
 }
 
@@ -3989,13 +3995,33 @@ function buildIngOptions() {
 // 맨 위에 항상 "선택 안 함"을 붙여, 이미 고른 원료를 다시 공란으로 되돌릴 수 있게 한다
 // (검색어로 걸러지지 않고 항상 노출). data-name=""은 하단 클릭 핸들러에서 그대로 빈 값
 // 선택으로 처리되어 별도의 새 드롭다운 없이 기존 컴포넌트만으로 동작한다.
+// 원료명에서 검색어와 일치하는 첫 구간만 강조용 <span>으로 감싼다(대소문자 무시).
+// 검색 매칭 로직 자체(getSortedIngNames)는 건드리지 않고 표시만 바꾼다.
+function highlightIngMatch(name, query) {
+  const q = (query || '').trim();
+  if (!q) return escHtml(name);
+  const i = name.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return escHtml(name);
+  return escHtml(name.slice(0, i)) +
+         '<span class="mix-ing-hl">' + escHtml(name.slice(i, i + q.length)) + '</span>' +
+         escHtml(name.slice(i + q.length));
+}
+
 function ingListItemsHTML(query) {
   const noneItem = '<div class="mix-ing-opt mix-ing-opt-none" data-name="">— 선택 안 함 —</div>';
   const names = getSortedIngNames(query);
-  if (names.length === 0) return noneItem + '<div class="mix-ing-empty">검색 결과가 없습니다</div>';
+  if (names.length === 0) {
+    return noneItem +
+      `<div class="mix-ing-noresult">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
+        <span>검색 결과가 없습니다</span>
+      </div>`;
+  }
   // 매칭 순서·우선순위는 그대로 두고, 실제 DOM에 그리는 항목만 상한선까지 자른다.
   const shown = names.slice(0, ING_SEARCH_RENDER_CAP);
-  let html = noneItem + shown.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
+  let html = noneItem + shown.map(n =>
+    `<div class="mix-ing-opt" data-name="${escHtml(n)}">${highlightIngMatch(n, query)}</div>`
+  ).join('');
   if (names.length > shown.length) {
     html += `<div class="mix-ing-empty">상위 ${shown.length}개만 표시</div>`;
   }
@@ -4013,6 +4039,22 @@ function ingListItemsHTML(query) {
 let mixIngListEl = null;
 let mixIngOpenWrap = null;
 let mixIngSelectCallback = null;
+let mixIngActiveIdx = -1; // 키보드 ↑/↓ 커서 위치(옵션 목록 기준). -1 = 아직 없음
+
+// 키보드 ↑/↓ 대상 — 실제 원료 항목만("— 선택 안 함 —"은 마우스 클릭 전용으로 남겨둔다).
+function mixIngOptEls() {
+  return mixIngListEl ? Array.from(mixIngListEl.querySelectorAll('.mix-ing-options .mix-ing-opt:not(.mix-ing-opt-none)')) : [];
+}
+// 옵션 목록을 다시 그린 직후 호출 — 키보드 커서를 초기화한다.
+function resetMixIngActive() { mixIngActiveIdx = -1; }
+function setMixIngActive(idx) {
+  const els = mixIngOptEls();
+  if (!els.length) { mixIngActiveIdx = -1; return; }
+  idx = (idx + els.length) % els.length; // 위/아래 끝에서 순환
+  els.forEach((el, i) => el.classList.toggle('active', i === idx));
+  els[idx].scrollIntoView({ block: 'nearest' });
+  mixIngActiveIdx = idx;
+}
 
 function getMixIngListEl() {
   if (!mixIngListEl) {
@@ -4031,8 +4073,16 @@ function getMixIngListEl() {
     // 입력마다 즉시 다시 그리면 확장 DB(수천 종) 검색 시 키 입력이 끊길 수 있어 디바운스한다.
     const renderMixOptions = debounce(() => {
       optionsEl.innerHTML = ingListItemsHTML(searchInput.value);
+      resetMixIngActive();
     }, 120);
     searchInput.addEventListener('input', renderMixOptions);
+    // 마우스가 항목 위로 오면 키보드 커서도 그 위치로 옮겨, 이후 ↑/↓가 자연스럽게 이어지게 한다.
+    optionsEl.addEventListener('mouseover', (e) => {
+      const opt = e.target.closest('.mix-ing-opt:not(.mix-ing-opt-none)');
+      if (!opt) return;
+      const i = mixIngOptEls().indexOf(opt);
+      if (i >= 0) setMixIngActive(i);
+    });
     optionsEl.addEventListener('click', (e) => {
       const opt = e.target.closest('.mix-ing-opt');
       if (!opt || !mixIngOpenWrap) return;
@@ -4052,10 +4102,24 @@ function getMixIngListEl() {
         }
         onMixChange();
       }
+      searchInput.value = ''; // 선택 후 검색창은 초기화(다음에 열 때 전체 목록부터)
       closeIngDropdown();
     });
+    // 키보드: ↑/↓ 로 항목 이동, Enter 로 선택, Esc 로 닫기.
     searchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeIngDropdown();
+      if (e.key === 'Escape') { closeIngDropdown(); return; }
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMixIngActive(mixIngActiveIdx < 0 ? 0 : mixIngActiveIdx + 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMixIngActive(mixIngActiveIdx < 0 ? -1 : mixIngActiveIdx - 1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const els = mixIngOptEls();
+        const target = mixIngActiveIdx >= 0 ? els[mixIngActiveIdx] : els[0];
+        if (target) target.click();
+      }
     });
 
     // 패널 안(검색창/목록)에서의 클릭은 바깥 클릭으로 취급하지 않는다.
@@ -4151,6 +4215,7 @@ function openIngDropdown(wrap, onSelect) {
   mixIngSelectCallback = onSelect || null;
   searchInput.value = '';
   optionsEl.innerHTML = ingListItemsHTML('');
+  resetMixIngActive();
 
   // 사이드바 아코디언과 같은 방식(높이를 0에서 목표값으로 트랜지션)으로 펼쳐지도록,
   // 위치 계산 직후 일단 0으로 접어둔 채 시작하고, 다음 프레임에 목표 높이로 올려
