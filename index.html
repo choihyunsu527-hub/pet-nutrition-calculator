@@ -3080,7 +3080,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
       <div class="ing-toolbar">
         <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="debouncedFilterIng()">
         <button id="sort-btn" class="active" onclick="toggleSort()">원래 순서</button>
-        <button id="top100-btn" onclick="toggleTop100()" title="반려동물 간식용으로 지정된 고정 100개 원료만 순위대로 표시">TOP 100 간식 원료</button>
         <button class="ing-btn-primary" onclick="openAddIng()">원료 추가</button>
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
           <span style="font-size:10px;color:var(--sub)" id="ing-count"></span>
@@ -6144,114 +6143,6 @@ const CAT_ICONS = {
   '과일류': 'apple', '오일류': 'droplet', '전분류': 'package', '특수원료': 'leaf', '기타': 'info',
 };
 
-// 반려견 간식 제조 활용도 기준 TOP 100 원료 — [사용자 표시명, 실제 DB 원료명] 쌍.
-// 화면에는 표시명을 보여주되 영양성분 조회·편집·삭제는 실제 DB 원료명으로 한다
-// (getIng()이 실제 이름 기준이라 편집 버튼 등 기존 동작이 그대로 맞물린다). 순서는 활용도 순위.
-// 100개 전항 getIng()으로 현 DB(ingredients.json + data/ingredients_ext.json)에 정확 매칭됨.
-// 동일 원료의 생것/삶은것 등 세부 상태는 대표 1개만 선정. DB에 없는 항목(예: 올리브유·현미가루·귀리가루·
-// 병아리콩가루·소고기육수·그린빈)은 동일 용도의 실제 DB 원료로 대체했다.
-const TOP100_SNACK_ING = [
-  ["닭가슴살", "닭고기(가슴,생것)"],
-  ["고구마", "고구마(생것)"],
-  ["계란", "달걀(생것)"],
-  ["단호박", "단호박(찐것)"],
-  ["닭고기(살코기)", "닭고기(살코기,생것)"],
-  ["소고기(살코기)", "소고기(살코기,생것)"],
-  ["오리고기(살코기)", "오리고기(살코기,생것)"],
-  ["연어", "연어(생것)"],
-  ["당근", "당근(뿌리,생것)"],
-  ["쌀(백미)", "쌀(백미,익힌것)"],
-  ["돼지고기(살코기)", "돼지고기(살코기,생것)"],
-  ["브로콜리", "브로콜리(생것)"],
-  ["감자", "감자, 대지, 생것"],
-  ["귀리/오트밀", "귀리"],
-  ["사과", "사과"],
-  ["바나나", "바나나"],
-  ["대구", "대구(생것)"],
-  ["명태/북어", "명태, 북어, 말린것"],
-  ["시금치", "시금치(생것)"],
-  ["현미", "현미"],
-  ["닭간", "닭간(생것)"],
-  ["양고기", "양고기(수입산,생것)"],
-  ["칠면조", "칠면조고기(생것)"],
-  ["블루베리", "블루베리"],
-  ["완두콩", "완두콩(생것)"],
-  ["치즈(모차렐라)", "치즈, 모차렐라"],
-  ["플레인 요구르트", "요구르트, 호상, 플레인"],
-  ["감자전분", "전분, 감자, 가루"],
-  ["고구마전분", "전분, 고구마, 가루"],
-  ["쌀전분", "전분, 쌀, 가루"],
-  ["밀가루(중력)", "밀, 중력밀가루"],
-  ["타피오카전분", "타피오카 전분"],
-  ["호박(늙은호박)", "호박, 늙은호박, 생것"],
-  ["완두콩(건조/그린피)", "완두, 말린것"],
-  ["양배추", "양배추"],
-  ["애호박", "애호박"],
-  ["오이", "오이"],
-  ["파프리카(빨강)", "파프리카(빨강)"],
-  ["콜리플라워", "콜리플라워"],
-  ["녹두", "녹두"],
-  ["렌틸콩", "렌틸콩"],
-  ["병아리콩", "병아리콩, 말린것"],
-  ["퀴노아", "퀴노아"],
-  ["보리", "보리"],
-  ["메밀", "메밀, 도정, 생것"],
-  ["옥수수", "옥수수"],
-  ["옥수수전분", "전분, 옥수수, 가루"],
-  ["소간", "소 부산물, 간, 생것"],
-  ["돼지안심", "돼지고기, 안심, 생것"],
-  ["닭다리살", "닭고기(다리살,생것)"],
-  ["고등어", "고등어(생것)"],
-  ["정어리", "정어리(생것)"],
-  ["참치", "참치(황다랑어,생것)"],
-  ["새우", "새우(생것)"],
-  ["달걀 노른자", "달걀, 난황, 생것"],
-  ["코티지치즈", "치즈, 카테지"],
-  ["산양유", "산양유"],
-  ["코코넛(말린것)", "코코넛, 말린것"],
-  ["코코넛 분말", "코코넛 분말"],
-  ["캐롭 파우더", "캐롭 파우더"],
-  ["땅콩", "땅콩, 말린것"],
-  ["아마씨(분말)", "아마씨 분말"],
-  ["치아씨드", "치아씨, 말린것"],
-  ["호박씨", "호박씨, 말린것"],
-  ["해바라기씨", "해바라기씨, 말린것"],
-  ["케일", "케일"],
-  ["비트", "비트(뿌리,생것)"],
-  ["셀러리", "셀러리, 생것"],
-  ["그린빈(풋강낭콩)", "강낭콩, 생것"],
-  ["무", "무, 조선무, 생것"],
-  ["배", "배, 생것"],
-  ["딸기", "딸기"],
-  ["크랜베리", "크랜베리, 생것"],
-  ["라즈베리", "라즈베리, 생것"],
-  ["복숭아", "복숭아, 백도, 생것"],
-  ["수박", "수박, 적육질, 생것"],
-  ["파인애플", "파인애플, 생것"],
-  ["망고", "망고, 생것"],
-  ["키위", "키위, 그린, 생것"],
-  ["단감", "감, 단감, 생것"],
-  ["블랙베리", "블랙베리, 생것"],
-  ["멜론", "멜론, 머스크, 생것"],
-  ["병아리콩(가루용)", "병아리콩"],
-  ["콩가루", "대두, 콩가루"],
-  ["검은콩(서리태)", "대두, 검은색, 서리태, 말린것"],
-  ["강낭콩", "강낭콩, 말린것"],
-  ["팥", "팥, 적색, 말린것"],
-  ["현미가루", "멥쌀, 현미, 한가루, 생것"],
-  ["귀리가루(오트밀)", "귀리, 오트밀"],
-  ["한천", "한천"],
-  ["닭육수", "닭육수"],
-  ["소고기 육수(우족)", "우족국물, 중량3배물"],
-  ["코코넛오일", "코코넛오일"],
-  ["식물성 오일(대두)", "대두오일"],
-  ["참깨", "참깨, 흰색, 말린것"],
-  ["아몬드", "아몬드, 말린것"],
-  ["연근", "연근"],
-  ["청경채", "청경채"],
-  ["상추(양상추)", "상추, 결구(양상추), 녹색, 생것"],
-  ["닭 모래집", "닭모래집(생것)"],
-];
 
 // rowCap을 넘기면 카테고리 헤더(이름·실제 개수)는 그대로 두되, 실제 원료 <tr>는 전체에서
 // rowCap개까지만 DOM에 만든다 — 검색 전 초기 상태에서 수백 개 행을 한꺼번에 렌더링하지 않기 위함.
@@ -6299,51 +6190,13 @@ function buildIngTable(data, rowCap) {
   }
 }
 
-// TOP 100 간식 원료 전용 렌더링 — buildIngTable()과 같은 행 구조·스타일(ING_SHOW 컬럼,
-// 체크박스, 편집 버튼)을 그대로 쓰되, 카테고리로 묶지 않고 rows가 들어온 순서(=순위) 그대로
-// 나열한다. 화면에는 TOP100_SNACK_ING의 표시명(label)을 보여주지만, 체크박스 data-name과
-// 편집 버튼은 실제 DB 원료명(ing[0])을 가리켜 기존 삭제/편집 기능이 그대로 맞물린다.
-function buildTop100Table(rows) {
-  const colSpan = ING_SHOW.length + 2;
-  let html = '';
-  if (rows.length === 0) {
-    html = `<tr><td colspan="${colSpan}" style="text-align:center;color:var(--sub);font-size:11px;padding:16px 0">검색 결과가 없습니다</td></tr>`;
-  } else {
-    rows.forEach(({ label, ing }, rowIdx) => {
-      const vals = ING_SHOW.map(j => (j === 0 ? label : ing[j]));
-      const escName = ing[0].replace(/"/g, '&quot;');
-      const bg = rowIdx % 2 === 0 ? '' : 'style="background:var(--even)"';
-      html += `<tr ${bg} data-ing-name="${escName}"><td class="center"><input type="checkbox" class="ing-chk" data-name="${escName}"></td>${vals.map((v, vi) =>
-        `<td class="${vi === 0 ? 'left' : 'num'}" style="font-size:11px">${vi === 0 ? `<span style="color:var(--sub);font-weight:600;margin-right:4px">${rowIdx + 1}.</span>${v}` : v}</td>`
-      ).join('')}
-      <td class="center">
-        <button onclick="openEditIng('${ing[0].replace(/'/g, "\\'")}')"
-          style="background:var(--acc2);color:white;border:none;border-radius:3px;
-                 padding:2px 7px;cursor:pointer;font-size:10px;font-family:inherit">편집</button>
-      </td>
-      </tr>`;
-    });
-  }
-  document.getElementById('ing-body').innerHTML = html;
-  document.getElementById('ing-count').textContent = `TOP 100 중 ${rows.length}개 표시`;
-}
-
 let isSorted = true;
-// TOP 100 간식 원료 보기 상태 — 켜져 있으면 #ing-body가 buildIngTable() 대신
-// buildTop100Table()로 채워진다. 검색(#ing-search)·정렬(#sort-btn)은 그대로 재사용한다.
-let top100Mode = false;
 
 function toggleSort() {
   isSorted = !isSorted;
   const btn = document.getElementById('sort-btn');
   btn.textContent = isSorted ? '원래 순서' : '가나다순 정렬';
   btn.classList.toggle('active', isSorted);
-  filterIng();
-}
-
-function toggleTop100() {
-  top100Mode = !top100Mode;
-  document.getElementById('top100-btn').classList.toggle('active', top100Mode);
   filterIng();
 }
 
@@ -6355,18 +6208,6 @@ function getSortedIngs(data) {
 function filterIng() {
   loadExtIngsOnce(); // 원료 검색창 입력 시점에만 확장 DB를 1회 lazy-load
   const q = document.getElementById('ing-search').value.toLowerCase().trim();
-
-  if (top100Mode) {
-    let rows = TOP100_SNACK_ING
-      .map(([label, dbName]) => ({ label, ing: getIng(dbName) }))
-      .filter(r => r.ing);
-    if (q) rows = rows.filter(r => r.label.toLowerCase().includes(q) || r.ing[0].toLowerCase().includes(q));
-    // isSorted(기존 "가나다순 정렬" 버튼)가 꺼져 있을 때만 TOP100 순위(목록 순서) 그대로 두고,
-    // 켜져 있으면 일반 원료 목록과 같은 방식으로 이름 기준 정렬한다.
-    if (isSorted) rows = [...rows].sort((a, b) => a.label.localeCompare(b.label, 'ko'));
-    buildTop100Table(rows);
-    return;
-  }
 
   if (!q) {
     // 검색 전 초기 상태 — 원료 목록을 아예 렌더링하지 않는다(행 0개·카테고리 헤더 0개).
@@ -6405,11 +6246,10 @@ function renderIngEmpty() {
 
 // 원료 DB 탭 초기 렌더 — 검색 전 상태(빈 목록). filterIng()의 검색어 없는 경로와 동일 결과.
 function renderIngInitial() {
-  if (top100Mode) { filterIng(); return; }
   renderIngEmpty();
 }
 
-// 타이핑 중 매 입력마다 표 전체를 다시 만들지 않도록 디바운스한다(정렬·TOP100 토글은 즉시 filterIng()).
+// 타이핑 중 매 입력마다 표 전체를 다시 만들지 않도록 디바운스한다(정렬 토글은 즉시 filterIng()).
 const debouncedFilterIng = debounce(filterIng, 150);
 
 // ════════════════════════════════════════════════════════════════════════════
