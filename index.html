@@ -750,9 +750,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                                transition: box-shadow .15s ease, background-color .15s ease; }
 .mix-row input[type=number]:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
 /* 포커스 강조 — 앱 표준 입력(.auth-input/.mix-ing-search-input)과 같은 accent 테두리 + --calc 링.
-   sticky 이웃 셀에 링이 가리지 않도록 이 순간에만 위로 띄운다. */
+   이 입력칸은 sticky 컬럼(nth-child(4))이라 position은 그대로 두고 z-index만 올려 이웃 sticky
+   셀 위로 링이 보이게 한다(position:relative를 주면 sticky가 풀려 focus 시 표가 우측으로 튄다). */
 .mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 3px var(--calc); background: var(--side2);
-                                     position: relative; z-index: 3; }
+                                     z-index: 3; }
 /* 배합비 입력칸은 sticky 구간의 마지막 열이라, 뒤에 스크롤되는 분석값 구간과의 경계를
    원료명 칼럼과 같은 진한 구분선(var(--border))으로 표시한다(border:none으로 리셋된
    border-right만 다시 지정 — 다른 스타일은 위 규칙 그대로). */
