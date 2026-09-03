@@ -502,6 +502,17 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
 /* 표 안에 "데이터 없음/입력 안내" 한 줄만 넣는 placeholder 행 — panel-type 빈 상태와
    같은 톤(11px는 table 기본값 상속, var(--sub), 중앙정렬, 20-30px 패딩대)으로 통일 */
 .table-empty-row { text-align: center; color: var(--sub); padding: 24px; }
+/* 원료 DB 검색 전 빈 상태 — 가로 스크롤되는 표(#ing-table) 바깥에 두어 항상 화면 중앙에
+   놓이게 한다. 새 색상 없이 기존 토큰(--hdr/--sub/--border)·폰트만 사용. */
+#ing-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center;
+                   justify-content: center; text-align: center; gap: 8px; padding: 32px 16px; }
+#ing-empty-state[hidden] { display: none; }
+.ing-empty-icon { width: 44px; height: 44px; border-radius: 12px; display: flex;
+                  align-items: center; justify-content: center; margin-bottom: 4px;
+                  border: 1px solid var(--border); color: var(--sub); }
+.ing-empty-title { font-size: 14px; font-weight: 700; color: var(--hdr); }
+.ing-empty-desc { font-size: 12px; color: var(--sub); line-height: 1.55; max-width: 380px; }
+.ing-empty-eg { font-size: 11px; color: var(--sub); opacity: .8; }
 #ana-table tbody tr:not(.cat-row):hover td,
 #warn-table tbody tr:not(.cat-row):hover td,
 #stdverify-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
@@ -3148,6 +3159,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
           </thead>
           <tbody id="ing-body"></tbody>
         </table>
+      </div>
+      <div id="ing-empty-state" hidden>
+        <div class="ing-empty-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg></div>
+        <div class="ing-empty-title">원료를 검색해 주세요</div>
+        <div class="ing-empty-desc">원료명이나 식품명을 검색하면 등록된 원료를 확인할 수 있습니다.</div>
+        <div class="ing-empty-eg">예: 고구마, 닭고기, 연어</div>
       </div>
     </div>
 
@@ -6147,6 +6164,12 @@ const CAT_ICONS = {
 // rowCap을 넘기면 카테고리 헤더(이름·실제 개수)는 그대로 두되, 실제 원료 <tr>는 전체에서
 // rowCap개까지만 DOM에 만든다 — 검색 전 초기 상태에서 수백 개 행을 한꺼번에 렌더링하지 않기 위함.
 function buildIngTable(data, rowCap) {
+  // 검색 결과를 그릴 때는 표를 다시 보이게 하고 검색 전 Empty State는 감춘다.
+  const esWrap = document.querySelector('#tab-ing .tbl-wrap');
+  const es = document.getElementById('ing-empty-state');
+  if (esWrap) esWrap.hidden = false;
+  if (es) es.hidden = true;
+
   const groups = {};
   CAT_ORDER.forEach(c => { groups[c] = []; });
   data.forEach(ing => {
@@ -6237,9 +6260,14 @@ function filterIng() {
   }
 }
 
-// 검색 전(초기/검색어 삭제) 상태 — #ing-body를 비워 원료 행·카테고리 헤더를 하나도 만들지 않는다.
+// 검색 전(초기/검색어 삭제) 상태 — 원료 행을 만들지 않고, 가로 스크롤 표는 숨긴 뒤
+// 표 바깥의 안내 Empty State만 노출한다(검색 시 buildIngTable이 표를 다시 보이게 함).
 function renderIngEmpty() {
   document.getElementById('ing-body').innerHTML = '';
+  const wrap = document.querySelector('#tab-ing .tbl-wrap');
+  const es = document.getElementById('ing-empty-state');
+  if (wrap) wrap.hidden = true;
+  if (es) es.hidden = false;
   const cntEl = document.getElementById('ing-count');
   if (cntEl) cntEl.textContent = '원료명을 검색하세요';
 }
