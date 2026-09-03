@@ -516,6 +516,18 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
 #ana-table tbody tr:not(.cat-row):hover td,
 #warn-table tbody tr:not(.cat-row):hover td,
 #stdverify-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
+/* ── 영양 분석 표: "한눈 상태" 정리 (판정값·계산식·색 토큰은 미변경, 표시만) ──
+   핵심 판정(AAFCO 성견)이 부족/초과인 행만 왼쪽에 상태색 띠 + 영양소명 강조 →
+   스캔 시 문제 영양소가 먼저 보이게. 정상 행은 기존 줄무늬 톤 그대로(과잉 강조 방지). */
+#ana-table tbody tr.ana-row-fail > td:first-child,
+#ana-table tbody tr.ana-row-over  > td:first-child { box-shadow: inset 3px 0 0 var(--fail-t); }
+#ana-table tbody tr.ana-row-fail > td:nth-child(2),
+#ana-table tbody tr.ana-row-over  > td:nth-child(2) { font-weight: 700; color: var(--fail-t); }
+/* 정보 계층: 영양소명(식별자) → 실측값(현재값)을 기준값(옅은 회색)보다 또렷하게 */
+#ana-table tbody td:nth-child(2) { font-weight: 600; color: var(--hdr); }
+#ana-table tbody td:nth-child(4) { font-weight: 700; }
+/* 숫자 열 자릿수 정렬 통일 — 위아래 값 비교가 빠르도록 */
+#ana-table td { font-variant-numeric: tabular-nums; }
 th { background: var(--th-bg); color: var(--hdr); padding: 6px 6px;
      text-align: center; position: sticky; top: 0; z-index: 10;
      white-space: nowrap; font-size: 10px; border: 1px solid var(--border);
@@ -5573,8 +5585,11 @@ function updateAnaTable(result, pc) {
     const rj  = gate(s.aafco_rp_j);
     const fj  = gate(s.fediaf_j);
     const rowBg = aj==='fail'?'fail':aj==='over'?'over':aj==='pass'?'pass':'';
+    // 행의 "한눈 상태" — 핵심 판정(AAFCO 성견)이 부족/초과일 때만 표시용 클래스(CSS에서 강조).
+    // 판정값(aj) 자체는 기존 gate() 결과 그대로, 여기서는 클래스명만 매핑한다.
+    const rowStatus = aj==='fail' ? 'ana-row-fail' : aj==='over' ? 'ana-row-over' : '';
 
-    html += `<tr>
+    html += `<tr class="${rowStatus}">
       <td class="left" style="font-size:10px;color:var(--sub)">${s.cat}</td>
       <td class="left">${s.name}</td>
       <td style="font-size:10px;color:var(--sub)">${s.unit}</td>
