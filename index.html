@@ -3980,7 +3980,7 @@ function ingListItemsHTML(query) {
   const shown = names.slice(0, ING_SEARCH_RENDER_CAP);
   let html = noneItem + shown.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
   if (names.length > shown.length) {
-    html += `<div class="mix-ing-empty">상위 ${shown.length}개만 표시 · 외 ${names.length - shown.length}개 — 검색어를 입력해 좁혀주세요</div>`;
+    html += `<div class="mix-ing-empty">상위 ${shown.length}개만 표시</div>`;
   }
   return html;
 }
