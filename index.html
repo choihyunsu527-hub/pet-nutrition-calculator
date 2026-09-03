@@ -3078,7 +3078,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
         <span class="hdr-desc">USDA FoodData Central 기반, per 100g as-is</span>
       </div>
       <div class="ing-toolbar">
-        <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="filterIng()">
+        <input type="text" id="ing-search" aria-label="원료명 검색" placeholder="원료명 검색..." oninput="debouncedFilterIng()">
         <button id="sort-btn" class="active" onclick="toggleSort()">원래 순서</button>
         <button id="top100-btn" onclick="toggleTop100()" title="반려동물 간식용으로 지정된 고정 100개 원료만 순위대로 표시">TOP 100 간식 원료</button>
         <button class="ing-btn-primary" onclick="openAddIng()">원료 추가</button>
@@ -3648,6 +3648,10 @@ function mergeSortedNames(a, b) {
 // (카테고리별 소수 요약용)과는 별개의 용도라 값도 따로 둔다.
 const EXT_ING_SEARCH_CAP = 300;
 
+// 2단계: 검색 결과를 실제로 DOM에 그리는 최대 개수. 매칭 계산(데이터·정렬·우선순위)은
+// 그대로 두고, 이 개수를 넘으면 잘라서 렌더링하고 "검색어를 좁혀 달라"는 안내만 덧붙인다.
+const ING_SEARCH_RENDER_CAP = 20;
+
 function allIngs() { return extIngs && extIngs.length ? [...ING_DB, ...customIngs, ...extIngs] : [...ING_DB, ...customIngs]; }
 function getIng(name) { return allIngs().find(i => i[0] === name); }
 
@@ -3973,7 +3977,13 @@ function ingListItemsHTML(query) {
   const noneItem = '<div class="mix-ing-opt mix-ing-opt-none" data-name="">— 선택 안 함 —</div>';
   const names = getSortedIngNames(query);
   if (names.length === 0) return noneItem + '<div class="mix-ing-empty">검색 결과가 없습니다</div>';
-  return noneItem + names.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
+  // 매칭 순서·우선순위는 그대로 두고, 실제 DOM에 그리는 항목만 상한선까지 자른다.
+  const shown = names.slice(0, ING_SEARCH_RENDER_CAP);
+  let html = noneItem + shown.map(n => `<div class="mix-ing-opt" data-name="${n}">${n}</div>`).join('');
+  if (names.length > shown.length) {
+    html += `<div class="mix-ing-empty">상위 ${shown.length}개만 표시 · 외 ${names.length - shown.length}개 — 검색어를 입력해 좁혀주세요</div>`;
+  }
+  return html;
 }
 
 // 재료 검색 드롭다운 패널은 배합 테이블(스크롤 컨테이너) 안에서 잘리지 않도록
@@ -4002,9 +4012,11 @@ function getMixIngListEl() {
 
     const searchInput = mixIngListEl.querySelector('.mix-ing-search-input');
     const optionsEl = mixIngListEl.querySelector('.mix-ing-options');
-    searchInput.addEventListener('input', () => {
+    // 입력마다 즉시 다시 그리면 확장 DB(수천 종) 검색 시 키 입력이 끊길 수 있어 디바운스한다.
+    const renderMixOptions = debounce(() => {
       optionsEl.innerHTML = ingListItemsHTML(searchInput.value);
-    });
+    }, 120);
+    searchInput.addEventListener('input', renderMixOptions);
     optionsEl.addEventListener('click', (e) => {
       const opt = e.target.closest('.mix-ing-opt');
       if (!opt || !mixIngOpenWrap) return;
@@ -6362,8 +6374,21 @@ function filterIng() {
     }
   }
   data = getSortedIngs(data);
-  buildIngTable(data);
+  // 2단계: 매칭은 그대로 계산하되 표에 실제로 그리는 행은 상한선까지만 — 검색 전 전체(수백 종)나
+  // 흔한 검색어의 대량 결과를 한꺼번에 DOM으로 만들지 않는다.
+  const matched = data.length;
+  const capped = matched > ING_SEARCH_RENDER_CAP ? data.slice(0, ING_SEARCH_RENDER_CAP) : data;
+  buildIngTable(capped);
+  if (matched > capped.length) {
+    const cntEl = document.getElementById('ing-count');
+    if (cntEl) cntEl.textContent = q
+      ? `${matched}개 일치 · 상위 ${capped.length}개 표시 — 검색어를 좁혀주세요`
+      : `총 ${matched}개 · 상위 ${capped.length}개 표시 — 검색해 원료를 찾으세요`;
+  }
 }
+
+// 타이핑 중 매 입력마다 표 전체를 다시 만들지 않도록 디바운스한다(정렬·TOP100 토글은 즉시 filterIng()).
+const debouncedFilterIng = debounce(filterIng, 150);
 
 // ════════════════════════════════════════════════════════════════════════════
 // 원료 추가 모달
