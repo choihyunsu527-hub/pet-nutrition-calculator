@@ -10341,6 +10341,9 @@ async function loadAdminUsers() {
 
 function renderAdminUserTable(box, rows) {
   box.innerHTML = '';
+  // 마지막 남은 super_admin만 보호한다(서버 delete-user도 동일한 카운트 규칙을 다시 검증함) —
+  // super_admin이 2명 이상이면 본인이 아닌 다른 super_admin은 삭제 버튼을 눌러도 된다.
+  const superAdminCount = rows.filter(r => r.role === 'super_admin').length;
   if (rows.length === 0) {
     const empty = document.createElement('div');
     empty.style.cssText = 'font-size:11px;color:var(--sub);text-align:center;padding:10px 8px';
@@ -10386,7 +10389,7 @@ function renderAdminUserTable(box, rows) {
     tdStatus.className = 'center';
     tdStatus.textContent = '활성';
 
-    // 관리(편집/삭제) — 본인 계정 삭제와 super_admin 계정 삭제는 버튼 자체를 비활성화해
+    // 관리(편집/삭제) — 본인 계정 삭제와 "마지막 남은" super_admin 삭제는 버튼 자체를 비활성화해
     // Edge Function을 호출하기 전에 UI에서부터 막는다(서버 사이드 검증은 delete-user에서 재수행).
     const tdActions = document.createElement('td');
     tdActions.className = 'center';
@@ -10400,11 +10403,12 @@ function renderAdminUserTable(box, rows) {
     delBtn.className = 'settings-opt-btn';
     delBtn.style.cssText = 'padding:4px 10px;font-size:10.5px;color:#B03A2E;border-color:#B03A2E';
     delBtn.textContent = '삭제';
-    if (isSelf || row.role === 'super_admin') {
+    const isLastSuperAdmin = row.role === 'super_admin' && superAdminCount <= 1;
+    if (isSelf || isLastSuperAdmin) {
       delBtn.disabled = true;
       delBtn.style.opacity = '0.4';
       delBtn.style.cursor = 'not-allowed';
-      delBtn.title = isSelf ? '본인 계정은 삭제할 수 없습니다.' : '관리자 계정은 삭제할 수 없습니다.';
+      delBtn.title = isSelf ? '본인 계정은 삭제할 수 없습니다.' : '마지막 남은 관리자(super_admin) 계정은 삭제할 수 없습니다.';
     } else {
       delBtn.onclick = () => deleteUserAccount(row);
     }

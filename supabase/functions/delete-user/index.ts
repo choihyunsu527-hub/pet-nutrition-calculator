@@ -6,7 +6,7 @@
 //   1) 요청에 담긴 로그인 세션(JWT)이 유효한지
 //   2) 그 사용자의 profiles.role이 정말 'super_admin'인지
 //   3) 본인 계정은 삭제하지 못하도록 차단
-//   4) 삭제 대상이 super_admin이면 차단 (관리자 계정은 삭제 불가)
+//   4) 삭제 대상이 super_admin이고, 현재 super_admin이 1명뿐이면 차단(마지막 관리자 보호)
 //
 // profiles.id는 auth.users(id)를 on delete cascade로 참조하므로 auth 사용자를
 // 삭제하면 profiles 행도 자동으로 함께 삭제되지만, 순서를 보장하기 위해 profiles
@@ -83,7 +83,9 @@ Deno.serve(async (req) => {
     return json({ error: '본인 계정은 삭제할 수 없습니다.' }, 400);
   }
 
-  // 5) 삭제 대상이 super_admin이면 차단
+  // 5) 삭제 대상이 super_admin이면 "마지막 1명"인지 확인해 그 경우에만 차단한다 — super_admin이
+  //    여러 명이면 본인이 아닌 다른 super_admin은 삭제할 수 있어야 한다. 이 카운트는 반드시
+  //    여기(서버)에서 재검증한다 — 프런트의 버튼 비활성화는 UX일 뿐 우회 호출로 뚫릴 수 있다.
   const { data: targetProfile, error: targetProfileErr } = await admin
     .from('profiles')
     .select('role')
@@ -92,7 +94,14 @@ Deno.serve(async (req) => {
 
   if (targetProfileErr) return json({ error: targetProfileErr.message }, 400);
   if (targetProfile?.role === 'super_admin') {
-    return json({ error: '관리자(super_admin) 계정은 삭제할 수 없습니다.' }, 400);
+    const { count: superAdminCount, error: countErr } = await admin
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', 'super_admin');
+    if (countErr) return json({ error: countErr.message }, 400);
+    if ((superAdminCount ?? 0) <= 1) {
+      return json({ error: '마지막 남은 관리자(super_admin) 계정은 삭제할 수 없습니다.' }, 400);
+    }
   }
 
   // 6) profiles 행 명시적 삭제 후 auth 사용자 삭제
