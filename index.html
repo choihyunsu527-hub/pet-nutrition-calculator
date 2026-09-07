@@ -3919,82 +3919,119 @@ const STANDARDS_CAT = [
 // NRC 2006 / AAFCO 2023 Appendix I
 // ════════════════════════════════════════════════════════════════════════════
 
-function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
-  // 인덱스 (0-based, ing[i+1] 참조):
-  // 0=kcal, 1=수분, 2=단백, 3=지방, 4=탄수, 5=회분, 6=콜레스
-  // 7=Ca, 8=P, 9=Na, 10=K, 11=Fe, 12=Zn, 13=Mg, 14=Se
-  // 15=VitA, 16=VitD, 17=VitE, 18=VitK
-  // 19=B1, 20=B2, 21=B3, 22=B5, 23=B6, 24=엽산, 25=B12
-  // 26=EPA, 27=DHA
-  // 28=Cu, 29=Mn, 30=I, 31=Cl, 32=콜린, 33=비오틴
-  // 34=LA, 35=ALA, 36=조섬유
-  // 37=아르기닌, 38=히스티딘, 39=이소류신, 40=류신, 41=라이신
-  // 42=메티오닌+시스틴, 43=페닐알라닌+티로신, 44=트레오닌
-  // 45=트립토판, 46=발린, 47=타우린
-  const asis = new Array(48).fill(0);
+// 계산 엔진: 외부 조회(getIng)·기준표 선택을 전역에서 읽지 않고 인자로만 받는다.
+//   ingredientMap  — 원료명 → 원료 배열(48열) 조회. Map 또는 { get(name) } 형태(기본: 전역 ingIndex).
+//   standardsTable — 종별 영양기준 배열(기본: species 로 STANDARDS / STANDARDS_CAT 선택).
+// 계산 공식·결측 처리·기준 판정·result 구조는 종전과 동일하다.
+function calcNutrition(rows, productType, vitkManual, aminoManual, species, ingredientMap, standardsTable) {
+  const lookupIng = (ingredientMap && typeof ingredientMap.get === 'function')
+      ? (name => ingredientMap.get(name))
+      : (name => (ingredientMap ? ingredientMap[name] : undefined));
+  // asis[]는 0-based 영양소 위치별 합산값(원료배열에서는 ing[위치 + 1]).
+  // 위치 ↔ 영양소 대응은 상단 ING_IDX 한 곳에서만 정의한다.
+  const asis = new Array(ING_COL_COUNT).fill(0);
   let totalRatio = 0;
+  // 원료DB 셀이 null이면 "실제 0"이 아니라 "데이터 없음" — 해당 영양소는 이 원료가 기여하지 않고,
+  // asis 인덱스를 missingCols에 기록해 두었다가 기준 판정에서 fail 대신 '─'(평가 제외)로 처리한다.
+  // (숫자 0은 그대로 실제 0으로 합산 — 기존 계산식·F1~F4 로직은 건드리지 않는다.)
+  const missingCols = new Set();
 
   for (const [name, ratio] of rows) {
     if (!name || ratio <= 0) continue;
-    const ing = getIng(name);
+    const ing = lookupIng(name);
     if (!ing) continue;
     totalRatio += ratio;
     const f = ratio / 100;
-    for (let i = 0; i < 48; i++) asis[i] += ing[i + 1] * f;
+    for (let i = 0; i < ING_COL_COUNT; i++) {
+      const raw = ing[i + 1];
+      if (raw == null) { missingCols.add(i); continue; }   // null/undefined = 결측
+      asis[i] += raw * f;
+    }
   }
 
-  // 수분함량은 더 이상 사용자가 직접 입력하지 않고, 배합에 들어간 원료들의 실제 수분값을
-  // 배합비로 가중평균해 자동으로 계산한다(asis[1] = 원료DB 수분 × 배합비의 합).
-  const autoMoisturePct = asis[1];
-  const dmPct = Math.max(1 - autoMoisturePct / 100, 0.001);
-  const meAsis = (asis[2]*3.5 + asis[3]*8.5 + asis[4]*3.5) * 10;
-  const meDmb  = meAsis / dmPct;
+  // ── 배합 유효성 (F3) ──────────────────────────────────────────────────────
+  // 원료명이 비어 있는데 배합비만 입력된 행은 조용히 무시하지 않고 "유효하지 않은 배합"으로 본다.
+  const hasNamelessRatio = rows.some(([nm, r]) => !nm && r > 0);
+  // 이름 있는 행에 음수 배합비가 들어오면(붙여넣기·JS 입력 등) 계산에서 조용히 빠지지 않도록
+  // "유효하지 않은 배합비"로 처리한다(0은 정상 — 미사용 행). loop의 ratio<=0 스킵은 그대로 둔다.
+  const hasNegativeRatio = rows.some(([nm, r]) => nm && r < 0);
 
-  const pct    = i => asis[i] / dmPct;
-  const mgPct  = i => asis[i] / 1000 / dmPct;
-  const mgKg   = i => asis[i] * 10 / dmPct;
-  const ugMgKg = i => asis[i] / 100 / dmPct;
-  const ugUgKg = i => asis[i] * 10 / dmPct;
-  const IUkg   = i => asis[i] * 10 / dmPct;
+  // ── 상대 배합비 정규화 (F1) ───────────────────────────────────────────────
+  // DMB·기준판정은 "상대 배합비" 기준으로 계산한다 — 배합비 합계로 정규화해 배치 크기(합계<100%)와
+  // 무관하게 농도가 일정해진다. 합계가 100%면 dmScale === 1 이라 기존 계산값과 완전히 동일하다.
+  const dmScale = totalRatio > 0 ? 100 / totalRatio : 0;
+  const nrm = i => asis[i] * dmScale;   // 정규화된 "최종 100g당" 함량
 
-  const caPct = mgPct(7);
-  const pPct  = mgPct(8);
+  // 수분함량은 배합에 들어간 원료들의 실제 수분값을 배합비로 가중평균해 자동 계산한다.
+  const autoMoisturePct = nrm(1);
+  const dmFrac = 1 - autoMoisturePct / 100;
+
+  // ── 입력 오류 상태 (F2) ───────────────────────────────────────────────────
+  // 배합비 합계가 100%를 넘거나, 정규화 후에도 건물률이 비정상(수분 ≥ 100% 또는 건물 < 1%)이면
+  // DMB/ME를 하한값으로 억지 계산해 폭주시키지 않고 "입력 오류"로 표시한다(기준판정은 전부 '─').
+  const blendError =
+      hasNegativeRatio
+        ? '배합비에 음수 값이 입력된 행이 있습니다. 0 이상의 값으로 수정해 주세요.'
+    : hasNamelessRatio
+        ? '원료명이 선택되지 않은 행에 배합비가 입력되어 있습니다. 해당 행의 원료를 지정하거나 배합비를 비워 주세요.'
+    : totalRatio > 100 + 0.01
+        ? `배합비 합계가 ${totalRatio.toFixed(1)}%로 100%를 초과합니다. 합계를 100% 이하로 맞춰 주세요.`
+    : (totalRatio > 0 && dmFrac < 0.01)
+        ? `건물률(${(dmFrac * 100).toFixed(1)}%)이 비정상입니다 — 수분이 100%에 가까운 배합은 영양 기준을 평가할 수 없습니다.`
+    : null;
+
+  const dmPct = Math.max(dmFrac, 0.001);
+  // F4: 원료DB의 "탄수화물"은 차이법 값(= NFE + 조섬유)이므로, Modified Atwater 3.5 kcal/g은
+  // 조섬유를 뺀 가용무질소물(NFE)에만 적용한다. 조섬유(asis[ING_IDX.CRUDE_FIBER])가 0이면 기존 계산과 동일.
+  const nfeAsis = Math.max(asis[ING_IDX.CARB] - asis[ING_IDX.CRUDE_FIBER], 0);
+  const meAsis = (asis[ING_IDX.PROTEIN]*3.5 + asis[ING_IDX.FAT]*8.5 + nfeAsis*3.5) * 10;   // as-is: 실제 배합 그대로(정규화 전)
+  const meDmb  = meAsis * dmScale / dmPct;   // 정규화·DMB도 동일 원칙(dmScale 선형 반영)
+
+  const pct    = i => nrm(i) / dmPct;
+  const mgPct  = i => nrm(i) / 1000 / dmPct;
+  const mgKg   = i => nrm(i) * 10 / dmPct;
+  const ugMgKg = i => nrm(i) / 100 / dmPct;
+  const ugUgKg = i => nrm(i) * 10 / dmPct;
+  const IUkg   = i => nrm(i) * 10 / dmPct;
+
+  const caPct = mgPct(ING_IDX.CA);
+  const pPct  = mgPct(ING_IDX.P);
   const cap   = pPct > 0 ? caPct / pPct : 0;
 
   const dmb = {
-    kcal: asis[0] / dmPct, moist: autoMoisturePct,
-    prot: pct(2),  fat:  pct(3),  nfe:  pct(4),  ash:  pct(5),  chol: mgKg(6),
+    kcal: nrm(ING_IDX.KCAL) / dmPct, moist: autoMoisturePct,
+    prot: pct(ING_IDX.PROTEIN),  fat:  pct(ING_IDX.FAT),  nfe:  pct(ING_IDX.CARB),  ash:  pct(ING_IDX.ASH),  chol: mgKg(ING_IDX.CHOLESTEROL),
     ca:   caPct,   p:    pPct,    cap:  cap,
-    na:   mgPct(9), k:   mgPct(10), mg: mgPct(13),
-    fe:   mgKg(11), zn:  mgKg(12), se:  ugMgKg(14),
-    vitA: IUkg(15), vitD: IUkg(16), vitE: mgKg(17), vitK: mgKg(18),
-    b1:   mgKg(19), b2:  mgKg(20), b3:  mgKg(21),
-    b5:   mgKg(22), b6:  mgKg(23), b9:  ugMgKg(24), b12: ugUgKg(25),
-    epa:  mgKg(26), dha: mgKg(27),
-    epaKcal: meDmb > 0 ? mgKg(26) / (meDmb/1000) : 0,
-    dhaKcal: meDmb > 0 ? mgKg(27) / (meDmb/1000) : 0,
-    cu:      mgKg(28),
-    mn:      mgKg(29),
-    iodine:  ugMgKg(30),
-    cl:      mgPct(31),
-    choline: mgKg(32),
-    biotin:  ugUgKg(33),
-    la:      pct(34),
-    ala:     pct(35),
-    fiber:   pct(36),
-    arg:     pct(37),
-    his:     pct(38),
-    ile:     pct(39),
-    leu:     pct(40),
-    lys:     pct(41),
-    metcys:  pct(42),
-    phetyr:  pct(43),
-    thr:     pct(44),
-    trp:     pct(45),
-    val:     pct(46),
-    tau:     mgKg(47),
-    omega6_3ratio: (pct(34) > 0 && (mgKg(26) + mgKg(27) + pct(35)) > 0)
-                   ? pct(34) / (mgKg(26)/1000 + mgKg(27)/1000 + pct(35))
+    na:   mgPct(ING_IDX.NA), k:   mgPct(ING_IDX.K), mg: mgPct(ING_IDX.MG),
+    fe:   mgKg(ING_IDX.FE), zn:  mgKg(ING_IDX.ZN), se:  ugMgKg(ING_IDX.SE),
+    vitA: IUkg(ING_IDX.VIT_A), vitD: IUkg(ING_IDX.VIT_D), vitE: mgKg(ING_IDX.VIT_E), vitK: mgKg(ING_IDX.VIT_K),
+    b1:   mgKg(ING_IDX.VIT_B1), b2:  mgKg(ING_IDX.VIT_B2), b3:  mgKg(ING_IDX.VIT_B3),
+    b5:   mgKg(ING_IDX.VIT_B5), b6:  mgKg(ING_IDX.VIT_B6), b9:  ugMgKg(ING_IDX.FOLATE), b12: ugUgKg(ING_IDX.VIT_B12),
+    epa:  mgKg(ING_IDX.EPA), dha: mgKg(ING_IDX.DHA),
+    epaKcal: meDmb > 0 ? mgKg(ING_IDX.EPA) / (meDmb/1000) : 0,
+    dhaKcal: meDmb > 0 ? mgKg(ING_IDX.DHA) / (meDmb/1000) : 0,
+    cu:      mgKg(ING_IDX.CU),
+    mn:      mgKg(ING_IDX.MN),
+    iodine:  ugMgKg(ING_IDX.IODINE),
+    cl:      mgPct(ING_IDX.CL),
+    choline: mgKg(ING_IDX.CHOLINE),
+    biotin:  ugUgKg(ING_IDX.BIOTIN),
+    la:      pct(ING_IDX.LA),
+    ala:     pct(ING_IDX.ALA),
+    fiber:   pct(ING_IDX.CRUDE_FIBER),
+    arg:     pct(ING_IDX.ARG),
+    his:     pct(ING_IDX.HIS),
+    ile:     pct(ING_IDX.ILE),
+    leu:     pct(ING_IDX.LEU),
+    lys:     pct(ING_IDX.LYS),
+    metcys:  pct(ING_IDX.MET_CYS),
+    phetyr:  pct(ING_IDX.PHE_TYR),
+    thr:     pct(ING_IDX.THR),
+    trp:     pct(ING_IDX.TRP),
+    val:     pct(ING_IDX.VAL),
+    tau:     mgKg(ING_IDX.TAURINE),
+    omega6_3ratio: (pct(ING_IDX.LA) > 0 && (mgKg(ING_IDX.EPA) + mgKg(ING_IDX.DHA) + pct(ING_IDX.ALA)) > 0)
+                   ? pct(ING_IDX.LA) / (mgKg(ING_IDX.EPA)/1000 + mgKg(ING_IDX.DHA)/1000 + pct(ING_IDX.ALA))
                    : 0,
   };
 
@@ -4046,10 +4083,33 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
     return "fail";
   }
 
-  const STD = species === '고양이' ? STANDARDS_CAT : STANDARDS;
+  // 기준 영양소명 → 그 값을 만드는 asis 인덱스(들). 배합에 쓰인 어느 원료든 이 인덱스가 결측이면
+  // 해당 기준은 "데이터 없음"이라 판정하지 않는다(값 null → judge()가 기존대로 '─' 반환).
+  const STD_ASIS_COL = {
+    "수분":ING_IDX.MOISTURE, "조단백":ING_IDX.PROTEIN, "조지방":ING_IDX.FAT, "탄수화물(NFE)":ING_IDX.CARB, "조회분":ING_IDX.ASH,
+    "칼슘(Ca)":ING_IDX.CA, "인(P)":ING_IDX.P, "Ca:P 비율":[ING_IDX.CA,ING_IDX.P], "나트륨(Na)":ING_IDX.NA, "칼륨(K)":ING_IDX.K,
+    "철(Fe)":ING_IDX.FE, "아연(Zn)":ING_IDX.ZN, "마그네슘(Mg)":ING_IDX.MG, "셀레늄(Se)":ING_IDX.SE,
+    "비타민A":ING_IDX.VIT_A, "비타민D":ING_IDX.VIT_D, "비타민E(α-TE)":ING_IDX.VIT_E, "비타민K":ING_IDX.VIT_K,
+    "비타민B1(티아민)":ING_IDX.VIT_B1, "비타민B2(리보플라빈)":ING_IDX.VIT_B2, "비타민B3(나이아신)":ING_IDX.VIT_B3,
+    "비타민B5(판토텐산)":ING_IDX.VIT_B5, "비타민B6(피리독신)":ING_IDX.VIT_B6, "비타민B9(엽산)":ING_IDX.FOLATE, "비타민B12(코발라민)":ING_IDX.VIT_B12,
+    "EPA":ING_IDX.EPA, "DHA":ING_IDX.DHA, "EPA+DHA":[ING_IDX.EPA,ING_IDX.DHA],
+    "구리(Cu)":ING_IDX.CU, "망간(Mn)":ING_IDX.MN, "요오드(I)":ING_IDX.IODINE, "염소(Cl)":ING_IDX.CL, "콜린":ING_IDX.CHOLINE, "비오틴(B7)":ING_IDX.BIOTIN,
+    "리놀레산(LA,n-6)":ING_IDX.LA, "ALA(α-리놀렌,n-3)":ING_IDX.ALA, "조섬유":ING_IDX.CRUDE_FIBER, "ω-6:ω-3 비율":[ING_IDX.LA,ING_IDX.ALA,ING_IDX.EPA,ING_IDX.DHA],
+    "아르기닌(Arg)":ING_IDX.ARG, "히스티딘(His)":ING_IDX.HIS, "이소류신(Ile)":ING_IDX.ILE, "류신(Leu)":ING_IDX.LEU, "라이신(Lys)":ING_IDX.LYS,
+    "메티오닌+시스틴":ING_IDX.MET_CYS, "페닐알라닌+티로신":ING_IDX.PHE_TYR, "트레오닌(Thr)":ING_IDX.THR, "트립토판(Trp)":ING_IDX.TRP,
+    "발린(Val)":ING_IDX.VAL, "타우린(Tau)*":ING_IDX.TAURINE,
+  };
+  const stdColMissing = nm => {
+    const c = STD_ASIS_COL[nm];
+    if (c == null) return false;
+    return Array.isArray(c) ? c.some(x => missingCols.has(x)) : missingCols.has(c);
+  };
+
+  const STD = standardsTable || (species === '고양이' ? STANDARDS_CAT : STANDARDS);
   const standards = STD.map(std => {
     const [nm,unit,mr,ra,aa,aaMax,aaGr,aaRp,fed,fedGr,cat] = std;
-    const v = valMap[nm];
+    // 입력 오류 상태(F2·F3)이거나, 배합 원료 중 해당 영양소 데이터가 결측이면 판정하지 않는다 — 값 null → 전부 '─'.
+    const v = (blendError || stdColMissing(nm)) ? null : valMap[nm];
     return {
       name:nm, unit, value:v, cat,
       nrc_mr:mr, nrc_ra:ra,
@@ -4065,7 +4125,10 @@ function calcNutrition(rows, productType, vitkManual, aminoManual, species) {
     };
   });
 
-  return { totalRatio, asis, dmPct, meAsis, meDmb, dmb, valMap, standards };
+  // missingCols: 결측이 기록된 asis 인덱스 목록. dataIncomplete: 화면 안내용(기준이 있는 영양소 중 결측 존재 여부).
+  const missingColsArr = [...missingCols];
+  const dataIncomplete = standards.some(s => stdColMissing(s.name) && (s.aa_min != null || s.nrc_mr != null || s.fed_ad != null));
+  return { totalRatio, asis, dmPct, meAsis, meDmb, dmb, valMap, standards, blendError, missingCols: missingColsArr, dataIncomplete };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -4863,6 +4926,13 @@ function updateAminoJudges(result, pc) {
     el.title = `${tooltip} — ${pc.short} 유형으로 판단되어 아미노산 적합성 평가에서 제외됨`;
   }
   const stds = getAminoStds(species);
+  // 아미노산명 → asis 인덱스 (결측 판정용). result.missingCols에 있으면 원료 데이터 없음.
+  const AMINO_ASIS_COL = {
+    "아르기닌(Arg)":37, "히스티딘(His)":38, "이소류신(Ile)":39, "류신(Leu)":40, "라이신(Lys)":41,
+    "메티오닌+시스틴":42, "페닐알라닌+티로신":43, "트레오닌(Thr)":44, "트립토판(Trp)":45,
+    "발린(Val)":46, "타우린(Tau)*":47,
+  };
+  const missingSet = new Set(result.missingCols || []);
   const aminoMap = {
     "아르기닌(Arg)":       dmb.arg,
     "히스티딘(His)":       dmb.his,
@@ -4880,25 +4950,37 @@ function updateAminoJudges(result, pc) {
   stds.forEach(std => {
     const [nm,unit,mr,ra,aa,aaMax,aaGr,aaRp,fed,fedGr,cat] = std;
 
-    // 자동계산값 (% DMB)
-    const autoVal = aminoMap[nm] || 0;
-
     // 직접입력 보정값
     const overrideEl = document.getElementById(`amino-${nm}`);
     const override = overrideEl ? parseFloat(overrideEl.value)||0 : 0;
+
+    // 배합 원료에 이 아미노산 데이터가 결측이고 보정값도 없으면 → 자동계산값 사용 불가(결측)
+    const isMissing = AMINO_ASIS_COL[nm] != null && missingSet.has(AMINO_ASIS_COL[nm]) && override <= 0;
+
+    // 자동계산값 (% DMB)
+    const autoVal = isMissing ? null : (aminoMap[nm] || 0);
 
     const finalVal = override > 0 ? override : autoVal;
 
     const autoEl = document.getElementById(`amino-auto-${nm}`);
     if (autoEl) {
-      autoEl.textContent = autoVal > 0 ? autoVal.toFixed(4) : '─';
-      autoEl.style.color = autoVal > 0 ? 'var(--pass-t)' : 'var(--sub)';
+      autoEl.textContent = (autoVal != null && autoVal > 0) ? autoVal.toFixed(4) : '─';
+      autoEl.style.color = (autoVal != null && autoVal > 0) ? 'var(--pass-t)' : 'var(--sub)';
+      autoEl.title = isMissing ? '배합 원료에 이 아미노산 데이터가 없어 자동계산 불가 — 판정 제외' : '';
     }
 
     // 판정 (최종값 기준)
     const nrcEl = document.getElementById(`amino-nrc-${nm}`);
     const aaEl  = document.getElementById(`amino-aa-${nm}`);
     const grEl  = document.getElementById(`amino-gr-${nm}`);
+
+    // 결측: pass/fail 판정하지 않고 '─'(평가 제외)
+    if (finalVal == null) {
+      [ [nrcEl,mr], [aaEl,aa], [grEl,aaGr] ].forEach(([el,th]) => {
+        if (el && th > 0) { el.textContent = '─'; el.className = 'ag-cell center none'; el.title = '원료 데이터 없음 — 판정 제외'; }
+      });
+      return;
+    }
 
     if (nrcEl && mr > 0) renderAminoCell(nrcEl, finalVal >= mr, `NRC MR: ${mr}`);
     if (aaEl && aa > 0)  renderAminoCell(aaEl,  finalVal >= aa, `AAFCO ${isCat?'성묘':'성견'} Min: ${aa}`);
@@ -4935,6 +5017,7 @@ function computeLimitingAminoAcid(result) {
     const std = result.standards.find(s => s.name === name);
     if (!std) return; // 기준 데이터 자체가 없는 아미노산은 판정 대상에서 제외
     const finalVal = getAminoFinalValue(name, std.value);
+    if (finalVal == null) return; // 원료 데이터 결측(std.value === null, 보정값도 없음) → 제한 아미노산·점수 계산에서 제외
 
     const candidates = [];
     if (std.nrc_mr != null && std.nrc_mr > 0) {
@@ -5255,8 +5338,13 @@ function classifyProductPurpose(result, rows) {
   // 기존 AAFCO 최소/최대 기준 충족률 계산 — 그대로 유지(주식/보조식 판정의 핵심 신호)
   const stds = result.standards || [];
   const essential = stds.filter(s => s.aa_min != null && s.aa_min > 0);
-  const withData  = essential.filter(s => s.value != null && s.value > 0);
-  const completeness = essential.length ? withData.length / essential.length : 0;
+  // value === null 은 "원료 데이터 결측 → 판정 불가(미평가)"다. 완전성(completeness) 계산에서는
+  // 이런 항목을 pass/fail 어느 쪽도 아닌 "평가 제외"로 보고 분모·분자 모두에서 뺀다.
+  // (실측 0은 종전대로 "원료에 해당 영양소가 없음"으로 보고 분모에 남겨 completeness를 낮춘다.)
+  // withData / minPassRate / failItems / overMaxItems 는 이미 value>0 만 대상이라 결과가 종전과 동일하다.
+  const evaluableEssential = essential.filter(s => s.value != null);
+  const withData  = evaluableEssential.filter(s => s.value > 0);
+  const completeness = evaluableEssential.length ? withData.length / evaluableEssential.length : 0;
   const metMin  = withData.filter(s => s.value >= s.aa_min);
   const minPassRate = withData.length ? metMin.length / withData.length : 0;
   const failItems = withData.filter(s => s.value < s.aa_min)
@@ -5275,7 +5363,8 @@ function classifyProductPurpose(result, rows) {
   ];
   const baseStats = {
     completeness, minPassRate,
-    essentialCount: essential.length, withDataCount: withData.length, metMinCount: metMin.length,
+    essentialCount: essential.length, evaluableEssentialCount: evaluableEssential.length,
+    withDataCount: withData.length, metMinCount: metMin.length,
     failItems, overMaxItems, topNutrients,
   };
   function build(type, confidence, reasons) {
@@ -5315,7 +5404,10 @@ function classifyProductPurpose(result, rows) {
   // 비율(minPassRate)은 합성 비타민·미네랄 프리믹스가 들어가야만 높게 나오므로, 주식 여부를 가르는
   // 핵심 신호는 completeness가 아니라 minPassRate다. completeness는 "데이터가 거의 없는" 극단적인
   // 경우(예: 단백질·지방만 입력된 경우)를 추가로 잡아내는 보조 신호로만 사용한다.
-  const nutritionSaysStaple = completeness >= 0.85 && minPassRate >= 0.90 && overMaxItems.length === 0;
+  // 안전장치: 결측이 많아 "평가 가능한" 필수 영양소가 절반도 안 되면, completeness가 높게 나와도
+  // (예: 5/5=100%) 주식이라고 확신할 근거가 부족하므로 주식 판정을 하지 않는다.
+  const enoughEvaluable = essential.length === 0 || evaluableEssential.length >= essential.length * 0.5;
+  const nutritionSaysStaple = enoughEvaluable && completeness >= 0.85 && minPassRate >= 0.90 && overMaxItems.length === 0;
 
   // ── ②·③ 단일 식품 원료 100%는 기본적으로 간식 ───────────────────────
   // 단, "단일 원료 = 무조건 간식"으로 하드코딩하지 않는다 — 그 원료 하나만으로도 이미 영양학적으로
@@ -5543,6 +5635,15 @@ function updateTotBar(result, rows) {
 
   meEl.textContent = `ME(as-is): ${result.meAsis.toFixed(0)} kcal/kg  |  ME(DMB): ${result.meDmb.toFixed(0)} kcal/kg  |  DM%: ${(result.dmPct*100).toFixed(1)}%`;
 
+  // 입력 오류 상태(F2·F3): 기존 실패색(빨강) 막대를 그대로 재사용해 원인을 표시하고, 아래 정상 색상 분기는 건너뛴다.
+  if (result.blendError) {
+    ratioEl.textContent = '⚠ ' + result.blendError;
+    bar.style.background = 'var(--fail-bg)';
+    bar.style.borderTopColor = 'var(--fail-t)';
+    ratioEl.style.color = 'var(--fail-t)';
+    return;
+  }
+
   if (Math.abs(tot-100) < 0.01) {
     bar.style.background = 'var(--pass-bg)';
     bar.style.borderTopColor = 'var(--pass-t)';
@@ -5581,6 +5682,14 @@ function updateCards(result, pc) {
     el.innerHTML = html;
     el.style.color = tone === 'pass' ? 'var(--pass-t)' : tone === 'fail' ? 'var(--fail-t)' : 'var(--sub)';
     el.title = title || '';
+  }
+
+  // 입력 오류 상태(F2·F3): 잘못된 분모로 나온 값이므로 충족/부족 개수를 표시하지 않고 "평가 제외"로 통일
+  if (result.blendError) {
+    setJudgeCard('c-nrc',    'gated', statusIconText('gated'), result.blendError);
+    setJudgeCard('c-aafco',  'gated', statusIconText('gated'), result.blendError);
+    setJudgeCard('c-fediaf', 'gated', statusIconText('gated'), result.blendError);
+    return;
   }
 
   // 간식/직접급여불가는 결핍 평가 자체를 적용하지 않음 — 요약 카드도 "평가 제외"로 통일
@@ -5701,7 +5810,10 @@ function updateAnaTable(result, pc) {
       <td class="center ${jClass(fj)}" title="${tooltip('FEDIAF',s.fed_ad,null,s.fediaf_j,fj)}" style="background:var(--fed-bg)">${JA[fj]||'─'}</td>
     </tr>`;
   });
-  tbody.innerHTML = html;
+  const incompleteNote = result.dataIncomplete
+    ? `<tr class="cat-row"><td colspan="13">※ 일부 원료의 영양소 데이터가 없어 해당 항목은 판정에서 제외됩니다(값 · 판정 모두 ─).</td></tr>`
+    : '';
+  tbody.innerHTML = incompleteNote + html;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -5826,7 +5938,10 @@ function renderStdVerify(result, pc) {
       <td class="center ${stdvJClass(j)}">${STDV_LABEL[j] || '─'}</td>
     </tr>`;
   });
-  tbody.innerHTML = html;
+  const incompleteNote = result.dataIncomplete
+    ? `<tr class="cat-row"><td colspan="7">※ 일부 원료의 영양소 데이터가 없어 해당 항목은 판정에서 제외됩니다(─).</td></tr>`
+    : '';
+  tbody.innerHTML = incompleteNote + html;
 
   const stapleOk = judgedCount > 0 && failCount === 0 && overCount === 0;
   const overallPct = judgedCount ? Math.round(passCount / judgedCount * 100) : 0;
@@ -5979,14 +6094,18 @@ function computeContribAnalysis(result, rows, defs = CONTRIB_NUTRIENTS) {
 
   const nutrients = {};
   defs.forEach(def => {
+    // 원료DB의 raw 컬럼(=asis 인덱스 + 1)이 null이면 "데이터 없음"(실제 0이 아님).
+    // omega3처럼 복합 asisIdx가 아닌 단일 영양소 def에만 적용한다. amount/pct 계산식은 종전 그대로.
+    const rawCol = (def.key !== 'omega3' && def.asisIdx != null) ? def.asisIdx + 1 : null;
     const rawItems = activeRows.map(([nm, ratio]) => {
       const ing = getIng(nm);
+      const missing = rawCol != null && ing[rawCol] == null;
       const amount = def.get(ing) * (ratio / 100); // calcNutrition의 asis[i]+=ing[i+1]*f 와 동일한 식
-      return { name: nm, ratio, amount };
+      return { name: nm, ratio, amount, missing };
     });
     // 총량은 기존 calcNutrition 결과(result.asis)에서 그대로 가져와 기존 표시값과 절대 어긋나지 않게 함
     const total = def.key === 'omega3'
-      ? result.asis[35] * 1000 + result.asis[26] + result.asis[27]
+      ? result.asis[ING_IDX.ALA] * 1000 + result.asis[ING_IDX.EPA] + result.asis[ING_IDX.DHA]
       : result.asis[def.asisIdx];
     const byName = {};
     rawItems.forEach(it => {
@@ -5994,7 +6113,8 @@ function computeContribAnalysis(result, rows, defs = CONTRIB_NUTRIENTS) {
       byName[it.name] = it;
     });
     const items = rawItems.slice().sort((a, b) => b.amount - a.amount);
-    nutrients[def.key] = { total, unit: def.unit, label: def.label, items, byName };
+    const anyMissing = rawItems.some(it => it.missing);
+    nutrients[def.key] = { total, unit: def.unit, label: def.label, items, byName, anyMissing };
   });
 
   return { order, nutrients };
@@ -6141,14 +6261,22 @@ function renderContribHeatmapInto(containerId, analysis, defs, rowClickFn) {
     const clickAttr = rowClickFn ? ` onclick="${rowClickFn}('${escName}')"` : '';
     html += `<tr><td class="left"${clickAttr}>${name}</td>`;
     defs.forEach(def => {
-      const item = analysis.nutrients[def.key].byName[name];
-      const pct = item ? item.pct : 0;
-      if (pct < 0.5) {
-        html += `<td style="background:var(--side2);color:var(--sub)">─</td>`;
+      const nut = analysis.nutrients[def.key];
+      const item = nut.byName[name];
+      // 이 원료의 셀이 결측이거나, 열 전체가 결측이라 총량조차 0이면 "데이터 없음"으로 명시 표시(─와 구분).
+      const colDataless = nut.anyMissing && !(nut.total > 0);
+      if ((item && item.missing) || colDataless) {
+        // ─(실제 0/소량 기여)와 확실히 구분되도록 빗금 패턴 + 이탤릭 "n/a". 색은 테마 변수만 사용.
+        html += `<td style="background:repeating-linear-gradient(45deg,var(--side2),var(--side2) 4px,var(--gray-l) 4px,var(--gray-l) 8px);color:var(--sub);font-style:italic" title="원료 영양 데이터 없음 — 기여도 계산 불가">n/a</td>`;
       } else {
-        const bg = `color-mix(in srgb, var(--acc) ${Math.min(pct, 100).toFixed(0)}%, var(--side2))`;
-        const color = pct > 55 ? '#fff' : 'var(--text)';
-        html += `<td style="background:${bg};color:${color}">${pct.toFixed(0)}%</td>`;
+        const pct = item ? item.pct : 0;
+        if (pct < 0.5) {
+          html += `<td style="background:var(--side2);color:var(--sub)">─</td>`;
+        } else {
+          const bg = `color-mix(in srgb, var(--acc) ${Math.min(pct, 100).toFixed(0)}%, var(--side2))`;
+          const color = pct > 55 ? '#fff' : 'var(--text)';
+          html += `<td style="background:${bg};color:${color}">${pct.toFixed(0)}%</td>`;
+        }
       }
     });
     html += '</tr>';
@@ -6216,14 +6344,22 @@ function updateWarnPanel(result, pc) {
     ["요오드(I)", dmb.iodine,"mg/kg DMB", 50,   "요오드 과잉→갑상선 기능 이상", "AAFCO 2023 Max 50 mg/kg"],
   ];
 
+  // 이 표의 각 영양소가 만들어지는 asis 인덱스 — result.missingCols에 있으면 "실제 0"이 아니라 "데이터 없음".
+  const WARN_COL = {"칼슘(Ca)":7,"인(P)":8,"철(Fe)":11,"아연(Zn)":12,"셀레늄(Se)":14,"비타민A":15,"비타민D":16,"나트륨(Na)":9,"칼륨(K)":10,"구리(Cu)":28,"요오드(I)":30};
+  const warnMissing = new Set(result.missingCols || []);
+
   let html = '';
   lastWarnItems = [];
   items.forEach(([nm,val,unit,mx,risk,src]) => {
-    const vs = val.toFixed(5);
+    const isMissing = WARN_COL[nm] != null && warnMissing.has(WARN_COL[nm]);
+    const vs = isMissing ? '─' : val.toFixed(5);
     const mxs = mx ? String(mx) : '─';
     let ratio='─', status='', cls='';
     let ratioPct = null;
-    if (mx) {
+    if (isMissing) {
+      ratio = '─';
+      status = `${statusIconText('none')} (데이터 없음)`; cls = 'none';
+    } else if (mx) {
       if (val === 0) {
         ratio = '0.0%';
         status = `${statusIconText('none')} (원료 미포함)`; cls = 'none';
@@ -6548,9 +6684,9 @@ function openEditIng(name) {
     <div class="modal-row">
       <label>${col} [${unit}]</label>
       <input type="${i === 0 ? 'text' : 'number'}" id="new-ing-${i}"
-             value="${i === 0 ? ing[i].replace(/"/g, '&quot;') : ing[i]}"
+             value="${i === 0 ? ing[i].replace(/"/g, '&quot;') : (ing[i] ?? '')}"
              min="0" step="0.001"
-             placeholder="${i === 0 ? '원료명 입력' : '0'}">
+             placeholder="${i === 0 ? '원료명 입력' : '빈칸=데이터 없음'}">
     </div>
   `).join('');
   document.getElementById('add-ing-modal').classList.add('open');
@@ -6594,7 +6730,10 @@ function deleteSelectedIng() {
 function saveNewIng() {
   const vals = ING_COLS.map(([col,unit],i) => {
     const el = document.getElementById(`new-ing-${i}`);
-    return i===0 ? el.value.trim() : parseFloat(el.value)||0;
+    if (i === 0) return el.value.trim();
+    // 빈칸 = 데이터 없음(null), 숫자 0 입력 = 실제 0. (기존엔 빈칸도 0으로 저장했다.)
+    const t = (el.value || '').trim();
+    return t === '' ? null : (parseFloat(t) || 0);
   });
   if (!vals[0]) { alert('원료명을 입력하세요.'); return; }
 
@@ -7144,9 +7283,10 @@ function renderEnergyAnalysis(result, pc) {
 
   // ── 칼로리 조성: AAFCO Modified Atwater(단백질 3.5 / 지방 8.5 / 탄수화물 3.5 kcal/g)로 ME를 구성한 3대 영양소 비중 ──
   const asis = result.asis;
-  const kcalProt = (asis[2] || 0) * 3.5 * 10;
-  const kcalFat  = (asis[3] || 0) * 8.5 * 10;
-  const kcalCarb = (asis[4] || 0) * 3.5 * 10;
+  const kcalProt = (asis[ING_IDX.PROTEIN] || 0) * 3.5 * 10;
+  const kcalFat  = (asis[ING_IDX.FAT] || 0) * 8.5 * 10;
+  // F4: ME 기여분도 조섬유를 뺀 NFE 기준(= meAsis 계산과 동일) — 3개 값의 합이 ME(as-is)와 일치해야 함
+  const kcalCarb = Math.max((asis[ING_IDX.CARB] || 0) - (asis[ING_IDX.CRUDE_FIBER] || 0), 0) * 3.5 * 10;
   const kcalTot  = kcalProt + kcalFat + kcalCarb;
   const macros = [
     { label: '단백질',   kcal: kcalProt, color: 'var(--acc)',   dmb: result.dmb.prot },
@@ -8538,6 +8678,8 @@ function toggleRecentFavorite(name) {
 function exportExcel() {
   if (!lastResult) { alert('먼저 계산을 실행하세요.'); return; }
   if (typeof XLSX === 'undefined') { alert('Excel 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
+  // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 수치가 파일로 나가지 않도록 내보내기를 막는다.
+  if (lastResult.blendError) { alert('배합에 오류가 있어 Excel로 내보낼 수 없습니다.\n\n' + lastResult.blendError); return; }
 
   const result  = lastResult;
   const totalG  = getMixTotalG();
@@ -8597,6 +8739,10 @@ function exportExcel() {
       J_LABEL[s.fediaf_j] || '─',
     ]);
   });
+  if (result.dataIncomplete) {
+    anaAOA.push([]);
+    anaAOA.push(['※ 일부 원료의 영양소 데이터가 없어 해당 항목은 판정에서 제외됨(값·판정 ─).']);
+  }
   const wsAna = XLSX.utils.aoa_to_sheet(anaAOA);
   wsAna['!cols'] = anaHeader.map(() => ({wch:14}));
   XLSX.utils.book_append_sheet(wb, wsAna, '영양분석');
@@ -8613,6 +8759,10 @@ function exportExcel() {
 // ════════════════════════════════════════════════════════════════════════════
 function buildMixReportHtml() {
   const result  = lastResult;
+  // 유효하지 않은 배합이면 정상 배합표 대신 오류 안내만 반환한다(openMixPreview에서 이미 막지만 방어적으로 유지).
+  if (result && result.blendError) {
+    return `<div class="mr-notes" style="color:#c0392b">⚠ 유효하지 않은 배합입니다 — 배합표를 생성할 수 없습니다.<br>${escHtml(result.blendError)}</div>`;
+  }
   const pc      = lastProductClass;
   const policy  = getEvaluationPolicy(pc);
   const totalG  = getMixTotalG();
@@ -8680,6 +8830,7 @@ function buildMixReportHtml() {
     <div>· 본 보고서의 영양성분 값은 건물기준(DMB)이며, NRC 2006 · AAFCO 2023 · FEDIAF 2025 기준을 근거로 합니다.</div>
     <div>· ${escHtml(policy.summary)}</div>
     <div>· "기준/판정" 열은 AAFCO ${((document.getElementById('sb-species')?.value||'개')==='고양이') ? '성묘' : '성견'} 최소~최대 기준과 본 프로그램의 판정 로직을 그대로 사용한 결과입니다.</div>
+    ${result.dataIncomplete ? `<div>· 일부 원료의 영양소 데이터가 없어 해당 항목은 값·판정을 ─로 표시하고 판정에서 제외했습니다.</div>` : ''}
   `;
 
   return `
@@ -8731,6 +8882,8 @@ function buildMixReportHtml() {
 
 function openMixPreview() {
   if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
+  // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 배합표가 만들어지지 않도록 막는다.
+  if (lastResult.blendError) { alert('배합에 오류가 있어 배합표를 만들 수 없습니다.\n\n' + lastResult.blendError); return; }
   document.getElementById('mixreport-page').innerHTML = buildMixReportHtml();
   document.getElementById('mixreport-overlay').classList.add('open');
 }
@@ -8764,6 +8917,8 @@ function printMixReport() {
 async function exportMixExcel() {
   if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
   if (typeof ExcelJS === 'undefined') { alert('Excel 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
+  // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 수치가 파일로 나가지 않도록 막는다.
+  if (lastResult.blendError) { alert('배합에 오류가 있어 Excel로 내보낼 수 없습니다.\n\n' + lastResult.blendError); return; }
 
   const result = lastResult;
   const policy = getEvaluationPolicy(lastProductClass);
@@ -8923,6 +9078,10 @@ async function exportMixExcel() {
     r.getCell(4).font = { bold: true, size: BODY_FONT_SIZE, color: { argb: jt.fg } };
     r.getCell(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: jt.bg } };
   });
+  if (result.dataIncomplete) {
+    const nr = ws.addRow(['※ 일부 원료의 영양소 데이터가 없어 해당 항목은 판정에서 제외됨(값·판정 공란/─).']);
+    nr.getCell(1).font = { italic: true, size: BODY_FONT_SIZE, color: { argb: SUB } };
+  }
 
   // 표가 페이지를 넘어가도 이 헤더 행이 반복 인쇄되도록(PDF의 thead 반복과 동일한 목적).
   // 배합표 미리보기 문서는 스크롤용 표가 아니라 PDF와 같은 "보고서"이므로 틀 고정(freeze panes)은 쓰지 않는다.
