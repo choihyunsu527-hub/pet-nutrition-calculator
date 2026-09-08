@@ -48,9 +48,22 @@ function sliceBalanced(src, marker, open, close, label) {
   return src.slice(idx, i);
 }
 
+// 계산 엔진 소스를 얻는다. JS 가 기능별 파일로 분리된 뒤에는
+//   - js/ingredients.js       : ING_IDX / ING_COL_COUNT / STANDARDS / STANDARDS_CAT
+//   - js/nutrition-engine.js   : calcNutrition (DOM 비참조 순수 계산 엔진)
+//   - js/nutrition.js          : (구조 분리 전 호환용 — 아직 calcNutrition 이 여기 있을 수도 있음)
+// 에 나뉘어 있다. 분리 전(단일 index.html 인라인 스크립트) 구조와도 호환되도록, 없으면 인라인 스크립트로 되돌린다.
+function readEngineSource() {
+  const jsDir = path.resolve(__dirname, '..', '..', 'js');
+  const split = ['ingredients.js', 'nutrition-engine.js', 'nutrition.js']
+    .map((f) => path.join(jsDir, f))
+    .filter((p) => fs.existsSync(p));
+  if (split.length) return split.map((p) => fs.readFileSync(p, 'utf8')).join('\n\n');
+  return readLargestInlineScript(fs.readFileSync(INDEX_HTML, 'utf8'));
+}
+
 function loadEngine() {
-  const html = fs.readFileSync(INDEX_HTML, 'utf8');
-  const js = readLargestInlineScript(html);
+  const js = readEngineSource();
 
   const colCountMatch = js.match(/const\s+ING_COL_COUNT\s*=\s*[^;]+;/);
   if (!colCountMatch) throw new Error('[load-engine] const ING_COL_COUNT 선언을 찾지 못했습니다.');

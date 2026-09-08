@@ -1,0 +1,1738 @@
+/* ── 폰트 로딩 전까지 깜빡임(FOUT) 방지 ── */
+html { visibility: hidden; }
+html.fonts-ready { visibility: visible; }
+
+/* ── 기본 리셋 ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* CSS 변수(디자인 토큰)는 css/variables.css로 분리됨 — <head>의 <link>로 로드 */
+body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-serif;
+       background: var(--body-bg); color: var(--text); font-size: 13px; height: calc(100vh / 1.1);
+       display: flex; flex-direction: column; overflow-x: auto; overflow-y: hidden; position: relative;
+       zoom: 1.1; transition: background .25s ease; }
+#login-overlay, #app { position: relative; z-index: 1; }
+
+/* ── 전체 상단 헤더 ── */
+/* 창이 좁아져도 검색창/버튼이 찌그러지거나 화면 밖으로 밀려 잘리지 않도록, #top-row1에 최소
+   폭을 고정해두고 그보다 좁아지면 #top-bar 자체에서만 가로 스크롤이 생기게 한다(사이드바/본문
+   레이아웃에는 영향 없음). */
+#top-bar { background: var(--side2); border-bottom: 1px solid var(--border);
+           flex-shrink: 0; transition: background .25s ease;
+           overflow-x: auto; overflow-y: hidden; }
+#top-row1 { height: 64px; display: flex; align-items: center; position: relative;
+             padding: 0 28px; gap: 16px; min-width: 1280px; }
+#top-title { display: none; }
+#top-view-title { font-size: 17px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
+#top-nav { display: none; }
+
+/* ── 헤더 중앙 전역 통합 검색 — 헤더의 핵심 요소이므로 다른 컨트롤보다 한 단계 넓게,
+   #top-row1의 position:relative를 기준으로 좌/우 콘텐츠 폭과 무관하게 항상 정중앙 부근에
+   오도록 절대 배치한다(기존 메커니즘 그대로 — 드롭다운은 JS가 실제 렌더 좌표로 다시 계산). ── */
+#top-search-wrap { position: absolute; left: 38%; top: 50%; transform: translate(-50%, -50%);
+                    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+                    width: 420px; max-width: 460px; height: 38px; box-sizing: border-box;
+                    background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                    padding: 0 14px; transition: border-color .2s ease, box-shadow .2s ease,
+                    border-radius .15s ease; z-index: 501; }
+#top-search-wrap:hover { border-color: var(--sub); }
+#top-search-wrap:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+#top-search-wrap.search-open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+#top-search-icon { width: 18px; height: 18px; flex-shrink: 0; color: var(--sub);
+                    fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#top-search-input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+                     font-size: 13px; font-family: inherit; color: var(--text); }
+#top-search-input::placeholder { color: var(--sub); }
+#top-search-results { position: fixed; box-sizing: border-box; background: var(--side2);
+                       border: 1px solid var(--border); border-top: none;
+                       border-radius: 0 0 var(--radius-md) var(--radius-md);
+                       box-shadow: var(--sh-md);
+                       max-height: 360px; overflow-y: auto; z-index: 500; display: none; }
+#top-search-results.open { display: block; }
+.tsr-item { display: flex; align-items: center; justify-content: space-between; gap: 14px;
+            height: 40px; padding: 0 16px; font-size: 13px; line-height: 1; color: var(--text);
+            cursor: pointer; }
+.tsr-item:hover { background: var(--hover-tint); }
+.tsr-item + .tsr-item { border-top: 1px solid var(--border); }
+.tsr-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tsr-src { font-size: 11px; color: var(--sub); flex-shrink: 0; white-space: nowrap; }
+.tsr-empty { padding: 10px 8px; font-size: 11px; color: var(--sub); text-align: center; }
+.search-hit-flash { animation: search-hit-flash-anim 1.6s ease; }
+@keyframes search-hit-flash-anim { 0%, 100% { background: transparent; } 15%, 60% { background: var(--calc); } }
+
+/* ── 우측 액션 클러스터 — 레시피 저장 계열 / 폴더 위치 / 계정·알림, 세 그룹으로 나눠 보이도록
+   그룹 사이에만 얇은 구분선을 두고, "저장"만 포인트 컬러(주요 동작)로 남기고 나머지는 모두
+   테두리만 있는 아웃라인 톤(보조 동작)으로 통일한다 — 배경을 채우던 --inp를 걷어내
+   불필요하게 박스처럼 보이던 장식을 줄임. 높이도 32px로 통일해 프로필/알림 아이콘과 정렬. */
+/* position+z-index — #top-search-wrap은 absolute·z-index:501로 헤더 위에 겹쳐 그려지므로,
+   #top-right 전체를 그보다 높은 스택 컨텍스트에 둬 실행취소/다시실행 버튼이 검색창 뒤로
+   가려지거나 잘리지 않게 한다(검색창 자체의 크기·위치는 건드리지 않음). */
+#top-right { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+             position: relative; z-index: 502; }
+#top-recipe { font-size: 11px; font-weight: 600; color: var(--sub); white-space: nowrap; }
+/* 실행 취소/다시 실행 — 아이콘 전용 정사각형 버튼(#top-recipe-folder-btn과 같은 톤) */
+#top-undo-btn, #top-redo-btn { width: 32px; height: 32px; padding: 0; flex-shrink: 0;
+                          background: transparent; border: 1px solid var(--border); border-radius: 8px;
+                          cursor: pointer; color: var(--sub);
+                          display: inline-flex; align-items: center; justify-content: center;
+                          transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+#top-undo-btn:hover:not(:disabled), #top-redo-btn:hover:not(:disabled) { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
+#top-undo-btn:disabled, #top-redo-btn:disabled { opacity: .4; cursor: not-allowed; }
+#top-recipe-select { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
+                      border: 1px solid var(--border); border-radius: 6px; padding: 0 8px;
+                      height: 32px; box-sizing: border-box; max-width: 160px;
+                      cursor: pointer; font-family: inherit; outline: none;
+                      transition: border-color .15s ease, background-color .15s ease; }
+#top-recipe-folder-btn { width: 32px; height: 32px; padding: 0; flex-shrink: 0;
+                          background: transparent; border: 1px solid var(--border); border-radius: 8px;
+                          cursor: pointer; color: var(--sub);
+                          display: inline-flex; align-items: center; justify-content: center;
+                          position: relative;
+                          transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+#top-recipe-folder-btn:hover, #top-recipe-select:hover { border-color: var(--acc); background: var(--hover-tint); color: var(--acc); }
+/* 폴더 위치 그룹(select+폴더 버튼)과 계정/알림 그룹을 나누는 구분선 — 폴더 버튼 오른쪽에 둔다 */
+#top-recipe-folder-btn { margin-right: 6px; }
+#top-recipe-folder-btn::after { content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
+                                 width: 1px; height: 18px; background: var(--border); }
+#top-recipe-save-btn { font-size: 11px; font-weight: 700; color: #fff; background: var(--acc);
+                        border: none; border-radius: 6px; padding: 0 14px; height: 32px; box-sizing: border-box;
+                        cursor: pointer; font-family: inherit; white-space: nowrap; transition: filter .2s ease; }
+#top-recipe-save-btn:hover { filter: brightness(1.08); }
+#top-recipe-save-btn:active { transform: scale(0.97); }
+.top-recipe-btn-sub { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
+                       border: 1px solid var(--border); border-radius: 6px; padding: 0 12px;
+                       height: 32px; box-sizing: border-box;
+                       cursor: pointer; font-family: inherit; white-space: nowrap;
+                       transition: border-color .15s ease, background-color .15s ease; }
+.top-recipe-btn-sub:hover { border-color: var(--acc); background: var(--hover-tint); }
+.top-recipe-btn-sub:active { transform: scale(0.97); }
+.top-recipe-btn-sub:disabled { opacity: .4; cursor: not-allowed; }
+.top-recipe-btn-sub:disabled:hover { border-color: var(--border); background: transparent; }
+/* "새 레시피" 뒤에만 구분선을 둬 "레시피 저장 계열"과 "폴더 위치" 그룹을 시각적으로 나눈다 */
+button.top-recipe-btn-sub[onclick="newRecipe()"] { position: relative; margin-right: 6px; }
+button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position: absolute; right: -9px; top: 50%;
+                                 transform: translateY(-50%); width: 1px; height: 18px; background: var(--border); }
+
+/* ── 프로필(우측 상단) ── */
+#profile-menu-wrap { position: relative; flex-shrink: 0; }
+#profile-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--acc);
+               color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; display: flex;
+               align-items: center; justify-content: center; font-family: inherit; padding: 0;
+               transition: filter .2s ease; }
+#profile-btn:hover { filter: brightness(1.1); }
+/* position:fixed — #top-bar가 overflow-y:hidden이라 position:absolute로는 버튼 아래로
+   펼쳐지는 부분이 잘렸다. top/right는 JS(positionProfileDropdown)가 #profile-btn의
+   getBoundingClientRect() 기준으로 매번 계산해 인라인 스타일로 채운다. z-index는
+   #top-right(502)보다 확실히 위에 오도록 충분히 높게 둔다. */
+.profile-dropdown { display: none; position: fixed; min-width: 180px;
+                     background: var(--panel-grad); border: 1px solid var(--panel-border);
+                     border-radius: 10px; box-shadow: var(--sh-md); z-index: 600; overflow: hidden; }
+.profile-dropdown.open { display: block; }
+#profile-dropdown-email { padding: 10px 14px; font-size: 11px; color: var(--sub);
+                           border-bottom: 1px solid var(--border); word-break: break-all; }
+.profile-dropdown-item { padding: 10px 14px; font-size: 12px; font-weight: 600; color: var(--text);
+                          cursor: pointer; transition: background-color .2s ease; }
+.profile-dropdown-item:hover { background: var(--side2); }
+
+/* ── 알림(우측 상단 벨 + 우측 슬라이드 Drawer) ── */
+#notif-btn { position: relative; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
+             border: none; background: transparent; color: var(--sub); cursor: pointer;
+             display: flex; align-items: center; justify-content: center; padding: 0;
+             transition: background-color .2s ease, color .2s ease; }
+#notif-btn:hover { background: var(--hover-tint); color: var(--text); }
+#notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
+             background: #34c759; border: 2px solid var(--side2); display: none; }
+#notif-dot.show { display: block; }
+
+#notif-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+                 z-index: 1000; opacity: 0; transition: opacity .28s ease; }
+#notif-overlay.open { display: block; opacity: 1; }
+
+#notif-drawer { position: fixed; top: 0; right: 0; height: 100%; width: 380px;
+                background: var(--panel-grad); border-left: 1px solid var(--panel-border);
+                box-shadow: var(--sh-md); z-index: 1001;
+                display: flex; flex-direction: column;
+                transform: translateX(100%); transition: transform .28s ease; }
+#notif-drawer.open { transform: translateX(0); }
+
+#notif-drawer-hdr { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+                    padding: 18px 20px; border-bottom: 1px solid var(--border); }
+#notif-drawer-hdr span { font-size: 14.5px; font-weight: 700; color: var(--hdr); }
+#notif-close-btn { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent;
+                    color: var(--sub); cursor: pointer; display: flex; align-items: center; justify-content: center;
+                    padding: 0; transition: background-color .2s ease, color .2s ease; }
+#notif-close-btn:hover { background: var(--hover-tint); color: var(--text); }
+
+#notif-list { flex: 1; overflow-y: auto; }
+.notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 14px 20px;
+              border-bottom: 1px solid var(--border); }
+.notif-dot-col { width: 8px; flex-shrink: 0; padding-top: 5px; }
+.notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; display: block; }
+.notif-body { flex: 1; min-width: 0; }
+.notif-title { font-size: 12.5px; font-weight: 700; color: var(--hdr); line-height: 1.4; }
+.notif-desc { font-size: 11.5px; color: var(--text); line-height: 1.55; margin-top: 3px; }
+.notif-time { font-size: 10px; color: var(--sub); margin-top: 6px; }
+.notif-empty { padding: 10px 8px; text-align: center; color: var(--sub); font-size: 11px; }
+
+/* ── 사이드바 접힘 상태 Tooltip — position:fixed로 JS가 좌표를 계산해 배치한다(사이드바의
+   overflow-y:auto/overflow-x:hidden에 잘리지 않도록 사이드바 바깥, body 레벨에 둔다) ── */
+#sidebar-tooltip { position: fixed; background: #1e2733; color: #FFFFFF; padding: 6px 10px;
+                    border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap;
+                    z-index: 2000; box-shadow: var(--sh-md); opacity: 0; pointer-events: none;
+                    transition: opacity .15s ease; }
+#sidebar-tooltip.show { opacity: 1; }
+
+/* ── 공통 Toast — 저장/수정/추가/불러오기 완료 안내(alert 대체). position:fixed라 body
+   zoom:1.1의 영향을 그대로 받아 시각적으로 일관되게 확대되므로 별도 좌표 보정이 필요 없다 ── */
+#app-toast { position: fixed; left: 50%; bottom: 32px; transform: translateX(-50%) translateY(6px);
+             max-width: min(420px, calc(100vw - 40px)); background: var(--acc); color: #fff;
+             font-size: 13px; font-weight: 600; line-height: 1.5; text-align: center;
+             padding: 12px 20px; border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+             z-index: 3000; opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; }
+#app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 480px) {
+  /* vw 대신 left:0으로 폭을 맞춘다 — 이 앱은 body에 zoom:1.1이 걸려 있어 100vw 같은 뷰포트
+     단위 폭 계산이 실제 화면보다 커지는 오차가 생긴다(edge-anchoring은 이 오차의 영향을 받지 않는다). */
+  #notif-drawer { left: 0; width: auto; }
+}
+
+/* ── 레이아웃 ── */
+/* 사이드바(260px)는 고정 폭을 유지하고 본문(#main)은 flex:1·min-width:0로 창 폭에 맞춰
+   자연스럽게 줄어든다. 표처럼 자체 최소 폭이 필요한 영역(#mix-table-wrap, #ing-table,
+   #std-table 등)은 각자 overflow-x:auto로 스스로 가로 스크롤을 내보내므로, 여기서 전체
+   앱 폭을 강제로 고정할 필요가 없다. */
+#app { display: flex; flex: 1; overflow: hidden; min-width: 0; }
+#sidebar { display: flex; flex-direction: column; width: 260px; flex-shrink: 0; box-sizing: border-box;
+           background: var(--topbar-bg); padding: 22px 16px; overflow-y: auto; overflow-x: hidden;
+           transition: width .25s ease; }
+#sidebar-logo { display: flex; flex-direction: column; padding: 0 2px 26px; flex-shrink: 0; }
+#sidebar-logo-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; }
+/* 로고 전체(아이콘+워드마크 이미지)를 감싸는 Home 버튼 — padding+음수 margin으로 실제 차지하는
+   레이아웃 크기는 이전과 동일하게 상쇄하면서, hover 시 은은한 배경만 살짝 더 넓게 보이게 한다. */
+#sidebar-home-btn { flex: 1 1 0%; min-width: 0; display: flex; align-items: center; gap: 10px;
+                     background: transparent; border: none; padding: 6px; margin: -6px;
+                     border-radius: 8px; cursor: pointer; text-align: left; font: inherit;
+                     transition: background-color .2s ease; }
+#sidebar-home-btn:hover { background: rgba(255,255,255,0.07); }
+#sidebar-logo img { width: 54px; height: 54px; display: block; flex-shrink: 0; object-fit: contain; }
+#sidebar-brand-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+#sidebar-wordmark { font-size: 16px; font-weight: 700; line-height: 1.05; letter-spacing: 0.5px;
+                     color: #FFFFFF; white-space: normal; }
+#sidebar-collapse-btn { width: 28px; height: 28px; flex-shrink: 0; border-radius: 6px; border: none;
+                         background: transparent; color: #b7c0ca; cursor: pointer; padding: 0;
+                         display: flex; align-items: center; justify-content: center;
+                         transition: background-color .2s ease, color .2s ease; }
+#sidebar-collapse-btn:hover { background: rgba(255,255,255,0.12); color: #FFFFFF; }
+#sidebar-collapse-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2;
+                             stroke-linecap: round; stroke-linejoin: round; }
+#sidebar-tagline { font-size: 8.5px; font-weight: 700; letter-spacing: 0.8px; color: #b7c0ca;
+                    text-transform: uppercase; white-space: normal; line-height: 1.35; display: block;
+                    cursor: pointer; border-radius: 6px;
+                    padding: 2px 4px; margin: 2px -4px 0; box-sizing: border-box;
+                    transition: background-color .2s ease; }
+#sidebar-tagline:hover { background: rgba(255,255,255,0.07); }
+#sidebar-nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+/* 메뉴 영역과 분리 — .nav-divider와 같은 톤(rgba(255,255,255,0.045))의 얇은 보더로 구분 */
+#sidebar-foot { margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.045);
+                font-size: 9px; color: #b7c0ca; opacity: 0.75; flex-shrink: 0; }
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* ── 사이드바 접힘 상태(76px) — 레이아웃/색상/아이콘/메뉴 순서는 그대로 두고 텍스트만 숨긴다 ── */
+html.sidebar-collapsed #sidebar { width: 76px; }
+html.sidebar-collapsed #sidebar-logo-row { flex-direction: column; gap: 8px; }
+html.sidebar-collapsed #sidebar-home-btn { flex: none; }
+html.sidebar-collapsed #sidebar-logo img { width: 44px; height: 44px;
+                                            object-fit: cover; object-position: left center; border-radius: 6px; }
+html.sidebar-collapsed #sidebar-brand-text,
+html.sidebar-collapsed #sidebar-foot { display: none; }
+html.sidebar-collapsed #sidebar-nav { gap: 4px; }
+html.sidebar-collapsed .nav-item,
+html.sidebar-collapsed .nav-group-hdr { justify-content: center; gap: 0; padding-left: 8px; padding-right: 8px; }
+html.sidebar-collapsed .nav-item > span,
+html.sidebar-collapsed .nav-label > span,
+html.sidebar-collapsed .nav-chevron,
+html.sidebar-collapsed .nav-section-label,
+html.sidebar-collapsed .nav-group-body { display: none; }
+
+/* ── 사이드바 네비게이션 ── */
+.nav-item { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box;
+            padding: 11px 12px; position: relative;
+            font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
+            border-radius: 8px;
+            transition: color .2s ease, background-color .2s ease;
+            user-select: none; white-space: nowrap; text-align: left; }
+.nav-item:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
+/* 활성 메뉴 — 사이드바 전체를 채우던 진한 틸 필 대신, 얇은 좌측 인디케이터 + 아주 은은한
+   배경 틴트 + 포인트 컬러(--acc) 텍스트로 표시한다. 아이콘은 stroke:currentColor라 텍스트
+   색을 그대로 물려받아 아이콘을 따로 바꿀 필요가 없다. 패딩은 기본 .nav-item과 동일하게
+   맞춰(예전엔 9px 8px로 더 작았음) 활성/비활성 전환 시 아이콘·텍스트 위치가 흔들리지 않는다. */
+.nav-item.active { color: var(--acc); background: rgba(255,255,255,0.07); font-weight: 700; }
+.nav-item.active::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
+  background: var(--acc); border-radius: 0 3px 3px 0;
+}
+.nav-item.active:hover { background: rgba(255,255,255,0.1); color: var(--acc); }
+
+/* Lucide 라인 아이콘 — stroke는 currentColor를 상속해 텍스트와 같은 색/상태로 움직인다 */
+.nav-icon { width: 18px; height: 18px; flex-shrink: 0; display: block;
+            fill: none; stroke: currentColor; stroke-width: 2;
+            stroke-linecap: round; stroke-linejoin: round; }
+.nav-label { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.nav-chevron { width: 15px; height: 15px; flex-shrink: 0; margin-left: 8px;
+               fill: none; stroke: currentColor; stroke-width: 2;
+               stroke-linecap: round; stroke-linejoin: round;
+               transition: transform .2s ease; }
+.nav-group.open > .nav-group-hdr .nav-chevron { transform: rotate(90deg); }
+
+/* ── 사이드바 구분선 ── */
+.nav-divider { height: 1px; margin: 14px 4px; background: rgba(255,255,255,0.045); border: none; flex-shrink: 0; }
+
+/* ── 사이드바 섹션 라벨 / 아코디언 그룹 ── */
+.nav-section-label { font-size: 9.5px; font-weight: 600; letter-spacing: 0.5px; color: #b7c0ca;
+                      opacity: 0.5; text-transform: uppercase; margin: 4px 12px 9px; user-select: none; }
+.nav-section-label:first-child { margin-top: 0; }
+
+.nav-group-hdr { display: flex; align-items: center; justify-content: space-between; width: 100%;
+                 box-sizing: border-box; padding: 11px 12px;
+                 font-size: 13.5px; font-weight: 600; color: #b7c0ca; cursor: pointer;
+                 border-radius: 8px;
+                 transition: color .2s ease, background-color .2s ease;
+                 user-select: none; white-space: nowrap; text-align: left; }
+.nav-group-hdr:hover { color: #FFFFFF; background: rgba(255,255,255,0.08); }
+.nav-group.has-active > .nav-group-hdr { color: #FFFFFF; }
+
+.nav-group-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .25s ease; }
+.nav-group.open > .nav-group-body { grid-template-rows: 1fr; }
+.nav-group-inner { overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
+.nav-subitem { padding-left: 30px; font-size: 12.5px; margin-top: 2px; }
+
+/* ── 대시보드 설정 폼 ── */
+.settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
+                 gap: 8px; margin-bottom: 10px; }
+.settings-grid .full-width { grid-column: 1 / -1; }
+.accent-card { background: none; border: none; padding: 0; }
+.sf-item label { display: block; font-size: 9px; color: var(--sub);
+                 font-weight: 600; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+.sf-item input, .sf-item select {
+  width: 100%; font-size: 11px; padding: 6px 9px;
+  border: 1px solid var(--border); border-radius: 5px;
+  background: var(--side2); color: var(--text); font-family: inherit; outline: none;
+  transition: border-color .25s ease, box-shadow .25s ease; }
+.sf-item input:focus, .sf-item select:focus {
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent); }
+
+/* ── 2지선다 세그먼트 컨트롤(동물종류/성별/중성화) — 실제 값은 숨겨진 select가 그대로 보유,
+   기존 코드는 그 select의 .value만 읽으므로 다른 로직을 손대지 않고도 UI만 교체할 수 있다 ── */
+.seg-hidden { display: none !important; }
+.seg-control { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.seg-btn { flex: 1; padding: 7px 10px; font-size: 11px; font-weight: 600; font-family: inherit;
+           border: none; background: var(--inp); color: var(--sub); cursor: pointer;
+           transition: background-color .2s ease, color .2s ease; }
+.seg-btn + .seg-btn { border-left: 1px solid var(--border); }
+.seg-btn:hover { background: var(--gray-l); }
+.seg-btn.active { background: var(--acc); color: #fff; }
+
+/* ── BCS(신체지수) 컬러 게이지 바 — 값은 숨겨진 select(#pet-bcs)가 그대로 보유 ── */
+.bcs-gauge { position: relative; padding-top: 20px; }
+.bcs-chip { position: absolute; top: 0; left: 12.5%; transform: translateX(-50%);
+            font-size: 9px; font-weight: 700; color: #fff; background: var(--acc);
+            padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+            transition: left .25s ease; pointer-events: none; }
+.bcs-bar { display: flex; gap: 2px; border-radius: 6px; overflow: hidden; }
+.bcs-seg { flex: 1; height: 22px; border: none; cursor: pointer; padding: 0;
+           font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.9);
+           display: flex; align-items: center; justify-content: center;
+           opacity: .5; transition: opacity .2s ease, transform .15s ease; }
+.bcs-seg:hover { opacity: .8; }
+.bcs-seg.active { opacity: 1; box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px rgba(0,0,0,.3); transform: scaleY(1.08); }
+.bcs-seg[data-value="1"], .bcs-seg[data-value="2"], .bcs-seg[data-value="3"] { background: #3B82F6; }
+.bcs-seg[data-value="4"], .bcs-seg[data-value="5"] { background: #10B981; }
+.bcs-seg[data-value="6"], .bcs-seg[data-value="7"] { background: #F59E0B; }
+.bcs-seg[data-value="8"], .bcs-seg[data-value="9"] { background: #EF4444; }
+.bcs-axis { display: flex; margin-top: 4px; font-size: 8.5px; color: var(--sub); font-weight: 600; text-align: center; }
+
+/* ── 알레르기 — select로 추가하면 옆 상자에 세로로 쌓이고, 값은 숨겨진
+   input(#pet-allergy)이 콤마 구분 문자열로 그대로 보유(기존 저장/불러오기 로직 재사용) ── */
+.allergy-control { display: flex; gap: 6px; align-items: flex-start; }
+.allergy-control select { flex: 1 1 40%; min-width: 0; height: 37px; }
+.allergy-list { flex: 1 1 60%; min-width: 0; max-height: 110px; overflow-y: auto;
+                border: 1px solid var(--border); border-radius: 5px; background: var(--side2);
+                padding: 3px; display: flex; flex-direction: column; gap: 3px; }
+.allergy-list-empty { display: flex; align-items: center; justify-content: center;
+                       min-height: 31px; font-size: 11px; color: var(--sub); }
+.allergy-item { display: flex; align-items: center; justify-content: space-between;
+                gap: 6px; padding: 3px 6px; border-radius: 4px; background: var(--inp);
+                font-size: 10.5px; color: var(--text); flex-shrink: 0; }
+.allergy-item .rm-btn { border: none; background: none; cursor: pointer; padding: 0;
+                         font-size: 11px; line-height: 1; color: var(--sub); flex-shrink: 0;
+                         transition: color .15s ease; }
+.allergy-item .rm-btn:hover { color: #C0392B; }
+.settings-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; }
+.settings-actions button { padding: 7px 16px; font-size: 11px; font-weight: 600;
+                            font-family: inherit; border-radius: 6px; cursor: pointer;
+                            border: 1px solid var(--border); background: var(--side2); color: var(--text);
+                            transition: background-color .15s ease, border-color .15s ease, transform .18s ease; }
+.settings-actions button:hover { background: var(--hover-tint); border-color: var(--acc); }
+.settings-actions button:active { transform: scale(0.97); }
+.settings-actions .btn-blue { background: var(--side2); color: var(--text); }
+.settings-actions .btn-green { background: var(--side2); color: var(--text); }
+.settings-actions .btn-red { background: var(--side2); color: #C0392B; }
+#recipe-name { font-size: 9px; color: var(--sub); margin-top: 6px; }
+
+/* ── 탭 숨김 (좌측 네비로 대체) ── */
+#tabs { display: none; }
+#tab-content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.tab-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.tab-pane.active { display: flex; }
+
+/* ── 공통 헤더바 ── */
+.hdr-bar { background: var(--gray-l); color: var(--text); padding: 6px 14px;
+           font-size: 10.5px; font-weight: 600; display: flex;
+           align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
+           border-bottom: 1px solid var(--border); color: var(--sub); }
+.hdr-bar .hdr-btns { margin-left: auto; display: flex; gap: 5px; }
+.hdr-bar button { padding: 4px 12px; border: none; border-radius: 3px;
+                  color: white; font-size: 10px; font-weight: 600;
+                  cursor: pointer; font-family: inherit;
+                  transition: filter .35s ease, transform .18s ease; }
+.hdr-bar button:hover { filter: brightness(1.1); }
+.hdr-bar button:active { transform: scale(0.97); }
+/* ── 페이지 헤더 제목/설명 2단 타이포 — 모든 탭이 공유하는 한 벌의 패턴 ──
+   이전에는 탭마다 dash-hdr-title/mix-hdr-title/ing-hdr-title/std-hdr-title처럼 같은 규칙을
+   이름만 바꿔 중복 정의했다. 지금은 .hdr-title/.hdr-desc 하나로 통합하고, 각 탭 hdr-bar에는
+   좌측 정렬용 .hdr-bar-left만 붙인다(가운데 정렬이 필요한 곳은 기존 .hdr-bar 기본값 그대로 유지 가능). */
+.hdr-bar.hdr-bar-left { justify-content: flex-start; }
+.hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
+.hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
+.hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
+/* 배합 설계 액션 버튼 hierarchy — 원료DB 툴바(.ing-toolbar button/.ing-btn-primary)와
+   같은 언어(중립 아웃라인 = 기본, 포인트 컬러 = 주요 동작, 기존 위험색(#B03A2E) = 파괴적 동작)를
+   그대로 재사용해 화면 간 툴바 스타일을 통일한다.
+   전역 상단바(#top-recipe-save-btn/.top-recipe-btn-sub)와 같은 체급(32px 높이, radius 6px)으로
+   맞춰, 같은 "레시피/배합 관리" 액션인데 두 바의 버튼 크기가 달라 보이던 문제를 줄인다. */
+#tab-mix .hdr-btns { gap: 8px; }
+#tab-mix .hdr-btns button { display: inline-flex; align-items: center; gap: 5px;
+                             background: var(--side2); color: var(--text); border: 1px solid var(--border);
+                             padding: 0 12px; height: 32px; box-sizing: border-box;
+                             font-size: 11px; font-weight: 600; border-radius: 6px; }
+#tab-mix .hdr-btns button svg { flex-shrink: 0; }
+#tab-mix .hdr-btns button:hover { filter: none; border-color: var(--acc); background: var(--hover-tint); }
+#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); font-weight: 700; padding: 0 14px; }
+#tab-mix .hdr-btns button.mix-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
+#tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
+#tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
+
+
+/* ── 카드 ── */
+.cards { display: flex; gap: 6px; padding: 8px 12px; flex-shrink: 0;
+         flex-wrap: wrap; justify-content: center; }
+.card { padding: 10px 12px; border-radius: var(--radius-md); min-width: 80px;
+        background: var(--gray-grad); box-shadow: var(--sh);
+        border: 1px solid var(--border); position: relative; overflow: hidden; }
+.card .card-title { font-size: var(--fs-meta); color: var(--sub); line-height: 1.4; min-height: 25px; }
+.card .card-val { font-size: 15px; font-weight: 700; margin-top: 3px;
+                  color: var(--hdr); }
+.card .card-sub { font-size: 10px; color: var(--sub); margin-top: 2px; }
+
+/* ── 탭 전체 컨테이너 (배합 설계·원료 DB 제외) ── */
+.tab-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden;
+             background: var(--panel-bg); transition: background .25s ease; }
+/* 경고 패널은 .dash-panel이 아니라 .tab-panel을 쓰지만, 표(8열·최대 약 1075px)가 넓지
+   않은 "카드형 정보 화면"이라 다른 카드 화면과 같은 폭 제한을 적용한다. .tab-panel 자체는
+   영양 분석·영양기준 DB처럼 진짜 넓은 표 화면도 공유하므로 여기서만 스코프한다. */
+#tab-warn .tab-panel { max-width: 1400px; margin: 0 auto; width: 100%; }
+
+/* ── 테이블 컨테이너 ── */
+.tbl-wrap { flex: 1; overflow: auto; padding: 20px;
+            background: var(--panel-bg); transition: background .25s ease; }
+table { width: 100%; border-collapse: collapse; font-size: 11px;
+        background: transparent; overflow: hidden; border: 1px solid var(--border); }
+#ana-table, #warn-table, #std-table { width: auto; margin: 0 auto; }
+/* ana-table은 헤더가 2줄(그룹행+개별행)이라 둘 다 top:0이면 스크롤 시 서로 겹침 →
+   1행은 top:0, 2행은 1행 높이만큼 내려서 각자 제자리에 고정되도록 함 */
+#ana-table thead tr:first-child th { height: 27px; }
+#ana-table thead tr:nth-child(2) th { top: 27px; }
+/* 영양소/경고/기준검증 표 — 원료DB·영양기준 DB 표(810번대)와 동일한 --table-line/--table-hdr-bg/
+   --hover-tint 토큰을 그대로 재사용한다(새 색상·새 컴포넌트 없음, 밀도/패딩은 표별로 유지). */
+#ana-table, #warn-table, #stdverify-table {
+  --table-line: color-mix(in srgb, var(--border) 65%, transparent);
+  --table-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%);
+  border-color: var(--table-line);
+}
+#ana-table th, #warn-table th, #stdverify-table th {
+  border-color: var(--table-line); background: var(--table-hdr-bg);
+}
+#ana-table td, #warn-table td, #stdverify-table td { border-color: var(--table-line); }
+#ana-table td, #warn-table td { padding: 5px 8px; }
+/* 표 안에 "데이터 없음/입력 안내" 한 줄만 넣는 placeholder 행 — panel-type 빈 상태와
+   같은 톤(11px는 table 기본값 상속, var(--sub), 중앙정렬, 20-30px 패딩대)으로 통일 */
+.table-empty-row { text-align: center; color: var(--sub); padding: 24px; }
+/* 원료 DB 검색 전 빈 상태 — 가로 스크롤되는 표(#ing-table) 바깥에 두어 항상 화면 중앙에
+   놓이게 한다. 새 색상 없이 기존 토큰(--hdr/--sub/--border)·폰트만 사용. */
+#ing-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center;
+                   justify-content: center; text-align: center; gap: 8px; padding: 32px 16px; }
+#ing-empty-state[hidden] { display: none; }
+.ing-empty-icon { width: 44px; height: 44px; border-radius: 12px; display: flex;
+                  align-items: center; justify-content: center; margin-bottom: 4px;
+                  border: 1px solid var(--border); color: var(--sub); }
+.ing-empty-title { font-size: 14px; font-weight: 700; color: var(--hdr); }
+.ing-empty-desc { font-size: 12px; color: var(--sub); line-height: 1.55; max-width: 380px; }
+.ing-empty-eg { font-size: 11px; color: var(--sub); opacity: .8; }
+#ana-table tbody tr:not(.cat-row):hover td,
+#warn-table tbody tr:not(.cat-row):hover td,
+#stdverify-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
+/* ── 영양 분석 표: "한눈 상태" 정리 (판정값·계산식·색 토큰은 미변경, 표시만) ──
+   핵심 판정(AAFCO 성견)이 부족/초과인 행만 왼쪽에 상태색 띠 + 영양소명 강조 →
+   스캔 시 문제 영양소가 먼저 보이게. 정상 행은 기존 줄무늬 톤 그대로(과잉 강조 방지). */
+#ana-table tbody tr.ana-row-fail > td:first-child,
+#ana-table tbody tr.ana-row-over  > td:first-child { box-shadow: inset 3px 0 0 var(--fail-t); }
+#ana-table tbody tr.ana-row-fail > td:nth-child(2),
+#ana-table tbody tr.ana-row-over  > td:nth-child(2) { font-weight: 700; color: var(--fail-t); }
+/* 정보 계층: 영양소명(식별자) → 실측값(현재값)을 기준값(옅은 회색)보다 또렷하게 */
+#ana-table tbody td:nth-child(2) { font-weight: 600; color: var(--hdr); }
+#ana-table tbody td:nth-child(4) { font-weight: 700; }
+/* 숫자 열 자릿수 정렬 통일 — 위아래 값 비교가 빠르도록 */
+#ana-table td { font-variant-numeric: tabular-nums; }
+th { background: var(--th-bg); color: var(--hdr); padding: 6px 6px;
+     text-align: center; position: sticky; top: 0; z-index: 10;
+     white-space: nowrap; font-size: 10px; border: 1px solid var(--border);
+     font-weight: bold; }
+td { padding: 4px 6px; border-bottom: 1px solid var(--border);
+     border-right: 1px solid var(--border); white-space: nowrap;
+     transition: background-color .3s ease; }
+tr.cat-row td { background: var(--th-bg); color: var(--hdr); font-weight: bold; font-size: 10px;
+                border-bottom: 2px solid var(--border); }
+tr.sec-row td { background: var(--sec); color: var(--hdr); font-weight: bold; }
+tr:nth-child(even):not(.cat-row):not(.sec-row) td { background: var(--even); }
+tr:nth-child(odd):not(.cat-row):not(.sec-row) td { background: var(--odd); }
+tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !important; }
+/* 관리자 페이지 "사용자 목록" 표 — 아이디/이메일 길이에 따라 표·열 너비가 늘었다 줄었다 하는
+   문제 방지: table-layout:fixed로 열 너비를 고정하고, 넘치는 텍스트는 말줄임표로 자른다.
+   표는 항상 부모(콘텐츠 영역, max-width:640px) 폭 100%를 넘지 않는다 — 고정 폭(650px)을
+   주면 부모보다 넓어져 가로 스크롤이 생기므로 폭을 직접 지정하지 않는다. 아이디 열만 너비를
+   지정하지 않아 나머지 4개 고정 열을 뺀 남은 공간을 자동으로 차지한다(반응형). */
+#admin-user-table-wrap { width: 100%; max-width: 100%; overflow-x: hidden; }
+#admin-user-table { table-layout: fixed; width: 100%; max-width: 100%; }
+#admin-user-table th:nth-child(2), #admin-user-table td:nth-child(2) { width: 85px; }
+#admin-user-table th:nth-child(3), #admin-user-table td:nth-child(3) { width: 145px; }
+#admin-user-table th:nth-child(4), #admin-user-table td:nth-child(4) { width: 60px; }
+#admin-user-table th:nth-child(5), #admin-user-table td:nth-child(5) { width: 135px; }
+#admin-user-table td, #admin-user-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+/* 상태 셀 색상 — "초과"는 최소/최대 기준을 실제로 벗어난 상태이므로 --fail(빨강)을 쓴다.
+   "주의"(근접이지만 아직 벗어나지 않음, 경고 패널 전용)만 별도 .warn 클래스로 --warn(노랑)을 쓴다
+   — 예전엔 이 둘이 같은 .over 클래스를 공유해서 탭마다 "초과"의 색이 반대로 보였다(판정값 자체는
+   그대로, 색 매핑만 정리). */
+.pass { background: var(--pass-bg) !important; color: var(--pass-t); font-weight: bold; }
+.fail { background: var(--fail-bg) !important; color: var(--fail-t); font-weight: bold; }
+.over { background: var(--fail-bg) !important; color: var(--fail-t); font-weight: bold; }
+.warn { background: var(--warn-bg) !important; color: var(--warn-t); font-weight: bold; }
+.none { background: var(--gray-l) !important; color: var(--sub); font-weight: bold; }
+.info { background: var(--calc) !important; color: var(--acc); font-weight: bold; }
+.num { text-align: right; }
+.left { text-align: left; }
+.center { text-align: center; }
+
+/* ── 영양 분석 탭: 카드·표를 왼쪽으로, 원료별 영양소 기여도를 오른쪽 전체 높이로 ── */
+.ana-split { display: flex; flex: 1; overflow: hidden; align-items: stretch; }
+.ana-left { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+.ana-split .tbl-wrap { flex: 1; }
+.ana-contrib-panel { width: 420px; flex-shrink: 0; overflow-y: auto; padding: 16px;
+                      margin: 16px; box-sizing: border-box;
+                      background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                      box-shadow: var(--sh-md);
+                      transition: background .25s ease; align-self: stretch; }
+.ana-contrib-hdr h3 { font-size: var(--fs-title); font-weight: 700; color: var(--hdr); margin-bottom: 12px; }
+.ana-contrib-sub { font-size: 10px; color: var(--sub); margin-bottom: 12px; letter-spacing: .3px; }
+.ana-contrib-nutsel { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+.ana-contrib-nutbtn { padding: 5px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
+                       border: 1px solid var(--border); background: var(--side); color: var(--sub);
+                       cursor: pointer; transition: .2s; white-space: nowrap; font-family: inherit; }
+.ana-contrib-nutbtn:hover { border-color: var(--acc); color: var(--acc); }
+.ana-contrib-nutbtn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.ana-contrib-summary { font-size: 12px; font-weight: 600; color: var(--hdr); background: var(--calc);
+                        padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; line-height: 1.5; }
+.ana-contrib-bar-row { margin-bottom: 12px; cursor: pointer; }
+.ana-contrib-bar-row:hover .ana-contrib-bar-name { color: var(--acc); }
+.ana-contrib-bar-toprow { display: flex; justify-content: space-between; align-items: baseline;
+                           font-size: 11px; margin-bottom: 3px; gap: 8px; }
+.ana-contrib-bar-name { font-weight: 700; color: var(--text); transition: color .2s; white-space: nowrap;
+                         overflow: hidden; text-overflow: ellipsis; }
+.ana-contrib-bar-meta { color: var(--sub); font-size: 9.5px; white-space: nowrap; flex-shrink: 0; }
+.ana-contrib-bar-track { flex: 1; height: 14px; background: var(--gray-l); border-radius: 7px; overflow: hidden; }
+.ana-contrib-bar-fill { height: 100%; background: var(--acc); border-radius: 7px; transition: width .4s ease; }
+.ana-contrib-bar-pct { font-size: 10.5px; font-weight: 700; color: var(--acc); margin-left: 8px; width: 42px; text-align: right; flex-shrink: 0; }
+.ana-contrib-empty { font-size: 11px; color: var(--sub); text-align: center; padding: 30px 10px; line-height: 1.6; }
+
+.ana-contrib-detail { margin-top: 4px; margin-bottom: 16px; padding: 12px; background: var(--gray-l);
+                       border-radius: var(--radius-md); border: 1px solid var(--border); }
+.ana-contrib-detail h4 { font-size: 11.5px; color: var(--hdr); margin-bottom: 4px; display: flex;
+                          justify-content: space-between; align-items: center; }
+.ana-contrib-detail-note { font-size: 10.5px; color: var(--sub); margin-bottom: 10px; line-height: 1.5; }
+.ana-contrib-detail-row { display: flex; align-items: center; gap: 8px; font-size: 10.5px; margin-bottom: 5px; }
+.ana-contrib-detail-row .lbl { width: 66px; color: var(--sub); flex-shrink: 0; white-space: nowrap;
+                                overflow: hidden; text-overflow: ellipsis; }
+.ana-contrib-detail-row .track { flex: 1; height: 9px; background: var(--side); border-radius: 5px; overflow: hidden; }
+.ana-contrib-detail-row .fill { height: 100%; background: var(--acc2); }
+.ana-contrib-detail-row .val { width: 42px; text-align: right; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
+.ana-contrib-detail-row.top .lbl, .ana-contrib-detail-row.top .val { color: var(--acc); }
+.ana-contrib-detail-row.top .fill { background: var(--acc); }
+
+.ana-contrib-heatmap-wrap { margin-top: 6px; }
+.ana-contrib-heatmap-wrap h4 { font-size: 11px; color: var(--hdr); margin-bottom: 8px; font-weight: 700; }
+#ana-contrib-heatmap table, #amino-contrib-heatmap table { width: auto; font-size: 9.5px; }
+#ana-contrib-heatmap th, #amino-contrib-heatmap th { font-size: 9px; padding: 4px 7px; white-space: nowrap; }
+#ana-contrib-heatmap td, #amino-contrib-heatmap td { padding: 4px 7px; text-align: center; font-weight: 700; white-space: nowrap; }
+#ana-contrib-heatmap td.left, #amino-contrib-heatmap td.left { text-align: left; background: var(--side2) !important;
+                                color: var(--hdr); position: sticky; left: 0; }
+#ana-contrib-heatmap td.left { cursor: pointer; }
+#ana-contrib-heatmap td.left:hover { color: var(--acc); }
+
+/* ── 배합 설계 탭 ── */
+/* 원료 선택 영역(테이블)과 뚜렷이 구분되는 "설정 패널"처럼 보이도록 아래쪽에 은은한 그림자를
+   덧붙인다(테두리 색은 그대로, 새 색상 없음). 라벨도 데이터 그리드 헤더와 같은 대문자·자간 톤으로 통일. */
+.mix-unit-bar { display: flex; align-items: center; gap: 24px; padding: 12px 16px;
+                 background: var(--side); border-bottom: 1px solid var(--border); flex-shrink: 0;
+                 box-shadow: 0 1px 0 var(--border); position: relative; z-index: 1; }
+.mix-unit-item { display: flex; flex-direction: column; gap: 4px; }
+.mix-unit-item label { font-size: 9.5px; color: var(--sub); font-weight: 700;
+                        text-transform: uppercase; letter-spacing: .4px; }
+.mix-unit-item select, .mix-unit-item input { font-size: 12px; padding: 6px 10px;
+                 border: 1px solid var(--border); border-radius: 6px;
+                 background: var(--inp); color: var(--text); font-family: inherit; outline: none;
+                 transition: border-color .15s ease, box-shadow .15s ease; }
+.mix-unit-item select:focus, .mix-unit-item input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.mix-unit-item select { cursor: pointer; min-width: 110px; }
+.mix-unit-item input { width: 80px; text-align: right; }
+.mix-unit-hint { font-size: 11px; color: var(--sub); margin-left: auto; }
+/* ── 배합 설계 테이블 밀도/보더 정리(2단계) ──
+   --mix-line: 기존 --border 토큰을 그대로 쓰되 color-mix()로 살짝 옅게 만든 파생값 —
+   새 색상을 만들지 않고 행/열 구분선의 시각적 노이즈만 줄인다(다른 곳엔 영향 없음, 이 안에서만 사용). */
+/* flex:1(남은 공간을 무조건 채움) 대신 flex:0 1 auto + max-height로 바꿔, 원료가 몇 개 없을 때는
+   테이블이 내용 높이만큼만 차지하고(빈 공간 최소화), 행이 많아져 max-height(60vh)를 넘으면
+   .mix-table-wrap 자체가 세로 스크롤(overflow-y:auto)된다 — 헤더(#mix-hdr)는 top:0 sticky로 고정.
+   (예전엔 #mix-body가 세로 스크롤을 맡았으나 본문 행 좌측 sticky 컬럼이 깨져 아래처럼 옮김.) */
+.mix-table-wrap { flex: 0 1 auto; max-height: 60vh; overflow-x: auto; overflow-y: auto; display: flex; flex-direction: column; min-height: 0; background: var(--bg);
+                   --mix-line: color-mix(in srgb, var(--border) 45%, transparent);
+                   /* 원료DB·영양기준DB 테이블(#ing-table/#std-table)과 같은 방식으로 파생한
+                      불투명 헤더 틴트 — 새 색상이 아니라 기존 --th-bg/--sub의 조합이다. 행 배경(백색/side2)과
+                      또렷이 구분되도록 섞는 비율만 6%→11%로 살짝 올렸다(다른 곳엔 영향 없음, 이 안에서만 사용). */
+                   --mix-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 11%); }
+/* 세로 스크롤은 이제 #mix-body가 아니라 .mix-table-wrap이 담당한다(아래 #mix-body 참고).
+   그래서 헤더 행 자체를 top:0 sticky로 고정해 세로로 스크롤해도 계속 보이게 한다.
+   z-index는 본문 좌측 sticky 셀(z-index:2)보다 위(3). */
+#mix-hdr { display: flex; background: var(--mix-hdr-bg); flex-shrink: 0; min-width: max-content;
+           position: sticky; top: 0; z-index: 3;
+           border-bottom: 1px solid var(--border); padding-right: 20px; }
+/* text-transform:uppercase를 쓰지 않는다 — 헤더 라벨은 대부분 한글이라 대소문자 구분이
+   없지만, "(kcal)"·"(g)"·"(mg)" 같은 단위 표기까지 함께 대문자로 바뀌어 KCAL/G/MG로
+   보이는 부작용이 있었다. 대문자·자간 톤은 letter-spacing만으로 유지한다. */
+#mix-hdr > * { display: flex; align-items: center; justify-content: center;
+                padding: 7px 4px; color: var(--hdr); font-size: 9.5px;
+                font-weight: 700; text-align: center; flex-shrink: 0;
+                letter-spacing: .3px;
+                border-right: 1px solid var(--mix-line); box-sizing: border-box; }
+/* 원료명(선택 영역) 칼럼과 배합비(입력 영역) 칼럼 사이, 그리고 배합비와 그 뒤 스크롤 영역
+   사이에 진한 구분선을 둬서 "무엇을 배합하는지"·"얼마나 배합하는지"·"분석값" 세 구간을
+   한눈에 나눠 보이게 한다(아래 sticky 처리와 같은 경계). */
+#mix-hdr span[style*="width:200px"] { border-right-color: var(--border); }
+#mix-hdr #mix-hdr-ratio { border-right-color: var(--border); }
+/* 배합표 컬럼 정렬 아이콘 — 헤더 라벨(.mix-hdr-label) 옆에 붙는 작은 버튼 하나.
+   기본은 muted(--sub), 정렬이 걸린 컬럼만 accent(--acc)로 강조한다. */
+.mix-hdr-label { white-space: nowrap; }
+.mix-sort-btn { display: inline-flex; align-items: center; justify-content: center; margin-left: 2px;
+                padding: 0; border: none; background: none; color: var(--sub); cursor: pointer; flex-shrink: 0; }
+.mix-sort-btn:hover { color: var(--hdr); }
+.mix-sort-btn.active { color: var(--acc); }
+/* #mix-body에 overflow-y:auto를 두면 (계산상 overflow-x도 auto가 되어) #mix-body가 sticky
+   기준 스크롤 컨테이너가 되는데, min-width:max-content라 자체 가로 스크롤이 없어 본문 행의
+   좌측 sticky 컬럼(원료명·배합비)이 .mix-table-wrap 가로 스크롤에 그대로 밀려났다.
+   → #mix-body는 스크롤 컨테이너가 아니게 두고(overflow 미지정=visible), 세로 스크롤은
+   .mix-table-wrap이 맡는다. 그러면 본문 행 sticky가 헤더와 동일하게 .mix-table-wrap 기준으로
+   고정된다. flex도 0 0 auto로 바꿔 본문은 항상 내용 높이만큼만 차지한다. */
+#mix-body { flex: 0 0 auto; min-width: max-content; }
+.mix-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--mix-line);
+           transition: background-color .15s ease; padding-right: 20px; }
+.mix-row:nth-child(even) { background: var(--even); }
+.mix-row:nth-child(odd)  { background: var(--odd); }
+.mix-row:hover { background: var(--hover-tint) !important; }
+.mix-row > * { border-right: 1px solid var(--mix-line); box-sizing: border-box; }
+/* ── 좌측 sticky 컬럼(체크박스/#/원료명/배합비) — 가로 스크롤로 30여 개 영양소 열을 볼 때도
+   "어떤 원료·몇 %인지"는 항상 보이게 고정한다. background:inherit로 각 행의 실제 배경
+   (짝/홀수 줄무늬, hover 강조, 알레르기 강조 !important 포함)을 그대로 물려받아 뒤로
+   스크롤되는 값들이 깔끔하게 가려지도록 한다. 폭/순서/테두리 등 기존 구조는 그대로 둔다. */
+#mix-hdr > *:nth-child(1), .mix-row > *:nth-child(1) { position: sticky; left: 0;    z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(2), .mix-row > *:nth-child(2) { position: sticky; left: 28px; z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(3), .mix-row > *:nth-child(3) { position: sticky; left: 60px; z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { position: sticky; left: 260px; z-index: 2; background: inherit; }
+.mix-row .mix-no { width: 32px; text-align: center; font-size: 10px;
+                   line-height: 34px; color: var(--sub); flex-shrink: 0; }
+.mix-row select { flex: 0 0 200px; border: none; border-right: 1px solid var(--border); background: transparent;
+                  font-size: 11px; height: 34px; padding: 0 4px; font-family: inherit; outline: none; color: var(--text); }
+.mix-ing-wrap { position: relative; flex: 0 0 200px; border-right: 1px solid var(--border); height: 34px; box-sizing: border-box;
+                box-shadow: inset 0 0 0 1px transparent; transition: box-shadow .15s ease; }
+.mix-ing-wrap:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
+.mix-ing-wrap:focus-within { box-shadow: inset 0 0 0 1px var(--acc); }
+.mix-ing-display { width: 100%; height: 34px; border: none; background: transparent; font-size: 12px;
+                  font-weight: 600; padding: 0 8px; font-family: inherit; outline: none; color: var(--hdr); box-sizing: border-box;
+                  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+                  cursor: pointer; text-align: left; }
+/* 원료명·배합비는 이 행에서 사용자가 "무엇을·얼마나" 결정하는 핵심 두 축이라 헤더도
+   나머지 분석값 헤더보다 또렷하게(색 --hdr, weight 800). 값·색상 로직은 미변경. */
+#mix-hdr-name, #mix-hdr-ratio { color: var(--hdr); font-weight: 800; }
+.mix-ing-display .mix-ing-display-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mix-ing-display.placeholder .mix-ing-display-txt { color: var(--sub); }
+.mix-ing-display .mix-ing-arrow { flex-shrink: 0; font-size: 9px; color: var(--sub); }
+/* 알레르기 원료 경고 — 등록된 알레르기 원료가 배합 행에 선택되면 즉시 빨간 강조 + ⚠️ 표시 */
+.mix-ing-wrap.mix-ing-allergy { background: rgba(192,57,43,0.12) !important; }
+.mix-ing-wrap.mix-ing-allergy .mix-ing-display { color: #C0392B; font-weight: 700; }
+.mix-ing-allergy-badge { flex-shrink: 0; }
+/* 사이드바 아코디언(.nav-group-body, 0fr→1fr grid-template-rows)과 같은 방식의 "펼쳐짐" 느낌을
+   내기 위해, display:none/block 토글 대신 max-height(0→JS가 계산한 값)+opacity를 트랜지션한다.
+   position:fixed라 레이아웃에 영향이 없으므로 항상 DOM/flex 상태를 유지해도 안전하다. */
+/* 배경은 반투명 입력창 톤(--inp)이 아니라 카드/패널에 쓰는 완전 불투명한 --side2를 써야 한다 —
+   --inp은 다크 테마에서 rgba(255,255,255,0.06)로 정의돼 있어(입력창처럼 이미 불투명한 카드 위에
+   얹힐 때만 문제없음), body 위에 곧바로 뜨는 이 패널에 그대로 쓰면 뒤 콘텐츠가 비쳐 보였다.
+   이 클래스는 배합 설계 원료 선택·알레르기 원료 등록 등 모든 원료 검색 드롭다운이 공유하므로,
+   여기 한 곳만 고치면 전부에 적용된다. */
+.mix-ing-list { position: fixed; overflow: hidden; background: var(--side2);
+                 border: 1px solid var(--border); border-radius: 4px;
+                 box-shadow: var(--sh-md); z-index: 500; display: flex; flex-direction: column;
+                 max-height: 0; opacity: 0; pointer-events: none;
+                 transition: max-height .22s ease, opacity .18s ease; }
+.mix-ing-list.open { opacity: 1; pointer-events: auto; }
+.mix-ing-search-wrap { flex-shrink: 0; padding: 6px; border-bottom: 1px solid var(--border); }
+.mix-ing-search-input { width: 100%; box-sizing: border-box; padding: 5px 8px; font-size: 11px;
+                 border: 1px solid var(--border); border-radius: 4px; background: var(--side2);
+                 color: var(--text); font-family: inherit; outline: none; }
+.mix-ing-search-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.mix-ing-options { flex: 1; overflow-y: auto; }
+.mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
+.mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
+.mix-ing-opt.active { box-shadow: inset 2px 0 0 var(--acc); }
+.mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
+.mix-ing-hl { color: var(--acc); font-weight: 700; }
+.mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); text-align: center; }
+/* 검색 결과 없음 — 원료 DB 탭 Empty State와 같은 톤(아이콘+안내, 기존 토큰만) */
+.mix-ing-noresult { display: flex; flex-direction: column; align-items: center; gap: 6px;
+                    padding: 18px 8px; font-size: 11px; color: var(--sub); text-align: center; }
+/* 배합비(%) 입력은 이 행에서 실제로 "입력"하는 유일한 값이라 실제중량(자동 계산, 보조 정보)보다
+   또렷하게 — font-weight/크기만 올리고 색은 그대로(계산 로직·값 자체는 미변경). */
+.mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
+                               font-size: 12px; font-weight: 700; height: 34px; padding: 0 6px;
+                               font-family: inherit; text-align: right; color: var(--hdr);
+                               outline: none; box-sizing: border-box;
+                               box-shadow: inset 0 0 0 1px transparent;
+                               transition: box-shadow .15s ease, background-color .15s ease; }
+.mix-row input[type=number]:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
+/* 포커스 강조 — 앱 표준 입력(.auth-input/.mix-ing-search-input)과 같은 accent 테두리 + --calc 링.
+   이 입력칸은 sticky 컬럼(nth-child(4))이라 position은 그대로 두고 z-index만 올려 이웃 sticky
+   셀 위로 링이 보이게 한다(position:relative를 주면 sticky가 풀려 focus 시 표가 우측으로 튄다). */
+.mix-row input[type=number]:focus { box-shadow: inset 0 0 0 1px var(--acc), 0 0 0 3px var(--calc); background: var(--side2);
+                                     z-index: 3; }
+/* 배합비 입력칸은 sticky 구간의 마지막 열이라, 뒤에 스크롤되는 분석값 구간과의 경계를
+   원료명 칼럼과 같은 진한 구분선(var(--border))으로 표시한다(border:none으로 리셋된
+   border-right만 다시 지정 — 다른 스타일은 위 규칙 그대로). */
+.mix-row input[type=number] { border-right: 1px solid var(--border); }
+.mix-row .mix-val, .mix-row .mix-actual-g { display: flex; align-items: center; justify-content: flex-end; align-self: stretch;
+                     font-size: 10px; color: var(--sub); padding: 0 4px; flex-shrink: 0; box-sizing: border-box;
+                     white-space: nowrap; overflow: hidden; }
+/* 행 선택 상태(선택 삭제 대상) — "선택 삭제" 버튼과 같은 위험색으로 묶어 무엇이 지워질지
+   한눈에 보이게 한다(JS 미변경, :has()로만 강조). */
+.mix-row .mix-chk { accent-color: var(--fail-t); cursor: pointer; }
+.mix-row:has(.mix-chk:checked) { background: color-mix(in srgb, var(--fail-t) 12%, transparent) !important;
+                                  box-shadow: inset 3px 0 0 var(--fail-t); }
+/* 실측 배합 결과가 있는 셀은 조금 더 또렷하게, 비어서 "─"만 있는 셀은 기존처럼 옅게 —
+   판정/계산 로직이 아니라 updateMixRowVals()가 값 유무에 따라 붙이는 표시용 클래스만 본다. */
+.mix-row .mix-val.mix-val-filled, .mix-row .mix-actual-g.mix-val-filled { color: var(--text); font-weight: 600; }
+.mix-row .mix-unit { margin-left: 1px; }
+/* 합계/상태 바 — updateTotBar()가 이미 배합비 합계 상태(정확히 100% / ±5% 이내 / 크게 벗어남)에
+   따라 background·borderTopColor·글자색을 pass/warn/fail 토큰으로 인라인 설정해준다(로직 그대로).
+   여기서는 그 신호가 잘 보이도록 캔버스(패딩/보더 두께/글자 크기)만 키운다. */
+#tot-bar { background: var(--side); color: var(--sub); padding: 9px 20px;
+           font-size: 11px; display: flex; gap: 0; flex-shrink: 0;
+           border-top: 2px solid var(--border);
+           align-items: center; transition: border-color .35s ease, background-color .35s ease; }
+#tot-ratio { font-weight: 800; font-size: 13px; color: var(--text);
+             padding-right: 16px; margin-right: 16px;
+             border-right: 1px solid var(--border); }
+#tot-me { font-size: 10.5px; color: var(--sub); font-weight: 400; }
+
+/* ── 아미노산 탭 ── */
+.amino-info { background: var(--warn-bg); color: var(--warn-t); border-bottom: 1px solid rgba(217,179,108,0.3);
+              padding: 8px 14px; font-size: 10px; flex-shrink: 0; }
+.amino-section { padding: 10px 12px; flex-shrink: 0; }
+.amino-section h3 { font-size: var(--fs-title); color: var(--hdr); margin-bottom: 12px; font-weight: bold; }
+/* 다른 데이터 표(원료DB/영양기준 DB/영양소·경고 분석)와 같은 톤으로, gap이 만드는 격자선 색을
+   진한 --border 그대로가 아니라 옅게 섞은 값으로 바꿔 과도한 테두리 느낌을 줄인다. */
+.amino-grid { display: grid; grid-template-columns: 170px 70px 110px 100px 65px 82px 82px 75px 78px 90px;
+              gap: 1px; font-size: 10px; width: max-content; margin: 0 auto;
+              background: color-mix(in srgb, var(--border) 65%, transparent);
+              border: 1px solid color-mix(in srgb, var(--border) 65%, transparent); }
+.amino-grid .ag-hdr { background: var(--th-bg); color: var(--hdr); padding: 5px 6px;
+                       text-align: center; font-weight: bold; white-space: nowrap; }
+.amino-grid .ag-cell { padding: 4px 6px; text-align: right; background: var(--side2); }
+.amino-grid .ag-cell.left { text-align: left; }
+.amino-grid .ag-cell.inp { background: var(--orange); }
+.amino-grid .ag-cell input { width: 100%; border: none; background: transparent;
+                               text-align: right; font-family: inherit; color: var(--text);
+                               font-size: 10px; outline: none; }
+.amino-grid .ag-cell.pass { background: var(--pass-bg); color: var(--pass-t);
+                              text-align: center; font-weight: bold; }
+.amino-grid .ag-cell.fail { background: var(--fail-bg); color: var(--fail-t);
+                              text-align: center; font-weight: bold; }
+
+/* ── 제한 아미노산(Limiting Amino Acid) 카드 ── */
+.amino-lim-subtitle { font-size: 10.5px; color: var(--sub); margin: -6px 0 10px; line-height: 1.5; }
+.amino-lim-summary { font-size: 12px; font-weight: 600; color: var(--hdr); background: var(--calc);
+                      padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; line-height: 1.6; }
+.amino-lim-bar-row { margin-bottom: 12px; }
+.amino-lim-bar-toprow { display: flex; justify-content: space-between; align-items: baseline;
+                         font-size: 11px; margin-bottom: 3px; gap: 8px; }
+.amino-lim-bar-name { font-weight: 700; color: var(--text); }
+.amino-lim-bar-meta { color: var(--sub); font-size: 9.5px; white-space: nowrap; flex-shrink: 0; }
+.amino-lim-bar-detail { font-size: 9.5px; color: var(--sub); margin: -1px 0 4px; }
+.amino-lim-bar-track { position: relative; flex: 1; height: 14px; background: var(--gray-l);
+                        border-radius: 7px; overflow: hidden; }
+.amino-lim-bar-fill { height: 100%; border-radius: 7px; transition: width .4s ease; }
+.amino-lim-bar-fill.pass { background: var(--pass-t); }
+.amino-lim-bar-fill.fail { background: var(--fail-t); }
+.amino-lim-bar-pct { font-size: 10.5px; font-weight: 700; width: 46px; text-align: right; flex-shrink: 0; }
+.amino-lim-badge { font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 6px; }
+.amino-lim-badge.fail { background: var(--fail-bg); color: var(--fail-t); }
+.amino-lim-100line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--sub);
+                      opacity: .55; z-index: 1; cursor: help; }
+.amino-lim-100caption { font-size: 9px; color: var(--sub); text-align: right; margin: 2px 0 4px; cursor: help; }
+.amino-lim-card { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 14px; }
+.amino-lim-card .lbl { font-size: 10px; font-weight: 700; color: var(--sub); letter-spacing: .4px; margin-bottom: 6px; }
+.amino-lim-card .name { font-size: 14px; font-weight: 700; }
+.amino-lim-card .meta { font-size: 12px; color: var(--sub); margin-top: 2px; }
+.amino-lim-card .note { font-size: 10.5px; color: var(--sub); margin-top: 8px; line-height: 1.5; }
+.vitk-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+             background: var(--side2); border-radius: var(--radius-md); margin: 8px 12px;
+             border: 1px solid var(--border); box-shadow: var(--sh); }
+.vitk-row label { font-size: 11px; font-weight: bold; color: var(--hdr); }
+.vitk-row input { width: 100px; padding: 5px 8px; border: 1px solid var(--border);
+                   background: var(--orange); font-size: 11px; color: var(--text);
+                   font-family: inherit; text-align: right; outline: none; border-radius: 4px; }
+.vitk-row span { font-size: 10px; color: var(--sub); }
+
+/* ── 경고패널 ── */
+#cap-card { padding: 12px 16px; font-size: 12px; font-weight: bold;
+            flex-shrink: 0; margin: 10px; border-radius: var(--radius-md); box-shadow: var(--sh); }
+
+/* ── 원료DB ── */
+.ing-toolbar { display: flex; align-items: center; gap: 8px;
+               padding: 6px 12px; flex-shrink: 0; background: var(--side);
+               border-bottom: 1px solid var(--border); }
+.ing-toolbar input { padding: 5px 10px; border: 1px solid var(--border);
+                     font-size: 11px; font-family: inherit; color: var(--text); background: var(--inp);
+                     width: 200px; outline: none; border-radius: 4px;
+                     box-shadow: 0 0 0 0 transparent;
+                     transition: border-color .15s ease, box-shadow .15s ease; }
+.ing-toolbar input:hover { border-color: var(--sub); }
+.ing-toolbar input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+/* 기본(세컨더리) 버튼 — 편집/원래 순서 같은 중립 동작. "원료 추가"만 .ing-btn-primary로
+   포인트 컬러를 얹고, "선택 삭제"는 기존 위험색(#B03A2E) 인라인 스타일을 그대로 유지한다. */
+.ing-toolbar button { padding: 5px 12px; background: var(--side2); color: var(--text);
+                       border: 1px solid var(--border); font-size: 11px; font-weight: 600;
+                       cursor: pointer; font-family: inherit; border-radius: 6px;
+                       transition: border-color .15s ease, background-color .15s ease, transform .18s ease; }
+.ing-toolbar button:hover { border-color: var(--acc); background: var(--hover-tint); }
+.ing-toolbar button:active { transform: scale(0.97); }
+.ing-toolbar button.ing-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
+.ing-toolbar button.ing-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
+/* 선택 삭제 — 기존 위험색(#B03A2E, 인라인 style로 이미 지정됨)은 그대로 두고 테두리만 맞춰준다 */
+.ing-toolbar button[onclick="deleteSelectedIng()"] { border-color: #B03A2E; color: #fff; }
+.ing-toolbar button[onclick="deleteSelectedIng()"]:hover { filter: brightness(1.08); background: #B03A2E; }
+/* 정렬 토글("원래 순서"/"가나다순 정렬")은 주요 동작이 아니라 "현재 어떤 정렬 모드인지" 보여주는
+   상태 표시라, "원료 추가"의 꽉 찬 포인트 컬러(.ing-btn-primary)와는 구분되게 옅은 틴트 칩으로
+   표시한다 — 새 색상이 아니라 포커스 링에 쓰는 기존 --calc(accent 16% 톤)를 재사용. */
+.ing-toolbar button.active { background: var(--calc); color: var(--acc); border-color: var(--acc); }
+.ing-toolbar button.active:hover { filter: brightness(1.05); background: var(--calc); }
+/* 검색+정렬(필터 영역)과 추가/삭제(액션 영역) 사이만 얇은 구분선으로 그룹을 나눈다 */
+#sort-btn { position: relative; margin-right: 12px; }
+#sort-btn::after { content: ''; position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
+                    width: 1px; height: 18px; background: var(--border); }
+/* 체크박스로 선택된 행 — JS 변경 없이 :has()로만 강조(선택 삭제 대상이 뭔지 한눈에 보이게) */
+#ing-table tbody tr:not(.cat-row):has(.ing-chk:checked) td {
+  background-color: color-mix(in srgb, var(--acc) 14%, var(--side2)) !important;
+}
+
+/* ── 원료 DB · 영양기준 DB 테이블 정돈(3단계) — 배합 설계에서 쓴 --mix-line과 같은 방식으로
+   기존 --border 토큰을 color-mix()로 옅게 만든 --table-line만 이 두 테이블 안에서 재사용한다.
+   다른 탭이 쓰는 공용 table/th/td 규칙(400번대)은 건드리지 않고, ID 선택자로만 겹쳐 쓴다. */
+/* --table-hdr-bg: --gray-l과 같은 "은은한 헤더 틴트" 느낌이지만, --gray-l 자체는 반투명이라
+   #ing-table의 sticky 헤더 셀(아래쪽 참고)에 그대로 쓰면 스크롤된 뒤 내용이 다시 비쳐 보인다.
+   그래서 같은 톤을 --th-bg 위에 완전 불투명하게 섞어(color-mix) sticky/일반 헤더 셀 모두에서
+   동일하게 쓴다(새 색상이 아니라 기존 --th-bg·--sub의 혼합값). */
+#ing-table, #std-table { --table-line: color-mix(in srgb, var(--border) 65%, transparent);
+                          --table-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%);
+                          border-color: var(--table-line); }
+#ing-table th, #std-table th { border-color: var(--table-line); background: var(--table-hdr-bg);
+                                 font-weight: 700; padding: 5px 6px; }
+#ing-table td, #std-table td { border-color: var(--table-line); padding: 3px 6px; }
+#ing-table tr.cat-row td, #std-table tr.cat-row td { border-bottom: 1px solid var(--table-line); }
+#ing-table tbody tr:not(.cat-row):hover td, #std-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
+/* 단위 컬럼은 값보다 한 단계 옅게 — 숫자와 단위의 시각적 위계 정리(값 자체는 변경 없음) */
+#std-table td:nth-child(3) { color: var(--sub); }
+
+/* 영양기준 DB는 "값을 입력·편집하는 화면"이 아니라 "기준값을 빠르게 훑어보는 화면"이라
+   원료 DB보다 한 단계 여유 있게(패딩↑, 글자 살짝↑) — 위 3px/6px 밀도 규칙을 이 표에서만 덮어쓴다. */
+#tab-std .tbl-wrap { padding: 28px; }
+#std-table th, #std-table td { padding: 8px 10px; font-size: 11px; }
+#std-table tr.cat-row td { padding: 7px 10px; font-size: 11px; }
+/* 헤더 아래 색 띠로 NRC/AAFCO/FEDIAF 칼럼 그룹을 표시 — 각 칼럼의 값 배경(--nrc-bg/--aa-bg/--fed-bg)과
+   짝을 이루는 글자색 토큰(--nrc-t/--aa-t/--fed-t)을 그대로 재사용해 "어디까지가 한 기준인지"를
+   스캔하기 쉽게 만든다(새 색상 없음, 값 자체는 미변경). */
+#std-table th:nth-child(4), #std-table th:nth-child(5) { border-bottom: 2px solid var(--nrc-t); }
+#std-table th:nth-child(6), #std-table th:nth-child(7),
+#std-table th:nth-child(8), #std-table th:nth-child(9) { border-bottom: 2px solid var(--aa-t); }
+#std-table th:nth-child(10), #std-table th:nth-child(11) { border-bottom: 2px solid var(--fed-t); }
+
+/* 원료 DB 테이블 — 원료명 제외 전 컬럼 폭 통일 */
+/* .tbl-wrap의 좌측 padding 때문에 고정 열이 진짜 왼쪽 끝(x=0)이 아니라 안쪽에서
+   sticky되어, 그 사이 틈으로 스크롤된 다른 열의 내용이 비쳐 보이는 문제 방지 */
+#tab-ing .tbl-wrap { padding-left: 0; padding-top: 0; }
+#ing-table { table-layout: fixed; border-collapse: separate; border-spacing: 0; overflow: visible; }
+#ing-table th { top: 0; }
+#ing-table th:not(:nth-child(1)):not(:nth-child(2)),
+#ing-table td:not(:nth-child(1)):not(:nth-child(2)) {
+  width: 72px !important;
+  white-space: normal;
+  word-break: keep-all;
+}
+/* 상단 헤더행 고정(세로 스크롤) + 앞 2열(체크박스·원료명) 고정(가로 스크롤)
+   ※ 카테고리 구분줄(.cat-row)은 colspan 단일 셀이라 nth-child(1)로 걸리지 않게 제외
+   ※ th는 헤더행 배경(--table-hdr-bg — 위 공통 규칙과 같은 불투명 톤), td는 본문 배경(--side2)을
+     각각 불투명하게 채워서 모서리(좌상단 코너)에서 뒤쪽 내용이 비치지 않도록 함 */
+/* will-change: transform → 크로미움에서 sticky 셀 + border-collapse:separate 조합 시
+   가로 스크롤 중 이전 프레임 잔상(고스팅)이 남는 렌더링 버그 방지 (합성 레이어 강제 생성) */
+/* 오른쪽 경계는 흐릿한 그림자만으로는 배율/렌더링에 따라 1~2px 틈이 남을 수 있어,
+   같은 배경색의 불투명한 solid shadow를 겹쳐 그 틈까지 확실히 덮음 */
+#ing-table th:nth-child(1), #ing-table th:nth-child(2) {
+  position: sticky; z-index: 11; background: var(--table-hdr-bg); will-change: transform;
+}
+#ing-table th:nth-child(1) { left: 0; box-shadow: 3px 0 0 var(--table-hdr-bg); }
+#ing-table th:nth-child(2) { left: 32px; box-shadow: 3px 0 0 var(--table-hdr-bg); }
+
+#ing-table tbody tr:not(.cat-row) td:nth-child(1) {
+  position: sticky; left: 0; z-index: 6; background: var(--side2); will-change: transform;
+  box-shadow: 3px 0 0 var(--side2);
+}
+#ing-table tbody tr:not(.cat-row) td:nth-child(2) {
+  position: sticky; left: 32px; z-index: 6; background: var(--side2); will-change: transform;
+  box-shadow: 3px 0 0 var(--side2);
+}
+/* hover 시 공통 규칙이 고정열의 불투명 배경을 반투명 색으로 덮어써서, 가로 스크롤로 뒤에
+   겹쳐진 다른 열 내용이 비쳐 보이는 문제 방지 → 고정열은 hover에서도 불투명하도록
+   --hover-tint와 같은 톤(중립 --sub)을 var(--side2) 위에 섞은 단색을 사용한다(새 색상 아님).
+   (background-image가 아니라 background-color 값이라 다른 셀과 같은 .15s 트랜지션 속도로 맞춰짐) */
+#ing-table tbody tr:not(.cat-row):hover td:nth-child(1),
+#ing-table tbody tr:not(.cat-row):hover td:nth-child(2) {
+  background-color: color-mix(in srgb, var(--side2), var(--sub) 12%) !important;
+}
+/* 카테고리 구분줄(육류·어류 등)은 colspan 단일 셀이라 셀 자체는 테이블 전체 너비라 sticky 여유(slack)가
+   없어 좌측 고정이 안 됨 → 셀 안의 라벨 텍스트만 별도 inline-block으로 감싸 그것을 좌측 고정시킴 */
+#ing-table tr.cat-row td { padding: 0; }
+#ing-table .cat-row-label {
+  display: inline-block; position: sticky; left: 0; z-index: 7;
+  padding: 4px 10px; will-change: transform;
+}
+/* 행마다 JS(buildIngTable)가 인라인 style로 그려 넣는 "편집" 버튼 — JS/onclick은 그대로 두고
+   외부 CSS의 !important로 인라인 스타일만 중립(편집=중립 컨벤션)으로 덮어써 톤을 맞춘다. */
+#ing-table td button[onclick^="openEditIng"] {
+  background: var(--side2) !important; color: var(--text) !important;
+  border: 1px solid var(--border) !important; border-radius: 4px !important;
+  padding: 2px 8px !important; font-weight: 600 !important;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+}
+#ing-table td button[onclick^="openEditIng"]:hover {
+  border-color: var(--acc) !important; color: var(--acc) !important; background: var(--hover-tint) !important;
+}
+
+/* ── 모달 ── — 6개 모달(원료 추가/비밀번호 변경/개인정보/사용자 편집/제품유형 근거/기준 등록)이
+   전부 이 한 세트(.modal-overlay/.modal/.modal-hdr/.modal-body/.modal-footer/.btn-save/.btn-cancel)를
+   공유하므로, 여기 한 곳만 다듬으면 모든 모달에 동일하게 적용된다. */
+.modal-overlay { display: none; position: fixed; inset: 0;
+                 background: rgba(0,0,0,0.75); z-index: 1000;
+                 align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+/* 배경(overlay)과의 대비를 --sh-md 하나에만 의존하지 않도록, 옅은 흰 테두리 링을 겹쳐 다크
+   테마에서도 모달 가장자리가 배경과 또렷이 분리돼 보이게 한다(새 색상 아님, 반투명 흰색 1px). */
+.modal { background: var(--panel-grad); border: 1px solid var(--panel-border); border-radius: var(--radius-lg); width: 560px; max-height: 80vh;
+         overflow-y: auto; box-shadow: var(--sh-md), 0 0 0 1px rgba(255,255,255,0.06); }
+.modal-hdr { background: var(--gray-l); color: var(--hdr); padding: 18px 24px;
+             font-size: 14px; font-weight: 800; display: flex;
+             justify-content: space-between; align-items: center; gap: 12px;
+             border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: 1px solid var(--border);
+             position: sticky; top: 0; z-index: 2; }
+/* 닫기(✕) 버튼 — 헤더의 알림·폴더 아이콘 버튼과 같은 "둥근 아이콘 버튼" 톤으로 통일 */
+.modal-hdr button { width: 28px; height: 28px; flex-shrink: 0; padding: 0;
+                    display: flex; align-items: center; justify-content: center;
+                    background: none; border: none; border-radius: 8px; color: var(--sub);
+                    font-size: 14px; cursor: pointer; transition: background-color .15s ease, color .15s ease; }
+.modal-hdr button:hover { background: var(--hover-tint); color: var(--hdr); }
+.modal-body { padding: 20px 24px; word-break: keep-all; overflow-wrap: break-word; }
+.modal-row { display: flex; align-items: center; margin-bottom: 9px; }
+.modal-row label { width: 180px; font-size: 11px; color: var(--sub); flex-shrink: 0; font-weight: 600; }
+.modal-row input { flex: 1; padding: 7px 10px; border: 1px solid var(--border);
+                   font-size: 12px; font-family: inherit; color: var(--text);
+                   background: var(--side2); outline: none; border-radius: 6px;
+                   transition: border-color .15s ease, box-shadow .15s ease; }
+.modal-row input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.modal-footer { padding: 16px 24px; background: var(--gray-l);
+                display: flex; justify-content: flex-end; gap: 8px;
+                border-top: 1px solid var(--border); border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+                position: sticky; bottom: 0; z-index: 2; }
+/* 확인/저장(.btn-save)=주요 동작(포인트 컬러 채움), 취소/닫기(.btn-cancel)=보조 동작(아웃라인) —
+   나머지 화면(헤더 툴바·원료DB 툴바 등)과 같은 사각형 소형 radius로 통일(기존 999px 알약형 제거) */
+.modal-footer button { padding: 0 20px; height: 32px; border: none; border-radius: 6px;
+                        font-size: 11px; font-weight: 700; cursor: pointer;
+                        font-family: inherit; transition: filter .2s ease, background-color .15s ease, transform .18s ease; }
+.modal-footer button:hover { filter: brightness(1.05); }
+.modal-footer button:active { transform: scale(0.97); }
+.btn-save { background: var(--acc); color: #fff; }
+.btn-cancel { background: transparent; color: var(--text); border: 1px solid var(--border) !important; }
+.btn-cancel:hover { background: var(--hover-tint); filter: none; }
+
+/* 상단 툴바 버튼(#top-recipe-save-btn / .top-recipe-btn-sub)과 톤을 맞춘 크기·폰트·여백 —
+   색상 구분(편집=중립/삭제=경고/등록=강조)은 .btn-cancel·.btn-save와 개별 경고색으로 유지한다. */
+#stdverify-custom-bar button { font-size: 11px; font-weight: 700; border-radius: 6px;
+                                 padding: 6px 12px; font-family: inherit; white-space: nowrap;
+                                 cursor: pointer; transition: filter .2s ease; }
+#stdverify-custom-bar button:hover { filter: brightness(1.08); }
+#stdverify-custom-bar button:active { transform: scale(0.97); }
+#stdverify-custom-bar button:disabled { opacity: .5; cursor: not-allowed; }
+#stdverify-custom-edit-btn { font-weight: 600; }
+#stdverify-custom-del-btn { font-weight: 600; color: #B03A2E; border-color: #B03A2E !important; }
+
+.pw-field { margin-bottom: 14px; text-align: left; }
+.pw-field label { display: block; font-size: 11px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
+.pw-field input, .pw-field select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+                   font-size: 12px; font-family: inherit; outline: none;
+                   background: var(--side2); color: var(--text); box-sizing: border-box;
+                   transition: border-color .15s ease, box-shadow .15s ease; }
+.pw-field input:focus, .pw-field select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.pw-field input:disabled, .pw-field select:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── 대시보드 ── */
+#tab-dash { overflow-y: auto; }
+/* .dash-panel을 쓰는 화면(대시보드/제품/분석 현황/에너지 분석/기준 검증/아미노산 분석/
+   경고 패널/용어 사전/설정 등 대부분의 "카드형 정보 화면")은 기본적으로 폭을 1400px로
+   제한해, 넓은 모니터에서 카드가 양옆으로 과도하게 늘어지지 않게 한다. 배합 설계·영양
+   분석·원료 DB·영양기준 DB처럼 가로로 긴 표가 필요한 화면은 이 클래스를 쓰지 않으므로
+   영향받지 않는다. */
+.dash-panel { background: var(--panel-bg);
+              padding: 24px; transition: background .25s ease;
+              word-break: keep-all; overflow-wrap: break-word;
+              max-width: 1400px; margin: 0 auto; }
+/* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
+   창이 좁아져 카드 폭이 최소치보다 줄어들면 다음 줄로 자연스럽게 내려간다. */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+
+/* ── 분석 현황: 카드를 4개 그룹으로 묶는 래퍼 — 그룹 내부는 .dash-grid와 동일한
+   auto-fit 2열 규칙을 쓰되(좁아지면 1열로 자연 전환), 그룹 간에는 카드 간격(16px)보다
+   넉넉한 "섹션 간" 여백(24px)을 둬 그룹 경계를 시각적으로 구분한다. display:contents 없이
+   일반 래퍼로 구성해 각 그룹이 독립적인 레이아웃 박스를 갖는다. */
+.ana-group-list { display: flex; flex-direction: column; gap: 24px; }
+.ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+                    letter-spacing: .5px; margin-bottom: 10px; }
+.ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+/* 단독으로 두면 한 줄에 하나씩 떨어져 가로로 길어지는 요약 카드들(주요 영양소 빠른 확인 /
+   아미노산 스코어 / 경고 요약)을 데스크톱에서 2열 균등 배치. 900px 이하는 기존처럼 1열. */
+.ana-group-grid.ana-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 좌 2/3 = 주요 영양소 빠른 확인(세로 2행 span), 우 1/3 = 핵심 지표 / 일일 급여량 위·아래.
+   align-items:start로 각 카드가 내용 높이만 차지. 900px 이하는 1열. */
+.ana-group-grid.ana-grid-hero { grid-template-columns: 2fr 1fr; align-items: start; }
+.ana-group-grid.ana-grid-hero > .dash-section:first-child { grid-row: 1 / span 2; }
+@media (max-width: 900px) {
+  .ana-group-grid.ana-grid-2col { grid-template-columns: 1fr; }
+  .ana-group-grid.ana-grid-hero { grid-template-columns: 1fr; }
+  .ana-group-grid.ana-grid-hero > .dash-section:first-child { grid-row: auto; }
+}
+/* Ca:P 비율 / 원료 상위 구성 / 기준 충족 현황 — 데스크톱에서 항상 3열 균등 배치.
+   minmax(0,1fr)로 세 카드가 정확히 같은 폭을 갖고, align-items:stretch + 카드 자체
+   height:100%로 한 행 안에서 높이가 동일하게 맞춰진다(내용이 짧은 원료 상위 구성도
+   옆 카드 높이에 맞춰 늘어남). 좁은 화면(≤900px)에서는 1열로 떨어진다.
+   .ana-group-grid의 stretch와 무관하게 두도록 독립된 grid 행으로 유지. */
+.ana-trio-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.ana-trio-row > .dash-section { min-width: 0; height: 100%; }
+@media (max-width: 900px) {
+  .ana-trio-row { grid-template-columns: 1fr; }
+}
+.dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                 box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
+                 box-sizing: border-box; }
+.dash-section h3 { font-size: var(--fs-title); font-weight: 700; color: var(--hdr);
+                    margin-bottom: 12px; border-bottom: 1px solid var(--border);
+                    padding-bottom: 4px; }
+.dash-section h3 .linkable { cursor: pointer; transition: color .35s ease; }
+.dash-section h3 .linkable:hover { color: var(--acc); }
+.dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 8px; }
+.product-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.product-info-box { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
+             padding: 12px 14px; box-shadow: var(--sh); }
+.product-info-box .pi-label { font-size: 10px; color: var(--sub); margin-bottom: 5px; font-weight: 700; }
+.product-info-box .pi-val { font-size: 13px; font-weight: 700; color: var(--hdr); line-height: 1.3;
+             word-break: keep-all; overflow-wrap: break-word; }
+.dash-kpi { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
+             padding: 12px 14px; box-shadow: var(--sh); position: relative; overflow: hidden; }
+.dash-kpi .kpi-label { font-size: var(--fs-meta); color: var(--sub); margin-bottom: 4px; }
+.dash-kpi .kpi-val { font-size: 18px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
+.dash-kpi .kpi-unit { font-size: var(--fs-meta); color: var(--sub); margin-top: 2px; }
+/* 분석 현황 탭("핵심 지표"/"일일 급여량")의 .dash-kpi만 미니 카드 chrome(배경/테두리/
+   shadow)을 걷어낸다 — .dash-kpi는 제품/에너지분석/기준검증 탭에서도 쓰는 공용
+   클래스라 그대로 두고, 탭 스코프로만 좁혀 "표 안에 카드가 여러 개" 인상을 없앤다.
+   label→숫자→단위 위계와 색은 그대로(각각 var(--sub)/var(--hdr)/var(--sub)). */
+#tab-analysis .dash-kpi { background: none; border: none; box-shadow: none; padding: 4px 6px; }
+#tab-analysis .dash-kpi .kpi-val { font-size: 19px; }
+
+/* ── 대시보드: 핵심 지표(위 dash-top-row) 아래의 프로필/설정 카드 — "기타 정보" 계층 ──
+   기존 .dash-grid/.dash-section은 다른 탭에서도 공유하는 카드 시스템이라 그대로 두고,
+   대시보드 하단 영역에만 붙는 보조 클래스로 배치만 조정한다.
+   좌/우를 완전히 독립된 세로 스택(.dash-bottom-col)으로 분리한다 — 그리드의 같은 행에
+   묶이면 짧은 카드도 옆 카드 높이만큼 빈 공간이 생기므로, flex column 두 개를 나란히
+   두어 각 컬럼이 자기 카드들의 실제 높이만큼만 차지하게 한다.
+   왼쪽: 기본 정보 → 영양 계산 설정 / 오른쪽: 생활 및 건강 정보 → 최근 레시피.
+   flex-wrap으로 좁은 화면에서는 컬럼이 아래로 떨어져 자연스럽게 1열이 된다. */
+.dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
+.dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+#tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
+/* 대시보드 하단(탭-대시보드)과 분석 현황 탭의 카드는 상단 KPI/Hero Card와 같은 톤으로 —
+   padding 22px, 제목은 eyebrow(작은 uppercase + 청록 accent dot)로 통일한다. .dash-section
+   자체는 다른 탭(제품/배합 등)에서도 쓰는 공용 클래스라 여기 두 탭에만 스코프를 좁힌다. */
+#tab-dash .dash-section, #tab-analysis .dash-section { padding: 22px; }
+#tab-dash .dash-section h3, #tab-analysis .dash-section h3 {
+  font-size: 10.5px; font-weight: 600; color: var(--sub);
+  text-transform: uppercase; letter-spacing: .4px; }
+#tab-dash .dash-section h3::before, #tab-analysis .dash-section h3::before {
+  content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--acc); margin-right: 6px; vertical-align: middle; }
+/* ── 왼쪽 컬럼("기본 정보"/"영양 계산 설정")만 — 공용 .settings-grid(다른 탭에서도
+   쓰므로 그대로 둠)를 여기서만 minmax 하한을 200px로 올려 넓어진 카드 폭에서 auto-fill이
+   안정적으로 2열이 되게 한다. 각 카드의 마지막 항목(기본 정보의 "현재 체중", 영양 계산
+   설정의 "목표 체중 조절")은 홀수 개수라 2열의 짝이 없는 고아 항목이 되므로 전체 폭을
+   쓰게 한다. */
+#tab-dash .dash-bottom-col:first-child .settings-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+#tab-dash .dash-bottom-col:first-child .settings-grid > .sf-item:last-child {
+  grid-column: 1 / -1;
+}
+/* ── 대시보드: 최근 레시피 카드 — Hero/KPI 카드와 같은 디자인 언어로 정돈 ──
+   기존엔 항목 하나하나가 자기 border/배경/shadow를 가진 "미니 카드"였다(레시피 버튼 +
+   별 버튼이 각각 박스). 이제는 카드 자체(.dash-recent-card)만 하나의 Neutral 카드이고,
+   그 안의 목록 항목은 배경 없는 플랫 로우 + 얇은 divider + 미세한 hover 배경으로만
+   구분한다 — KPI 카드가 진행바/텍스트 위계만으로 상태를 표현하듯, 여기도 색 대신
+   여백/구분선으로 정보를 나눈다. 레시피명(.dash-recent-item)이 이 로우에서 가장 중요한
+   텍스트, 즐겨찾기 별은 절제된 아이콘 버튼으로만 존재한다. */
+.dash-recent-card { padding: 22px; }
+.dash-recent-list { display: flex; flex-direction: column; min-width: 0; }
+/* 항목 행 — 레시피를 여는 버튼(.dash-recent-item)과 즐겨찾기 토글(.dash-fav-toggle-btn)을
+   형제 요소로 나란히 둬, 별 클릭이 레시피 열기 이벤트와 완전히 분리되게 한다.
+   min-width:0을 둬야 flex 자식(.dash-recent-item)의 기본 min-width:auto가 행 폭을
+   내용 길이만큼 늘리는 것을 막을 수 있다. 행끼리는 카드가 아니라 얇은 구분선으로만
+   나뉘고, 행 전체에 아주 옅은 hover 배경만 준다(강한 색상 변화 없음). */
+.dash-recent-row { display: flex; align-items: center; gap: 4px; min-width: 0;
+                    padding: 9px 6px; margin: 0 -6px; border-radius: 8px;
+                    transition: background-color .15s ease; }
+.dash-recent-row:hover { background: var(--hover-tint); }
+.dash-recent-row[hidden] { display: none; }
+/* 검색으로 숨겨진 행은 divider 계산에서 빠지도록, 보이는 첫 행 위에는 선을 그리지 않는다 */
+.dash-recent-row + .dash-recent-row { border-top: 1px solid var(--border); }
+.dash-recent-row[hidden] + .dash-recent-row { border-top: 0; }
+/* 레시피 열기 버튼 — 이름(1순위) + 부가정보(2순위, 시간)를 세로로 쌓는다.
+   버튼 자체 동작(onRecentRecipeSelect=불러오기)은 그대로, 표시 구조만 바꾼다. */
+.dash-recent-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+                     flex: 1; min-width: 0; text-align: left; background: none;
+                     border: none; border-radius: 0; padding: 0; cursor: pointer; font-family: inherit; box-shadow: none; }
+.dash-recent-name { max-width: 100%; font-size: 12.5px; font-weight: 700; color: var(--hdr);
+                     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-recent-meta { font-size: 10px; font-weight: 500; color: var(--sub); }
+/* 레시피 이름 검색 — 카드 안에서만 쓰는 로컬 필터(저장/불러오기 로직과 무관, 표시만 걸러냄).
+   앱 표준 입력 포커스 톤(--acc 테두리 + --calc 링) 재사용. */
+.dash-recent-search { display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+                       border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px;
+                       background: var(--inp); transition: border-color .15s ease, box-shadow .15s ease; }
+.dash-recent-search:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-recent-search svg { width: 13px; height: 13px; color: var(--sub); flex-shrink: 0; }
+.dash-recent-search input { flex: 1; min-width: 0; border: none; background: none; outline: none;
+                             font-family: inherit; font-size: 11px; color: var(--text); }
+.dash-recent-empty { display: flex; flex-direction: column; align-items: center; gap: 6px;
+                      font-size: 11px; color: var(--sub); padding: 20px 8px; text-align: center; }
+.dash-recent-empty svg { width: 20px; height: 20px; opacity: .7; }
+/* ── 대시보드: 최근 레시피 카드 헤더 — 다른 3개 카드와 같이 h3에 고정 제목을 쓰고,
+   그 아래에 최근/즐겨찾기 탭(.seg-control 재사용)을 별도 줄로 둔다. active 탭은
+   전역 .seg-btn.active(강한 accent 채움)를 이 카드 안에서만 옅은 톤으로 낮춘다
+   — .ing-toolbar button.active와 같은 절제된 패턴(포커스 링에 쓰는 --calc 재사용). */
+.dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 10px; }
+.dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
+.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); font-weight: 700; }
+/* 항목별 즐겨찾기 별 버튼(☆/★) — 더 이상 자기 박스를 갖지 않는 절제된 아이콘 버튼 */
+.dash-fav-toggle-btn { width: 26px; height: 26px; flex-shrink: 0; padding: 0;
+                        display: flex; align-items: center; justify-content: center;
+                        background: none; border: none; border-radius: 6px;
+                        color: var(--sub); cursor: pointer; box-shadow: none;
+                        transition: background-color .15s ease, color .15s ease; }
+.dash-fav-toggle-btn:hover { background: var(--hover-tint); color: var(--acc); }
+.dash-fav-toggle-btn.active { color: var(--acc); }
+
+/* ── 기준 검증 탭 ── */
+.stdverify-deficit-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
+             border-radius: 8px; margin-bottom: 6px; font-size: 11px; }
+.stdverify-deficit-item.fail { background: var(--fail-bg); }
+.stdverify-deficit-item.over { background: var(--warn-bg); }
+.stdverify-deficit-name { font-weight: 700; color: var(--hdr); flex-shrink: 0; min-width: 130px; }
+.stdverify-deficit-detail { color: var(--text); font-size: 10.5px; }
+.stdverify-deficit-group-label { font-size: 10.5px; font-weight: 700; margin: 6px 0 4px; }
+.stdverify-cust-cat { font-size: 10px; font-weight: 700; color: var(--sub); margin: 10px 0 4px; }
+.stdverify-cust-row { display: grid; grid-template-columns: 1fr 90px 90px; gap: 6px; align-items: center; margin-bottom: 5px; }
+.stdverify-cust-row input { padding: 6px 8px; border: 1px solid var(--border); font-size: 11px;
+             font-family: inherit; color: var(--text); background: var(--side2); outline: none; border-radius: 6px;
+             transition: border-color .15s ease, box-shadow .15s ease; }
+.stdverify-cust-row input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+/* "기준 충족 현황"(NRC/AAFCO/FEDIAF) — 예전엔 기준마다 자기 배경/테두리/shadow를 가진
+   미니 카드 3개가 쌓여 있었다(카드 안에 카드). 이제는 배경 없이 얇은 구분선으로만
+   세 기준을 나누고, 여백으로 그룹을 구분한다. 기준명 색(comp-title, nrc/aa/fed-t)과
+   상태값 색(cs-pass/fail 등)은 원래 값 그대로 — 이건 "작은 텍스트 상태 표시"라 허용 범위. */
+.dash-compliance { display: flex; flex-direction: column; }
+.dash-section > .accent-card { flex: 1; display: flex; flex-direction: column; }
+.dash-section > .accent-card > .settings-actions { margin-top: auto; }
+.dash-comp-card { background: none; border: none; box-shadow: none; padding: 8px 0; }
+.dash-comp-card + .dash-comp-card { border-top: 1px solid var(--border); }
+.comp-title { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+.dash-comp-stat { display: flex; justify-content: space-between; align-items: center;
+                   padding: 1px 0; font-size: 10px; }
+.dash-comp-stat .cs-val { font-weight: 700; font-size: 11px; }
+.cs-pass { color: var(--pass-t); }
+.cs-fail { color: var(--fail-t); }
+.cs-over { color: var(--fail-t); }
+/* 영양소 13종이 각자 배경/테두리/shadow를 가진 미니 카드였던 것을 제거 — 셀 하나하나가
+   "표 안의 작은 카드"처럼 보이지 않도록 배경 없이 여백(gap)만으로 나눈다. 상태 표시는
+   이미 작은 요소(qi-badge 배지, qi-gauge 게이지)로만 되어 있어 그대로 유지(허용 범위). */
+.dash-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 8px; }
+.dash-quick-item { background: none; border: none; box-shadow: none; border-radius: 0;
+                    padding: 2px 4px;
+                    display: flex; flex-direction: column; gap: 3px;
+                    justify-content: center; align-items: center; text-align: center; }
+.qi-name { font-size: var(--fs-meta); color: var(--hdr); line-height: 1.2; }
+.qi-value { font-size: 10px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
+/* ── 상태 배지 표준 컴포넌트 — 정상/부족/초과/주의/참고/미함유(평가 제외 포함)를
+   앱 전체에서 이 하나의 모양(아이콘+문구, radius 3px)으로 통일한다. 색은 기존
+   --pass/--fail/--warn 토큰 그대로: 부족·초과 모두 --fail(실제 기준 위반), 주의만
+   --warn(아직 위반은 아니고 근접), 참고는 기존 .info와 같은 --calc/--acc 계열. */
+.qi-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 3px; }
+.qi-badge svg { flex-shrink: 0; }
+.qi-pass { background: var(--pass-bg); color: var(--pass-t); }
+.qi-fail { background: var(--fail-bg); color: var(--fail-t); }
+.qi-over { background: var(--fail-bg); color: var(--fail-t); }
+.qi-warn { background: var(--warn-bg); color: var(--warn-t); }
+.qi-info { background: var(--calc); color: var(--acc); }
+.qi-none { background: var(--gray-l); color: var(--sub); }
+.qi-gauge-track { width: 100%; height: 5px; background: var(--gray-l); border-radius: 999px; overflow: hidden; margin-top: 1px; }
+.qi-gauge-fill { height: 100%; border-radius: 999px; transition: width .4s ease; }
+.dash-cap-bar { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                 padding: 10px 14px; box-shadow: var(--sh);
+                 display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.dash-cap-label { font-size: 11px; font-weight: 700; color: var(--hdr); }
+.dash-cap-badge { font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 4px; }
+
+/* ── 대시보드: 제품 유형 카드 + 요약 통계 타일을 한 줄로(좌: 카드, 우: 2x2) ──
+   이 둘과 아래 프로필 카드(.dash-section)를 같은 radius/그림자(--radius-md/--sh)로
+   통일해, 카드마다 무게감이 달라 보이던 것을 하나의 톤으로 정리한다. */
+.dash-top-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; }
+.dash-top-row .ptype-card { flex: 1.3; min-width: 0; margin-bottom: 0; }
+.dash-top-row .dash-stat-row { flex: 1; min-width: 0; margin-bottom: 0; }
+
+/* ── 대시보드: 요약 통계 타일(KPI 카드) — .ptype-card Hero Card와 같은 디자인 언어 ──
+   EYEBROW(accent dot+작은 라벨) → PRIMARY VALUE(카드의 핵심 숫자) → UNIT(작게) →
+   SECONDARY(진행바/보조 설명, 카드별로 유무만 다름) → ACTION(맨 아래 고정) 위계를
+   ptype-card와 동일한 padding(22px)·eyebrow 톤·색상 규칙으로 맞춘다. PRIMARY VALUE는
+   27px로, ptype-card-type(31px, 제품 유형명)보다 한 단계 낮춰 두 컴포넌트가 서로
+   위계를 침범하지 않게 한다. radius/shadow/border/배경은 새 값 없이 다른 대시보드
+   카드와 같은 --radius-md/--sh/--border/--side2 재사용. 카드를 flex-column으로 두고
+   액션 링크에 margin-top:auto를 줘서, 카드마다 중간 콘텐츠 줄 수가 달라도(진행바
+   유무 등) 4개 카드의 링크가 같은 높이에 맞춰진다. 상태(pass/warn/fail)에 따른
+   카드 배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
+.dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; margin-bottom: 10px; }
+.dash-stat-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
+                   border-radius: var(--radius-md); box-shadow: var(--sh); padding: 22px; position: relative; overflow: hidden; }
+/* EYEBROW — ptype-card-label과 같은 톤(10px/500/대문자) + 같은 청록 accent 점 하나만 */
+.dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500;
+                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.dash-stat-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
+/* PRIMARY VALUE — 카드의 핵심 정보. ptype-card-type(31px)보다 확실히 낮은 27px로,
+   두 히어로급 텍스트가 화면에서 서로 경쟁하지 않도록 위계 한 단계 아래에 둔다. */
+.dash-stat-val { font-size: 27px; font-weight: 700; color: var(--hdr); line-height: 1.2; letter-spacing: -.4px; }
+.dash-stat-unit { font-size: 12px; color: var(--sub); margin-left: 4px; font-weight: 500; letter-spacing: 0; }
+.dash-stat-sub { font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 6px; line-height: 1.5; }
+.dash-stat-link { font-size: 10.5px; font-weight: 700; color: var(--acc); cursor: pointer; margin-top: auto;
+                   padding-top: 12px; display: inline-block; transition: color .2s ease; }
+.dash-stat-link:hover { color: var(--acc2); }
+.dash-stat-track { width: 100%; height: 6px; background: var(--gray-l); border-radius: 999px;
+                    margin-top: 10px; overflow: hidden; }
+.dash-stat-fill { height: 100%; border-radius: 999px; background: var(--pass-t); transition: width .4s ease; }
+/* #ds-overall-card/#ds-warn-card는 진행바 톤 계산을 위해 JS가 pass/warn/fail 클래스를
+   계속 토글한다(판정 로직·집계는 그대로) — 다만 이 클래스명이 표 셀 상태색 유틸리티
+   (.pass/.fail/.warn, 521번째 줄 부근, background !important)와 이름이 겹쳐 카드 전체
+   배경까지 물드는 부작용이 있었다. 이 두 카드만 항상 기본 .dash-stat-card 배경(Neutral,
+   var(--side2))으로 고정해 그 부작용만 무력화한다 — 진행바(#ds-overall-fill) 자체의
+   pass/warn/fail 색상은 이 규칙과 무관하게 기존 로직 그대로 유지된다. */
+#ds-overall-card.pass, #ds-overall-card.warn, #ds-overall-card.fail,
+#ds-warn-card.pass, #ds-warn-card.warn, #ds-warn-card.fail { background: var(--side2) !important; }
+/* 위 두 카드에 pass/warn/fail 중 어떤 상태가 붙어도 전역 유틸리티(.pass/.warn/.fail)의
+   color 속성(--pass-t/--warn-t/--fail-t)이 카드 자신에 남지 않도록 #FFFFFF로 고정한다.
+   자식 요소(.dash-stat-val/.dash-stat-label/.dash-stat-sub/.dash-stat-link 등)는 각자
+   자기 color를 갖고 있어 화면상 텍스트색에는 영향이 없고, 카드 div 자신의 color
+   속성값만 바뀐다(전역 .pass/.warn/.fail 클래스 자체는 다른 화면에서 계속 쓰이므로
+   삭제하지 않고, 이 두 카드에만 스코프를 제한해 상속을 차단). */
+#ds-overall-card.pass, #ds-overall-card.warn, #ds-overall-card.fail,
+#ds-warn-card.pass, #ds-warn-card.warn, #ds-warn-card.fail { color: #FFFFFF; }
+
+/* ── 대시보드: 막대 차트(영양소/아미노산 충족률) ── */
+.dash-bar-list { display: flex; flex-direction: column; justify-content: center; gap: 7px; flex: 1; }
+.dash-bar-row { display: grid; grid-template-columns: 66px 1fr 42px; align-items: center; gap: 8px; }
+.dash-bar-label { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-bar-track { position: relative; height: 8px; background: var(--gray-l); border-radius: 999px; overflow: hidden; }
+.dash-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; transition: width .4s ease; }
+.dash-bar-pct { font-size: 10px; font-weight: 700; color: var(--hdr); text-align: right; }
+.dash-bar-axis { display: flex; justify-content: space-between; font-size: 9px; color: var(--sub);
+                  margin-top: 6px; padding-left: 74px; }
+
+/* ── 에너지 분석: DER 계수 분해 체인 ── */
+.ae-factor-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.ae-factor-chip { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
+                   padding: 8px 12px; display: flex; flex-direction: column; align-items: center;
+                   min-width: 76px; box-shadow: var(--sh); }
+.ae-fc-label { font-size: 9px; color: var(--sub); white-space: nowrap; }
+.ae-fc-name  { font-size: 10px; font-weight: 600; color: var(--text); margin-top: 2px; white-space: nowrap; }
+.ae-fc-val   { font-size: 14px; font-weight: 700; color: var(--hdr); margin-top: 2px; }
+.ae-fc-op    { font-size: 14px; font-weight: 700; color: var(--sub); }
+.ae-fc-final { background: var(--calc); border-color: var(--acc); }
+#ae-calorie-bars.dash-bar-list .dash-bar-row { grid-template-columns: 66px 1fr 148px; }
+#ae-calorie-bars .dash-bar-pct { white-space: nowrap; }
+
+/* ── 계산 기준 탭 ── */
+.cb-text { font-size: 11.5px; color: var(--text); line-height: 1.7; margin-bottom: 8px; }
+.cb-text b { color: var(--hdr); }
+.cb-formula { font-size: 11px; font-weight: 600; color: var(--hdr); background: var(--calc);
+              border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; line-height: 1.6; }
+.cb-note { font-size: 10px; color: var(--sub); line-height: 1.6; margin-top: 4px; }
+.cb-note .linkable { color: var(--acc); cursor: pointer; }
+.cb-note .linkable:hover { text-decoration: underline; }
+.cb-list { margin: 0 0 8px; padding-left: 18px; font-size: 11.5px; color: var(--text); line-height: 1.7; }
+.cb-list b { color: var(--hdr); }
+.cb-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; font-size: 11px; }
+.cb-badge-desc { color: var(--sub); margin-right: 10px; }
+.cb-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 4px; }
+.cb-subcard { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; box-shadow: var(--sh); }
+.cb-subtitle { font-size: 10.5px; font-weight: 700; color: var(--hdr); margin-bottom: 6px; }
+.cb-mini-table { width: 100%; font-size: 10.5px; border-collapse: collapse; }
+.cb-mini-table td { padding: 3px 4px; border-bottom: 1px solid var(--border); white-space: normal; }
+.cb-mini-table td:last-child { text-align: right; font-weight: 700; color: var(--hdr); }
+.cb-table { margin-bottom: 4px; }
+.cb-table th, .cb-table td { font-size: 10.5px; white-space: normal; }
+
+/* ── 전문 용어 사전 탭 ── */
+.gl-search-row { display: flex; align-items: center; gap: 10px; }
+#gl-search { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px;
+             background: var(--inp); color: var(--text); font-size: 13px; font-family: inherit; outline: none;
+             transition: border-color .2s ease; }
+#gl-search:focus { border-color: var(--acc); }
+.gl-count { font-size: 10.5px; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
+.gl-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.gl-chip { font-size: 10.5px; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+           border: 1px solid var(--border); background: var(--side2); color: var(--sub);
+           cursor: pointer; transition: all .15s ease; user-select: none; }
+.gl-chip:hover { border-color: var(--acc); color: var(--acc); }
+.gl-chip.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.gl-groups { display: flex; flex-direction: column; gap: 16px; }
+.gl-cat-hdr { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+              letter-spacing: .6px; margin: 2px 2px 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.gl-group-items { display: flex; flex-direction: column; gap: 8px; }
+.gl-entry { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+            padding: 13px 16px; box-shadow: var(--sh); }
+.gl-entry-hdr { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+.gl-term { font-size: 14.5px; font-weight: 800; color: var(--hdr); }
+.gl-abbr { font-size: 11px; font-weight: 500; color: var(--sub); font-style: italic; }
+.gl-def { font-size: 12px; color: var(--text); line-height: 1.65; }
+.gl-def b { color: var(--hdr); }
+.gl-link { font-size: 10.5px; color: var(--acc); cursor: pointer; margin-top: 6px; display: inline-block; }
+.gl-link:hover { text-decoration: underline; }
+.gl-empty { text-align: center; padding: 10px 8px; color: var(--sub); font-size: 11px; }
+
+/* ── 제품 유형 자동 판정 카드 & 배너 — "분석 결과 Hero Card" ──
+   HEADER(작은 eyebrow) → PRIMARY(제품 유형명, 카드의 주인공 — 31px로 다른 어떤
+   텍스트보다 압도적으로 큼) → DESCRIPTION(차분한 근거 요약) → STATS(하단 footer
+   그룹, divider로 분리) → ACTION 순의 위계. 카드 자체 padding/헤더/통계 여백을
+   전체적으로 조금씩 덜어내(24→22px, 헤더 마진 20→16px, 통계 마진 22→18px) 그만큼을
+   PRIMARY 텍스트 확대에 재배분했다 — 카드 높이(~336px, 옆 KPI 2x2 그리드와 동일)는
+   유지하면서 "제품 유형명 하나가 카드를 지배하는" 느낌만 확실히 커지도록. 카드를
+   flex-column 컨테이너로 두고 .dash-stat-link(다른 KPI 카드와 공유)의 margin-top:auto가
+   그대로 작동해 액션 링크는 항상 맨 아래에 붙는다. 배경/border/radius/shadow는
+   --side2/--border/--radius-md/--sh 그대로, pass/warn/fail 등 상태색은 전혀 쓰지 않음. */
+.ptype-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
+              border-radius: var(--radius-md); padding: 22px; margin-bottom: 14px; box-shadow: var(--sh); }
+/* HEADER — 왼쪽 eyebrow 라벨(청록 accent dot), 오른쪽 신뢰도 pill(+판정 근거 버튼).
+   얇은 구분선으로 카드 안에서 독립된 영역처럼 보이게 한다(색이 아니라 경계선으로 분리). */
+.ptype-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+                      padding-bottom: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.ptype-card-label { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--sub);
+                     font-weight: 500; letter-spacing: .5px; text-transform: uppercase; }
+.ptype-card-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
+.ptype-card-side { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+/* PRIMARY — 제품 유형명이 카드의 시각적 중심(31px/700, 다른 텍스트와 압도적 크기 차),
+   충분한 line-height로 숨 쉴 공간을 두고, 아래 여백(margin-bottom)으로 한 번 더
+   "이게 이 카드의 결론"이라는 단락감을 만든다. 영문명은 대문자+letter-spacing의
+   작은 캡션 톤으로 확실히 낮춰 PRIMARY와 경쟁하지 않게 한다. */
+.ptype-card-type { font-size: 31px; font-weight: 700; color: var(--hdr); letter-spacing: -.6px;
+                    line-height: 1.25; margin-bottom: 6px; }
+.ptype-card-type-en { font-size: 10px; color: var(--sub); font-weight: 600; letter-spacing: .4px;
+                       text-transform: uppercase; margin-bottom: 12px; }
+.ptype-card-desc { font-size: 11.5px; color: var(--sub); font-weight: 400; line-height: 1.55; max-width: 480px; }
+/* STATS — 카드 하단의 독립적인 footer 그룹. 위 콘텐츠와 얇은 border-top + 18px 여백으로
+   분리되고, 항목 사이도 옅은 세로 divider(var(--border))로 나뉜다. 라벨은 작고 차분하게,
+   값은 라벨보다 확실히 큰 15px/700로 — 다만 PRIMARY(31px)보다는 뚜렷이 작게 눌러서
+   제품 유형명과 경쟁하지 않는 "근거 데이터" 역할만 하도록 한다. */
+.ptype-card-stats { display: flex; flex-wrap: wrap; margin-top: 18px; padding-top: 14px;
+                     border-top: 1px solid var(--border); }
+.ptype-card-stat { font-size: 10px; color: var(--sub); padding-right: 20px; margin-right: 20px;
+                    border-right: 1px solid var(--border); }
+.ptype-card-stat:last-child { padding-right: 0; margin-right: 0; border-right: none; }
+.ptype-card-stat b { display: block; color: var(--hdr); font-size: 15px; font-weight: 700; letter-spacing: -.2px; margin-top: 3px; }
+.ptype-confidence { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+.ptype-confidence.conf-high   { background: var(--pass-bg); color: var(--pass-t); }
+.ptype-confidence.conf-medium { background: var(--warn-bg); color: var(--warn-t); }
+.ptype-confidence.conf-low    { background: var(--fail-bg); color: var(--fail-t); }
+.ptype-evidence-btn { padding: 6px 14px; font-size: 10.5px; font-weight: 700; border-radius: 999px; cursor: pointer;
+                       border: 1px solid var(--border); background: var(--side); color: var(--text); white-space: nowrap;
+                       font-family: inherit; transition: background .2s ease, color .2s ease; }
+.ptype-evidence-btn:hover { background: var(--acc); color: #fff; border-color: var(--acc); }
+
+.ptype-evidence-section { margin-bottom: 14px; }
+.ptype-evidence-section h4 { font-size: 11px; color: var(--hdr); margin-bottom: 6px; font-weight: 800; }
+.ptype-evidence-list { font-size: 11px; color: var(--text); line-height: 1.7; padding-left: 16px; margin: 0; }
+.ptype-evidence-kv { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px dashed var(--border); }
+.ptype-evidence-kv b { color: var(--hdr); }
+
+.ptype-banner { display: none; align-items: center; flex-wrap: wrap; row-gap: 4px; column-gap: 8px;
+                padding: 8px 14px; font-size: 10.5px; font-weight: 600; line-height: 1.5;
+                border-bottom: 1px solid var(--border); flex-shrink: 0;
+                word-break: keep-all; overflow-wrap: break-word; }
+.ptype-banner.show { display: flex; }
+.ptype-banner.type-supplement { background: var(--fed-bg); color: var(--fed-t); }
+.ptype-banner.type-treat      { background: var(--warn-bg); color: var(--warn-t); }
+.ptype-banner.type-unsuitable { background: var(--fail-bg); color: var(--fail-t); }
+.ptype-banner b { white-space: nowrap; }
+.ptype-banner .linkable { text-decoration: underline; cursor: pointer; margin-left: auto; white-space: nowrap; }
+/* 배합설계 탭의 안내 바만 절제된 톤으로 — 배합비 입력/배합 테이블이 화면의 주인공이 되도록
+   진한 색 전체 배경 대신 다른 얇은 안내 바(#mix-nutrient-note 등)와 같은 중립 배경을 쓰고,
+   상태는 얇은 좌측 accent border 하나로만 표시한다(id 선택자라 std-verify 탭의 동일 배너는
+   기존 스타일 그대로 유지됨 — 표시 조건·문구·판정 로직은 renderPtypeBanner() 그대로). */
+#mix-ptype-banner.show { padding: 6px 14px; border-left: 3px solid transparent; border-bottom: 1px solid var(--border); }
+#mix-ptype-banner.type-supplement { background: var(--gray-l); color: var(--text); border-left-color: var(--fed-t); }
+#mix-ptype-banner.type-treat      { background: var(--gray-l); color: var(--text); border-left-color: var(--warn-t); }
+#mix-ptype-banner.type-unsuitable { background: var(--gray-l); color: var(--text); border-left-color: var(--fail-t); }
+
+/* ── 대시보드: 도넛/게이지 ── */
+.dash-donut-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; }
+.dash-donut { position: relative; width: 132px; height: 132px; border-radius: 50%; flex-shrink: 0; }
+.dash-donut::before { content: ''; position: absolute; inset: 14px; border-radius: 50%; background: var(--side2); }
+.dash-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column;
+                      align-items: center; justify-content: center; text-align: center; }
+.dash-donut-val { font-size: var(--fs-metric); font-weight: 700; color: var(--hdr); position: relative; z-index: 1; }
+.dash-donut-sub { font-size: var(--fs-meta); color: var(--sub); margin-top: 10px; text-align: center; }
+.dash-donut-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; padding: 3px 12px; border-radius: 3px; margin-top: 6px; }
+.dash-donut-badge svg { flex-shrink: 0; }
+.dash-legend { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.dash-legend-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text); }
+.dash-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dash-legend-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-legend-pct { font-weight: 700; color: var(--hdr); }
+
+/* ── 대시보드: 경고 요약 리스트 ── */
+.dash-warn-list { display: flex; flex-direction: column; gap: 6px; }
+.dash-warn-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+                   background: var(--gray-l); border-radius: 10px; }
+.dash-warn-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 3px; flex-shrink: 0; }
+.dash-warn-badge svg { flex-shrink: 0; }
+.dash-warn-badge.critical { background: var(--fail-bg); color: var(--fail-t); }
+.dash-warn-badge.warning { background: var(--warn-bg); color: var(--warn-t); }
+.dash-warn-name { font-size: 11px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
+.dash-warn-desc { font-size: 9.5px; color: var(--sub); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-warn-empty { font-size: 11px; color: var(--sub); text-align: center; padding: 20px 0; }
+
+/* ── 스크롤바 ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--side); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+
+/* ── 플로팅 액션 버튼 (FAB) — 전역 종(개/고양이) 빠른 전환 단축 버튼(fabAction→setSpeciesQuick).
+   데스크톱 SaaS 도구 기준으로 보면 기존 56px/44px는 모바일 앱의 Material FAB 크기에 가까워
+   한 단계 줄이고(48px/38px), 은은한 --sh-md 그림자만 더했다. 색/동작/JS는 그대로. ── */
+.fab { position: fixed; right: 48px; bottom: 56px; width: 48px; height: 48px; z-index: 900; }
+.fab-main { position: absolute; right: 0; bottom: 0; width: 48px; height: 48px; border-radius: 50%;
+            background: #1A1A1A; border: none; cursor: pointer; padding: 0;
+            box-shadow: var(--sh-md);
+            display: flex; align-items: center; justify-content: center;
+            transition: background-color .2s ease; z-index: 2; }
+.fab-main:hover { background: #333333; }
+.fab-main:active { transform: scale(0.94); }
+.fab-icon { position: relative; width: 16px; height: 16px; transition: transform .3s ease-out; }
+.fab-icon::before, .fab-icon::after { content: ''; position: absolute; background: #fff; border-radius: 2px; }
+.fab-icon::before { left: 0; top: 7px; width: 16px; height: 2px; }
+.fab-icon::after  { left: 7px; top: 0; width: 2px; height: 16px; }
+.fab.open .fab-icon { transform: rotate(45deg); }
+.fab-item { position: absolute; right: 0; bottom: 0; width: 38px; height: 38px; border-radius: 50%;
+            background: #FFFFFF; border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: var(--sh-md);
+            display: flex; align-items: center; justify-content: center; font-size: 16px;
+            cursor: pointer; opacity: 0; pointer-events: none;
+            transform: translate(0,0) scale(0.3);
+            transition: transform .3s ease-out, opacity .25s ease-out;
+            z-index: 1; }
+.fab-item:hover { filter: brightness(0.96); }
+.fab-item[data-species].active { box-shadow: 0 0 0 3px #1A1A1A; }
+
+/* ── 설정 탭 ── */
+.settings-opt-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.settings-opt-btn { padding: 8px 16px; border: 1px solid var(--border); border-radius: 6px;
+                     background: var(--side2); color: var(--text); font-size: 11px; font-weight: 600;
+                     cursor: pointer; font-family: inherit;
+                     transition: background-color .25s ease, color .25s ease; }
+.settings-opt-btn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.fab.open .fab-item { opacity: 1; pointer-events: auto; }
+.fab.open .fab-item[data-idx="1"] { transition-delay: 0s;   transform: rotate(-15deg) translateY(-90px) rotate(15deg)  scale(1); }
+.fab.open .fab-item[data-idx="2"] { transition-delay: .03s; transform: rotate(-45deg) translateY(-90px) rotate(45deg)  scale(1); }
+.fab-item .fab-item-label { position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
+            white-space: nowrap; font-size: 10px; font-weight: 600;
+            color: #fff; background: rgba(26,26,26,0.85); padding: 3px 8px; border-radius: 4px;
+            opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+.fab-item:hover .fab-item-label { opacity: 1; }
+
+
+/* ── 로그인 ── */
+/* 좌(브랜드)/우(로그인 폼) 2분할 — 좌측은 사이드바/탑바와 같은 --topbar-bg(다크 네이비)를
+   테마와 무관하게 항상 사용해 "브랜드 존"으로 고정하고, 우측은 기존처럼 --body-bg/--panel-grad
+   등 테마 토큰을 그대로 써서 light/dark 전환에 자연스럽게 따라가도록 한다. */
+#login-overlay { position: fixed; inset: 0; background: var(--body-bg); z-index: 3000;
+                  display: flex; align-items: stretch; overflow: hidden; }
+#login-overlay.hidden { display: none; }
+
+/* LEFT — 브랜드 패널(약 55%) */
+#login-brand { flex: 0 0 55%; max-width: 55%; min-width: 0; position: relative; overflow: hidden;
+               background: var(--topbar-bg); display: flex; flex-direction: column; justify-content: center; }
+#login-brand-deco { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* 콘텐츠 위치 — 브랜드 블록을 LEFT PANEL 내부 수평 중앙에 놓는다. 좌우 padding을 대칭으로
+   주고 max-width + margin auto로 패널(55vw) 안에서 가운데 정렬한다. 브랜드/헤드라인/설명/
+   divider/standards가 전부 같은 중앙 축을 공유한다. 세로로는 justify-content:center 를 쓰되
+   padding-bottom 을 top 보다 크게 줘서 시각적으로 화면 세로 중앙보다 약간 위에 오도록 한다. */
+#login-brand-main { position: relative; z-index: 1; flex: 0 0 auto; min-height: 0; display: flex; flex-direction: column;
+                     align-items: center; justify-content: center; text-align: center;
+                     max-width: 620px; margin: 0 auto;
+                     padding: 0 40px; }
+#login-brand-logo-row { display: flex; align-items: center; justify-content: center; gap: 22px; margin-bottom: 22px; }
+#login-brand-mark-img { height: 80px; width: auto; flex: 0 0 auto; display: block; }
+#login-brand-name { font-size: 42px; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1.15; }
+#login-brand-sub { font-size: 13.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+                    color: var(--acc); margin-top: 5px; }
+#login-brand-headline { font-size: 27px; font-weight: 700; color: #fff; line-height: 1.35; margin-bottom: 10px; }
+#login-brand-desc { font-size: 15.5px; color: rgba(255,255,255,0.55); margin-bottom: 24px; }
+#login-brand-divider { width: 44px; height: 3px; border-radius: 1.5px; background: var(--acc); margin: 0 auto; }
+
+/* LEFT bottom — 국제 영양기준(AAFCO/FEDIAF/NRC) — Logo 2.png에서 크롭한 실제 로고 이미지.
+   왼쪽 패널 하단에 중앙 정렬로 안정적으로 배치. 왜곡 방지를 위해 width는 auto로 두고 height만
+   통일해 서로 다른 aspect ratio를 유지한 채 시각적 높이만 맞춘다. */
+#login-brand-standards { position: relative; z-index: 1; max-width: 620px;
+                          margin: clamp(44px, 7vh, 72px) auto 0;
+                          padding: 24px 40px 0; text-align: center;
+                          border-top: 1px solid rgba(255,255,255,0.1); }
+#login-standards-label { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 16px; text-align: center; }
+/* 안내 문구와 로고 그룹이 정확히 같은 중앙축을 쓰도록 row에도 max-width + margin auto 를 준다.
+   로고 3개는 각각 동일 너비(flex:1 1 0)의 item 안에 들어가고, 이미지는 item 내부에서 center
+   정렬되며 width:auto 로 원본 비율을 유지한다. 이렇게 하면 실제 가로폭이 달라도 시각적 간격이
+   균등하게 보인다. */
+#login-standards-row { display: flex; align-items: center; justify-content: center;
+                        gap: 28px; max-width: 400px; margin: 0 auto; }
+.login-standard-item { flex: 1 1 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+.login-standard-logo { height: 40px; width: auto; max-width: 100%; display: block; opacity: .92; }
+
+/* RIGHT — 로그인 폼(약 45%) */
+#login-right { flex: 1 1 45%; min-width: 0; display: flex; align-items: center; justify-content: center;
+               padding: 24px; overflow-y: auto; }
+
+@media (max-width: 860px) {
+  #login-brand { display: none; }
+  #login-right { flex: 1 1 100%; }
+}
+
+#login-box { background: var(--panel-grad); border: 1px solid var(--panel-border); border-radius: 20px;
+             box-shadow: var(--sh-md); padding: 44px 40px; width: 400px; max-width: 100%; text-align: center; }
+#login-title { font-size: 20px; font-weight: 800; color: var(--hdr); margin-bottom: 8px; }
+.auth-view { display: none; }
+.auth-view.show { display: block; }
+.auth-sub { font-size: 12px; color: var(--sub); margin-bottom: 26px; }
+.auth-field { position: relative; margin-bottom: 12px; }
+.auth-field svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+                   width: 16px; height: 16px; color: var(--sub); pointer-events: none; }
+.auth-input { width: 100%; height: 46px; padding: 0 14px 0 40px; border: 1px solid var(--border); border-radius: 10px;
+            font-size: 13px; font-family: inherit; outline: none; text-align: left;
+            background: var(--side2); color: var(--text); box-sizing: border-box;
+            transition: border-color .15s ease, box-shadow .15s ease; }
+.auth-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.auth-btn { width: 100%; height: 46px; border: none; border-radius: 10px; background: var(--acc);
+             color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+             margin-top: 4px; transition: filter .2s ease, transform .18s ease; }
+.auth-btn:hover { filter: brightness(1.1); }
+.auth-btn:active { transform: scale(0.97); }
+.auth-btn:disabled { opacity: .6; cursor: default; }
+.auth-err { font-size: 10px; color: #B03A2E; margin-top: 10px; min-height: 14px; }
+.auth-err.auth-msg-ok { color: var(--pass-t); }
+.auth-links { margin-top: 18px; font-size: 11px; display: flex; justify-content: space-between; gap: 8px; }
+.auth-links.auth-links-center { justify-content: center; }
+.auth-link { color: var(--acc); cursor: pointer; text-decoration: none; font-weight: 600; }
+.auth-link:hover { text-decoration: underline; }
+.auth-checks { margin-bottom: 20px; }
+.auth-check-row { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--sub);
+                   margin-bottom: 8px; text-align: left; }
+.auth-check-row:last-child { margin-bottom: 0; }
+.auth-check-row input[type=checkbox] { margin: 0; cursor: pointer; accent-color: var(--acc);
+                                         width: 16px; height: 16px; }
+.auth-check-row label { cursor: pointer; }
+
+/* ── 배합표 미리보기(A4 보고서) — 항상 화이트 배경·네이비 톤으로 고정(다크 테마와 무관하게
+   출력물은 동일해야 하므로 var(--acc) 등 테마 변수 대신 이 블록 안에서만 색을 직접 지정한다).
+   .modal-overlay/.modal 기본 세트는 그대로 재사용하되 폭만 A4에 맞게 이 클래스로 덮어쓴다. */
+.mixreport-modal { width: 900px; max-width: 96vw; background: #fff; }
+.mixreport-modal .modal-hdr { background: #1e2733; color: #fff; }
+.mixreport-modal .modal-hdr button { color: rgba(255,255,255,0.8); }
+.mixreport-modal .modal-hdr button:hover { background: rgba(255,255,255,0.15); color: #fff; }
+.mixreport-modal .modal-body { padding: 20px; background: #dfe3e8; }
+.mixreport-modal .modal-footer { background: #fff; border-top: 1px solid #e1e5e9; }
+.mixreport-modal .modal-footer .btn-cancel { border-color: #cfd6dc !important; }
+.mixreport-modal .modal-footer .btn-save { background: #1e2733; }
+
+#mixreport-page { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; color: #1e2733;
+                   padding: 14mm 12mm; box-sizing: border-box; box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+                   font-size: 9px; line-height: 1.4; }
+.mr-header { display: flex; justify-content: space-between; align-items: flex-start;
+             border-bottom: 2px solid #1e2733; padding-bottom: 8px; margin-bottom: 10px; }
+.mr-header-center { flex: 1; text-align: center; }
+.mr-title { font-size: 19px; font-weight: 800; color: #1e2733; letter-spacing: .5px; }
+.mr-subtitle { font-size: 10px; color: #5c6773; margin-top: 3px; font-weight: 600; }
+.mr-brand { font-size: 10px; font-weight: 700; color: #1e2733; text-align: right; white-space: nowrap; padding-top: 2px; }
+.mr-section-title { font-size: 11px; font-weight: 800; color: #fff; background: #1e2733;
+                     padding: 4px 8px; margin: 12px 0 6px; }
+.mr-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.mr-info-row { display: flex; border-bottom: 1px solid #e1e5e9; padding: 3px 0; gap: 6px; }
+.mr-info-label { flex: 0 0 72px; color: #5c6773; font-weight: 700; }
+.mr-info-val { flex: 1; color: #1e2733; word-break: break-all; }
+.mr-info-val[contenteditable="true"] { outline: none; min-height: 12px; }
+.mr-info-val[contenteditable="true"]:empty::before { content: ""; }
+.mr-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+.mr-table th { background: #1e2733; color: #fff; font-weight: 700; padding: 3px 5px; text-align: center; border: 1px solid #1e2733; }
+.mr-table td { padding: 2.5px 5px; border: 1px solid #d6dbe0; text-align: center; }
+.mr-table td.mr-left { text-align: left; }
+.mr-table tr.mr-cat-row td { background: #eef1f3; color: #5c6773; font-weight: 700; text-align: left; }
+.mr-table tr.mr-sum-row td { background: #dbe6f5; color: #1e2733; font-weight: 800; }
+.mr-badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-weight: 700; font-size: 8px; }
+.mr-badge-pass { background: rgba(46,160,67,0.14); color: #1E7E34; }
+.mr-badge-fail { background: rgba(211,47,47,0.14); color: #C0392B; }
+.mr-badge-over { background: rgba(211,47,47,0.14); color: #C0392B; }
+.mr-badge-none { background: #eef1f3; color: #5c6773; }
+.mr-comp-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.mr-comp-chip { flex: 0 0 auto; border: 1px solid #d6dbe0; border-radius: 4px; padding: 4px 8px;
+                background: #f5f6f8; min-width: 74px; }
+.mr-comp-name { font-weight: 700; color: #1e2733; display: block; }
+.mr-comp-pct { color: #1565C0; font-weight: 800; }
+.mr-notes { font-size: 8px; color: #5c6773; border-top: 1px solid #e1e5e9; margin-top: 10px; padding-top: 6px; }
+.mr-notes div { margin-bottom: 2px; }
+.mr-foot { display: flex; justify-content: space-between; font-size: 7.5px; color: #8892a0; margin-top: 6px; }
+
+@media print {
+  /* 브라우저 기본 인쇄 머릿글/바닥글(제목·URL·날짜)은 @page 여백 공간에 그려지므로 그 공간을
+     0으로 없애 표시되지 않게 하고, 보고서가 보여주던 여백은 #mixreport-page 자체 padding에
+     그대로 옮겨(14mm+10mm=24mm, 12mm+10mm=22mm) 화면에 보이는 여백 크기는 바꾸지 않는다. */
+  @page { size: A4 portrait; margin: 0; }
+  body.mixreport-printing > *:not(#mixreport-overlay) { display: none !important; }
+  body.mixreport-printing #mixreport-overlay { position: static !important; inset: auto !important;
+    background: #fff !important; display: block !important; }
+  body.mixreport-printing #mixreport-overlay .mixreport-modal { width: auto !important; max-width: none !important;
+    max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0; }
+  body.mixreport-printing .mixreport-modal .modal-body { background: #fff !important; padding: 0 !important; }
+  body.mixreport-printing .mixreport-nochrome { display: none !important; }
+  /* Chrome은 인쇄/PDF 저장 시 배경색을 기본적으로 생략한다(잉크 절약) — .mr-section-title,
+     .mr-table th 등이 쓰는 background:#1e2733 같은 진한 배경이 화면 미리보기와 달리 흰색으로
+     바뀌는 원인. #mixreport-page와 그 하위 요소 전체에 색 보존을 지시해 화면과 동일하게 만든다
+     (색상값 자체는 그대로 두고, 인쇄 시 생략되지 않도록 보존 여부만 지정). */
+  body.mixreport-printing #mixreport-page,
+  body.mixreport-printing #mixreport-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* 인쇄/PDF에서만 일반 데이터 행에 zebra striping 적용 — 화면 미리보기는 그대로 흰 배경.
+     .mr-cat-row/.mr-sum-row는 제외해 기존 색(#eef1f3/#dbe6f5)을 그대로 유지한다.
+     짝수 행 색은 .mr-cat-row가 쓰는 #eef1f3보다 살짝 옅게(#f5f7f8) 둬서 카테고리 구분행과
+     구별되게 한다. */
+  body.mixreport-printing .mr-table tr:not(.mr-cat-row):not(.mr-sum-row):nth-child(even) td {
+    background: #f5f7f8;
+  }
+  body.mixreport-printing .mr-table tr:not(.mr-cat-row):not(.mr-sum-row):nth-child(odd) td {
+    background: #fff;
+  }
+  /* 전역 표 줄무늬 규칙(:not(.cat-row):not(.sec-row), 이 파일 앞부분)은 클래스명이 달라
+     .mr-cat-row/.mr-sum-row를 걸러내지 못하고, 명시도(specificity)까지 더 높아 그 배경(#eef1f3/
+     #dbe6f5)을 흰색(--even/--odd)으로 덮어써버린다 — 이 문서 편집과 무관한 기존 동작이지만,
+     "카테고리/합계 행은 기존 색상 유지"를 인쇄에서 실제로 지키려면 여기서 다시 지정해야 한다. */
+  /* 인쇄에서만 대분류(.mr-cat-row) 가독성 보강 — 배경(#eef1f3) + 굵은 글씨(800) + 위아래
+     가로 구분선(1px solid #b8c0c8, 기본 세로 격자선 #d6dbe0보다 살짝 진해 카테고리 경계만
+     또렷하게 보임)만 쓴다. border-left/right는 절대 추가하지 않는다 — 셀 끝에서 끊겨 박스처럼
+     보이는 문제가 있어, 좌우 테두리는 .mr-table td 기본 세로 격자선(위쪽 base 규칙)만 쓴다. */
+  body.mixreport-printing .mr-table tr.mr-cat-row td {
+    background: #eef1f3 !important;
+    border-top: 1px solid #b8c0c8;
+    border-bottom: 1px solid #b8c0c8;
+    font-weight: 800;
+  }
+  body.mixreport-printing .mr-table tr.mr-sum-row td { background: #dbe6f5 !important; }
+  body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
+    min-height: 0 !important; padding: 24mm 22mm !important;
+    /* 표가 페이지 경계에서 갈릴 때도 이 padding이 매 페이지 조각의 위/아래에 반복되도록 한다
+       (기본값 slice는 padding을 박스 전체 시작/끝에만 한 번 준다) — 새 여백값을 만드는 대신
+       이미 페이지 가장자리에 쓰던 24mm/22mm를 그대로 재사용해 "잘린 표" 위·아래에도 같은
+       호흡을 준다. 값은 그대로 두고 이 표시 방식만 바꾸는 것이므로 기존 여백 설정과 동일하다. */
+    -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+  /* ── 페이지 나눔 규칙 — 글자 크기·여백·줄간격·표 크기는 화면 디자인 그대로 두고, 표가 페이지
+     경계를 넘어갈 때 "행이 반으로 잘리는 것"과 "제목/헤더만 페이지 끝에 홀로 남는 것"만 막는다.
+     표 전체를 1페이지에 강제로 넣지 않으며, 넘치면 다음 페이지로 자연스럽게 이어진다. ── */
+  body.mixreport-printing .mr-header,
+  body.mixreport-printing .mr-info-grid,
+  body.mixreport-printing .mr-comp-row,
+  body.mixreport-printing .mr-notes,
+  body.mixreport-printing .mr-comp-chip,
+  body.mixreport-printing .mr-table tr {
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  body.mixreport-printing .mr-section-title {
+    break-after: avoid; page-break-after: avoid;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  body.mixreport-printing .mr-table {
+    break-inside: auto; page-break-inside: auto;
+    /* border-collapse는 인쇄에서만 separate로 바꾼다 — collapse 상태로 표가 페이지 경계에서
+       잘리면 크로미움이 잘린 지점의 셀 테두리를 누락/중복 그려 선이 끊겨 보이는 문제가 있어,
+       셀마다 자기 테두리를 온전히 그리는 separate 모델로 바꿔 페이지 경계에서도 테두리가
+       깨지지 않게 한다(화면 미리보기는 이 규칙 밖이라 기존 collapse 그대로 유지된다). */
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  body.mixreport-printing .mr-table thead {
+    display: table-header-group; /* 표가 페이지를 넘기면 헤더 행이 다음 페이지 상단에 자동으로 반복됨 */
+  }
+  body.mixreport-printing .mr-table tr.mr-cat-row {
+    break-after: avoid; page-break-after: avoid; /* 카테고리 구분행이 페이지 끝에 혼자 남지 않게 */
+  }
+}
