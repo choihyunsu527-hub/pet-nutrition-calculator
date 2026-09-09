@@ -914,7 +914,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    table-layout:fixed + .tbl-wrap 가로 스크롤이라 전체 레이아웃·반응형은 그대로 유지된다. */
 #ing-table th:nth-child(2),
 #ing-table td:nth-child(2) {
-  width: 360px !important;
+  width: 280px !important;
   white-space: normal;
   word-break: keep-all;
   overflow-wrap: anywhere;
