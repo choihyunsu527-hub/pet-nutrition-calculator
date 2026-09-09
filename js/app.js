@@ -735,6 +735,37 @@ function renderGlossary() {
   `).join('')}</div>`;
 }
 
+// ── 법령·광고기준 탭: 실무 체크리스트 상태 저장/복원 ──────────────────────────
+// 순수 정보 탭이라 계산/DB/저장 로직과 무관하다. 체크 상태만 localStorage(JSON 배열)에 담는다
+// — 알림 읽음 표시(NOTIF_READ_STORAGE_KEY)와 동일한 "체크된 key 목록" 패턴. 로그인/서버와 무관.
+const LAW_CHECKLIST_KEY = 'feedcalc_v4_law_checklist';
+function loadLawChecklist() {
+  try { return new Set(JSON.parse(localStorage.getItem(LAW_CHECKLIST_KEY) || '[]')); }
+  catch (e) { return new Set(); }
+}
+function saveLawChecklist(set) {
+  try { localStorage.setItem(LAW_CHECKLIST_KEY, JSON.stringify([...set])); } catch (e) {}
+}
+function initLawChecklist() {
+  const wrap = document.getElementById('law-checklist');
+  if (!wrap) return;
+  const checked = loadLawChecklist();
+  wrap.querySelectorAll('.law-check').forEach(cb => {
+    cb.checked = checked.has(cb.dataset.key);
+  });
+  // 이벤트 위임 — 체크박스가 바뀔 때마다 현재 상태를 다시 저장한다(중복 바인딩 방지 플래그).
+  if (!wrap.dataset.bound) {
+    wrap.addEventListener('change', (e) => {
+      const cb = e.target.closest('.law-check');
+      if (!cb) return;
+      const set = loadLawChecklist();
+      if (cb.checked) set.add(cb.dataset.key); else set.delete(cb.dataset.key);
+      saveLawChecklist(set);
+    });
+    wrap.dataset.bound = '1';
+  }
+}
+
 // 영양소명/현재값/판정 상태(qi-badge)/게이지를 렌더링하는 카드 HTML을 만든다.
 // "분석 현황" 탭의 주요 영양소 빠른 확인과 대시보드 탭의 요약 카드가 이 함수를 공유해
 // 판정 로직(gateJudge)과 상태 스타일(qi-badge)이 두 곳에서 절대 어긋나지 않게 한다.
@@ -1213,6 +1244,7 @@ async function init() {
   renderCalcBasisPage();
   buildGlossaryChips();
   renderGlossary();
+  initLawChecklist();
   renderNotifList();
 
   // 이전 버전에서 남아있을 수 있는 레시피 작업 자동 저장분을 정리한다 —

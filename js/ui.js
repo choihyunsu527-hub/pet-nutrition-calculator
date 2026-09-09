@@ -108,7 +108,7 @@ function syncThemeButtons() {
 const TAB_LABELS = {
   dash:'대시보드', product:'제품 / 정보', mix:'배합 설계', analysis:'분석 현황',
   ana:'영양소 분석', 'ana-energy':'에너지 분석', 'std-verify':'기준 검증', amino:'아미노산 분석', warn:'경고 패널', history:'변경 이력',
-  std:'영양 기준 DB', glossary:'전문 용어', calcbasis:'계산 기준',
+  std:'영양 기준 DB', glossary:'전문 용어', calcbasis:'계산 기준', law:'법령·광고기준',
   ing:'원료 DB', settings:'설정', admin:'관리자',
 };
 

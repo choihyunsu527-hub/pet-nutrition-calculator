@@ -276,6 +276,11 @@
       <span>용어</span>
     </div>
 
+    <div class="nav-item" data-tab="law" data-label="법령·광고기준" onclick="showTab('law', this)" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 6l9-4 9 4"/><path d="M4 10h16"/><path d="M6 10v8"/><path d="M10 10v8"/><path d="M14 10v8"/><path d="M18 10v8"/><path d="M3 18h18"/><path d="M2 22h20"/></svg>
+      <span>법령·광고기준</span>
+    </div>
+
     <div class="nav-divider" style="margin-top:auto"></div>
     <div class="nav-section-label">시스템</div>
     <div class="nav-item" data-tab="admin" data-requires-role="super_admin" data-label="관리자" onclick="showTab('admin', this)" style="display:none" role="button" tabindex="0">
@@ -1415,6 +1420,164 @@
               참고로 AAFCO는 "간헐적·보조적 급여 전용" 제품을 반려동물 하루 섭취 열량의 10% 이하로만 급여하도록
               권장합니다(간식이 주식을 대체해서는 안 되는 이유입니다).<br>
               ※ 현재 배합의 실제 판정 결과와 근거는 <span class="linkable" onclick="goTab('dash')">대시보드</span> 상단의 "제품 유형 분석" 카드에서 확인할 수 있습니다.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: 법령·광고기준 ── -->
+    <div class="tab-pane" id="tab-law">
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">법령·광고기준</span>
+        <span class="hdr-desc">반려동물사료 관련 법령·표시사항·허위/과장광고 기준 한눈에 보기</span>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:24px">
+
+          <div class="dash-section">
+            <h3>1. 관련 법령 · 기준</h3>
+            <div class="cb-text">
+              반려동물사료는 <b>사료관리법</b> 체계의 적용을 받습니다. 아래는 실무에서 자주 참조하는
+              법령·하위규정이며, 각 항목의 「국가법령정보센터 원문 보기」에서 전체 조문을 확인할 수 있습니다.
+            </div>
+
+            <details class="law-acc">
+              <summary>사료관리법</summary>
+              <div class="law-acc-body">
+                <div class="cb-text">
+                  사료의 수급 안정과 품질관리·안전성 확보를 위한 <b>기본법</b>입니다. 제조업·수입업·판매업 등록,
+                  <b>성분등록</b>, 표시기준, 사용 가능한 원료·성분규격, 유해사료의 제조·판매 금지와 단속·행정처분의
+                  근거가 담겨 있습니다.
+                </div>
+                <a class="law-link" href="https://www.law.go.kr/법령/사료관리법" target="_blank" rel="noopener noreferrer">국가법령정보센터 원문 보기 ↗</a>
+              </div>
+            </details>
+
+            <details class="law-acc">
+              <summary>사료관리법 시행령 / 시행규칙</summary>
+              <div class="law-acc-body">
+                <div class="cb-text">
+                  법이 위임한 세부사항을 정합니다. <b>시행령</b>은 등록 대상·절차, 권한 위임 등을,
+                  <b>시행규칙</b>은 등록 신청서식, 성분등록 방법, 검사·행정처분 기준 등을 규정합니다.
+                  사료의 <b>표시사항 세부 기준</b>은 아래 「사료 등의 기준 및 규격」 고시에서 정하며,
+                  <b>반려동물사료 표시사항</b>은 그 고시 <b>별표 15의2</b>에 있습니다.
+                </div>
+                <a class="law-link" href="https://www.law.go.kr/법령/사료관리법시행령" target="_blank" rel="noopener noreferrer">시행령 원문 보기 ↗</a>
+                <a class="law-link" href="https://www.law.go.kr/법령/사료관리법시행규칙" target="_blank" rel="noopener noreferrer">시행규칙 원문 보기 ↗</a>
+              </div>
+            </details>
+
+            <details class="law-acc">
+              <summary>사료 등의 기준 및 규격 (농림축산식품부 고시)</summary>
+              <div class="law-acc-body">
+                <div class="cb-text">
+                  사료의 <b>성분규격</b>, 유해물질(중금속·곰팡이독소 등) <b>허용기준</b>, 사용할 수 있는 단미사료·
+                  보조사료 <b>원료 목록</b>, 제조·보관·사용 시 준수사항을 정한 농림축산식품부 고시입니다. 원료·첨가물
+                  사용 가부는 이 고시의 목록을 기준으로 판단하며, <b>반려동물사료 표시사항(별표 15의2)</b>도 이
+                  고시에 포함되어 있습니다.
+                </div>
+                <a class="law-link" href="https://www.law.go.kr/행정규칙/사료등의기준및규격" target="_blank" rel="noopener noreferrer">고시 원문 보기 ↗</a>
+              </div>
+            </details>
+
+            <details class="law-acc">
+              <summary>표시·광고의 공정화에 관한 법률 제3조</summary>
+              <div class="law-acc-body">
+                <div class="cb-text">
+                  제3조는 소비자를 속이거나 오인시킬 우려가 있는 <b>부당한 표시·광고 행위를 금지</b>합니다.
+                  금지 유형은 <b>① 거짓·과장</b>, <b>② 기만적</b>, <b>③ 부당하게 비교하는</b>,
+                  <b>④ 비방적인</b> 표시·광고 네 가지입니다(세부 유형·기준은 시행령에서 정함). 아래 3번 항목에
+                  유형별 기준을 정리했습니다.
+                </div>
+                <a class="law-link" href="https://www.law.go.kr/법령/표시·광고의공정화에관한법률" target="_blank" rel="noopener noreferrer">국가법령정보센터 원문 보기 ↗</a>
+              </div>
+            </details>
+
+            <div class="cb-note">
+              ※ 법령·고시는 <b>개정될 수 있습니다.</b> 실제 적용 전 반드시 국가법령정보센터(law.go.kr)에서
+              <b>시행일 기준 최신 원문</b>을 확인하세요. 이 화면은 참고용 요약이며 법적 자문이 아닙니다.
+            </div>
+          </div>
+
+          <div class="dash-section">
+            <h3>2. 반려동물사료 표시사항 (「사료 등의 기준 및 규격」 고시 별표 15의2)</h3>
+            <div class="cb-text">
+              반려동물사료 포장(용기)에는 아래 항목을 <b>한글로 알아보기 쉽게</b> 표시해야 합니다.
+              (제품 형태·성분에 따라 일부 항목은 해당 시에만 표시)
+            </div>
+            <ul class="cb-list law-cols">
+              <li><b>제품명</b></li>
+              <li><b>성분등록번호</b></li>
+              <li><b>사료의 명칭 및 형태</b> (예: 배합사료 / 건식·습식·반습식 등)</li>
+              <li><b>사료의 유형</b> (반려동물완전사료 / 반려동물 기타사료)</li>
+              <li><b>급여대상</b> (대상 동물 — 예: 개 / 고양이, 성장단계)</li>
+              <li><b>등록성분량</b> (조단백질·조지방·조섬유·조회분·수분 등 보증성분)</li>
+              <li><b>원료명</b> (실제 배합 비율이 높은 순서로 기재)</li>
+              <li><b>주의사항</b></li>
+              <li><b>내용량</b> (중량 또는 개수)</li>
+              <li><b>동물용의약품을 첨가한 경우 그 첨가 내용</b></li>
+              <li><b>제조연월일</b> (수입품은 수입연월일) <b>및 유통기한</b></li>
+              <li><b>업체 정보</b> (제조업 또는 수입판매업체의 상호·주소·전화번호)</li>
+              <li>필요 시: 알레르기 유발 가능 원료, 급여방법·급여량, 보관방법</li>
+            </ul>
+            <div class="cb-note">
+              세부 표시 방법(활자 크기 8포인트 이상, 표시 위치, 예외 등)은 「사료 등의 기준 및 규격」 고시
+              별표 15의2 본문을 따릅니다 —
+              <a class="law-link" href="https://www.law.go.kr/행정규칙/사료등의기준및규격" target="_blank" rel="noopener noreferrer">고시 별표 원문 보기 ↗</a>
+            </div>
+          </div>
+
+          <div class="dash-section">
+            <h3>3. 허위·과장 / 기만 / 부당비교 / 비방 광고 기준</h3>
+            <div class="cb-text">
+              표시·광고의 공정화에 관한 법률 제3조가 금지하는 4가지 유형입니다. 아래는 <b>유형별 판단 기준</b>과
+              반려동물사료에서 자주 문제되는 표현 예시로, 개별 문구의 위법 여부는 광고 전체 맥락·근거자료로
+              판단해야 합니다.
+            </div>
+            <div class="cb-subgrid">
+              <div class="cb-subcard">
+                <div class="cb-subtitle">① 허위 · 과장 광고</div>
+                <div class="cb-text">사실과 다르거나 지나치게 부풀린 표현. 근거(시험성적서·문헌) 없이 효능·효과를
+                  단정. 예: 질병의 <b>예방·치료·개선</b> 표방, "100% 완벽한 영양", "부작용 전혀 없음".</div>
+              </div>
+              <div class="cb-subcard">
+                <div class="cb-subtitle">② 기만적 광고</div>
+                <div class="cb-text">중요한 사실을 <b>은폐·축소</b>하거나 오인하게 하는 표현. 예: 극소량 첨가를 전면에 크게
+                  강조, "무첨가"의 대상·범위 불명확, 시험 조건을 숨긴 비교 수치.</div>
+              </div>
+              <div class="cb-subcard">
+                <div class="cb-subtitle">③ 부당하게 비교하는 광고</div>
+                <div class="cb-text">비교 대상·기준·근거를 명시하지 않거나 유리한 항목만 골라 <b>자사 제품이 우수</b>한 것처럼
+                  표현. 객관적으로 확인되지 않은 "업계 1위", "가장 우수" 등.</div>
+              </div>
+              <div class="cb-subcard">
+                <div class="cb-subtitle">④ 비방적 광고</div>
+                <div class="cb-text">경쟁사업자·경쟁제품을 <b>객관적 근거 없이 헐뜯거나</b> 불리하게만 표현. 특정 원료·브랜드를
+                  근거 없이 유해한 것처럼 단정.</div>
+              </div>
+            </div>
+            <div class="cb-note">
+              참고: 질병 예방·치료 효능을 표방하면 사료가 아닌 <b>동물용의약(외)품</b> 광고로 오인될 수 있어 별도
+              규제 대상이 될 수 있습니다. 문구 확정 전 관련 고시·가이드라인의 최신본을 확인하세요.
+            </div>
+          </div>
+
+          <div class="dash-section">
+            <h3>4. 제품 출시 전 실무 체크리스트</h3>
+            <div class="cb-text">체크 상태는 이 브라우저에 자동 저장됩니다(로그인·서버 저장 아님).</div>
+            <div id="law-checklist" class="law-checklist">
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="reg-number"><span>성분등록을 완료하고 <b>성분등록번호</b>를 확보했다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="label-items"><span>표시사항(2번 항목)의 <b>필수 항목을 모두</b> 포장에 기재했다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="ingredient-order"><span><b>원료명</b>을 실제 배합 비율이 높은 순서로 기재했다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="guaranteed"><span><b>등록성분량</b>(보증성분)이 실제 분석값과 일치한다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="date"><span><b>제조연월일(수입연월일)·유통기한</b>을 표기했다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="drug"><span>동물용의약품을 첨가한 경우 <b>그 첨가 내용</b>을 표시했다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="company"><span><b>업체 정보</b>(상호·주소·전화번호)가 정확하다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="caution"><span><b>주의사항</b>·보관방법·급여방법 문구를 검토했다</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="ad-claims"><span>광고 문구에서 <b>질병 예방·치료 표방, 무첨가·비교·비방</b> 표현을 점검했다(3번 항목)</span></label>
+              <label class="law-check-row"><input type="checkbox" class="law-check" data-key="latest-law"><span>적용 법령·고시의 <b>시행일 기준 최신 원문</b>을 국가법령정보센터에서 대조했다</span></label>
             </div>
           </div>
 
