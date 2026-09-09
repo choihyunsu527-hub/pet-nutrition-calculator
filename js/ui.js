@@ -112,6 +112,19 @@ const TAB_LABELS = {
   ing:'원료 DB', settings:'설정', admin:'관리자',
 };
 
+// ── 페이지 로드 시점의 URL 해시 ───────────────────────────────────────────────
+// index.html <head>의 첫 인라인 스크립트가 어떤 외부 스크립트보다 먼저 window.__NC_INITIAL_HASH에
+// 원본 해시를 담아 둔다. 이후 인증 SDK 초기화 등이 해시를 지워도, 최초 탭 복원은 항상 이 값을
+// 기준으로 삼는다 → "첫 새로고침만 대시보드로 튕기는" 타이밍 의존 버그 제거.
+// (혹시 그 캡처가 없으면 현재 location.hash로 폴백한다.)
+const INITIAL_URL_HASH = (function () {
+  var src = (typeof window !== 'undefined' && typeof window.__NC_INITIAL_HASH === 'string')
+    ? window.__NC_INITIAL_HASH : (location.hash || '');
+  var raw = src.replace(/^#/, '');
+  if (!raw) return '';
+  try { return decodeURIComponent(raw); } catch (e) { return raw; }
+})();
+
 function toggleNavGroup(groupEl) {
   const willOpen = !groupEl.classList.contains('open');
   // 한 번에 하나의 그룹만 펼쳐 사이드바가 길어지지 않도록 아코디언 방식으로 동작한다.
@@ -221,12 +234,12 @@ function syncTabHash(id, replace) {
   else location.hash = target;
 }
 
-// 초기 로드 시 복원할 탭 ID 결정: 해시 > sessionStorage > 'dash'
+// 초기 로드 시 복원할 탭 ID 결정: URL 해시(로드 시점 캡처값) > sessionStorage > 'dash'.
+// location.hash를 다시 읽지 않고 INITIAL_URL_HASH를 쓰므로, init()이 늦게 실행되거나
+// 그 사이 해시가 지워져도 항상 최초 URL 기준으로 같은 탭을 복원한다(새로고침 횟수 무관).
 function initialTabId() {
-  if (/type=recovery/.test(location.hash)) return 'dash';
-  let hashId = '';
-  try { hashId = decodeURIComponent(location.hash.replace(/^#/, '')); } catch (e) { hashId = location.hash.replace(/^#/, ''); }
-  if (isValidTabId(hashId)) return hashId;
+  if (/type=recovery/.test(location.hash) || /type=recovery/.test(INITIAL_URL_HASH)) return 'dash';
+  if (isValidTabId(INITIAL_URL_HASH)) return INITIAL_URL_HASH;
   const saved = sessionStorage.getItem('feedcalc_v4_tab');
   if (saved && document.getElementById('tab-' + saved)) return saved;
   return 'dash';
@@ -237,7 +250,16 @@ function initialTabId() {
 window.addEventListener('hashchange', () => {
   let id = '';
   try { id = decodeURIComponent(location.hash.replace(/^#/, '')); } catch (e) { id = location.hash.replace(/^#/, ''); }
-  if (!isValidTabId(id)) return;
+  if (!isValidTabId(id)) {
+    // 외부 코드(예: 라이브러리 초기화)가 해시를 통째로 지웠는데 유효한 탭이 열려 있으면,
+    // 그 탭 해시를 되살려 URL을 일관되게 유지한다 — 다음 새로고침이 대시보드로 튀지 않도록.
+    if (location.hash === '' && document.getElementById('login-overlay')?.classList.contains('hidden')) {
+      const active = document.querySelector('.tab-pane.active');
+      const activeId = active ? active.id.replace(/^tab-/, '') : '';
+      if (activeId && activeId !== 'dash' && isValidTabId(activeId)) syncTabHash(activeId, true);
+    }
+    return;
+  }
   if (document.getElementById('tab-' + id).classList.contains('active')) return;
   goTab(id);
 });
