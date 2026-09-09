@@ -1227,8 +1227,10 @@ async function init() {
   initRecipeFolder();
   renderRecentRecipes();
 
-  const savedTab = sessionStorage.getItem('feedcalc_v4_tab');
-  if (savedTab && document.getElementById('tab-'+savedTab)) goTab(savedTab);
+  // 새로고침·뒤로가기 후 같은 화면 복원: URL 해시 > sessionStorage > 대시보드.
+  const startTab = initialTabId();
+  syncTabHash(startTab, true);   // 히스토리 항목 없이 현재 탭을 해시에 반영
+  goTab(startTab);
 
   // 변경 시마다 dirty 플래그를 세운다(원료DB 갱신 목적의 저장은 saveToStorage()가 계속 담당).
   // 레시피 작업 자체는 더 이상 localStorage에 자동 저장하지 않는다 — 새로고침/재실행 시 항상 새 작업으로 시작한다.
