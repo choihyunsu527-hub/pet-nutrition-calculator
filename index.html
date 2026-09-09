@@ -13,9 +13,26 @@
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 (function () {
-  var reveal = function () { document.documentElement.classList.add('fonts-ready'); };
-  if (document.fonts && document.fonts.ready) {
-    Promise.race([document.fonts.ready, new Promise(function (r) { setTimeout(r, 400); })]).then(reveal);
+  var revealed = false;
+  var reveal = function () {
+    if (revealed) return;
+    revealed = true;
+    document.documentElement.classList.add('fonts-ready');
+  };
+  // 폰트 CDN이 느리거나 차단돼도 화면이 계속 숨겨지지 않도록 상한(1s)을 둔다.
+  setTimeout(reveal, 1000);
+  if (document.fonts && document.fonts.load) {
+    // 이 스크립트는 <head>에서 <body> 생성 전에 실행된다 — 이 시점엔 아직 어떤 요소도
+    // Pretendard를 쓰지 않아 document.fonts.ready 가 곧바로 resolve 되고, 그 결과 대체 폰트로
+    // 먼저 그려졌다가 Pretendard 가 뒤늦게 적용되며 글자가 다시 배치되는 현상(FOUT)이 생긴다.
+    // 실제로 쓰는 굵기 + 한글/영문/숫자 샘플로 폰트 로드를 직접 트리거한 뒤(이미 설치·캐시돼
+    // 있으면 즉시 resolve), 완료되면 화면을 보여준다.
+    var s = '가나다라마바사아자차 ABCabc 0123';
+    Promise.all([
+      document.fonts.load('400 1em "Pretendard"', s),
+      document.fonts.load('600 1em "Pretendard"', s),
+      document.fonts.load('700 1em "Pretendard"', s)
+    ]).then(reveal).catch(reveal);
   } else {
     reveal();
   }
