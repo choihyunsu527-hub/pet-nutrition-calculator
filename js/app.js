@@ -766,6 +766,222 @@ function initLawChecklist() {
   }
 }
 
+// ── 표시사항 작성 탭 (V1) ────────────────────────────────────────────────────
+// 계산/DB/레시피 로직과 무관한 정보 화면이다. 자동값은 sb-* 입력 · getMixRows() · lastResult 에서
+// "읽기만" 해서 표시하고(계산 미접촉), 사용자가 입력/수정한 값만 localStorage(JSON)에 저장한다.
+// 저장 형식은 레시피 파일(collectRecipeData)과 무관 — 표시사항 초안은 브라우저에만 남는다.
+const LABEL_DRAFT_KEY = 'feedcalc_v4_label_draft';
+// 등록성분량으로 보여줄 항목 [키, 라벨, ING_IDX 키, 비교표기]
+const LABEL_GUARANTEED_DEFS = [
+  ['prot',     '조단백질', 'PROTEIN',     '이상'],
+  ['fat',      '조지방',   'FAT',         '이상'],
+  ['fiber',    '조섬유',   'CRUDE_FIBER', '이하'],
+  ['ash',      '조회분',   'ASH',         '이하'],
+  ['moisture', '수분',     'MOISTURE',    '이하'],
+];
+
+function loadLabelDraft() {
+  try { const d = JSON.parse(localStorage.getItem(LABEL_DRAFT_KEY) || '{}'); return (d && typeof d === 'object' && !Array.isArray(d)) ? d : {}; }
+  catch (e) { return {}; }
+}
+function saveLabelDraft(d) {
+  try { localStorage.setItem(LABEL_DRAFT_KEY, JSON.stringify(d)); } catch (e) {}
+}
+
+// 제품유형(sb-ptype: 주식/보조식/간식) → 법정 유형 표기 "초안"(편집 가능 기본값일 뿐, 확정값 아님)
+function labelPtypeDefault() {
+  const p = document.getElementById('sb-ptype')?.value || '';
+  if (p === '주식')   return '반려동물완전사료';
+  if (p === '보조식') return '반려동물 기타사료';
+  if (p === '간식')   return '반려동물 기타사료(간식)';
+  return '';
+}
+function labelTargetText() {
+  const sp = document.getElementById('sb-species')?.value || '';
+  const tg = document.getElementById('sb-target')?.value || '';
+  return [sp, tg].filter(Boolean).join(' · ');
+}
+// 현재 배합의 원료(이름 있고 배합비 > 0)를 배합비 내림차순으로
+function labelIngredientRows() {
+  if (typeof getMixRows !== 'function') return [];
+  return getMixRows().filter(([nm, pct]) => nm && pct > 0).sort((a, b) => b[1] - a[1]);
+}
+// as-fed(100g) 등록성분량 참고값 = asis[i] * dmScale. lastResult 없음/blendError면 null.
+function labelGuaranteedAuto() {
+  const r = (typeof lastResult !== 'undefined') ? lastResult : null;
+  if (!r || r.blendError || !Array.isArray(r.asis) || typeof ING_IDX === 'undefined') return null;
+  if (!(r.totalRatio > 0)) return null;   // 배합비 입력 전 — 참고값 없음
+  const dmScale = 100 / r.totalRatio;
+  const out = {};
+  let anyMissing = false;
+  LABEL_GUARANTEED_DEFS.forEach(([key, , idxName]) => {
+    const i = ING_IDX[idxName];
+    out[key] = r.asis[i] * dmScale;
+    if (Array.isArray(r.missingCols) && r.missingCols.includes(i)) anyMissing = true;
+  });
+  out._anyMissing = anyMissing;
+  return out;
+}
+function fmtLabelPct(v) { return (typeof v === 'number' && isFinite(v)) ? v.toFixed(1) : ''; }
+
+// 화면 입력값 → draft 객체 (편집된 값만 담는다 — 자동 기본값과 같으면 저장 안 함)
+function collectLabelDraft() {
+  const g = document.getElementById('tab-label'); if (!g) return {};
+  const val = id => (document.getElementById(id)?.value ?? '').trim();
+  const ingredientNames = {};
+  g.querySelectorAll('.lbl-ing-name-input').forEach(inp => {
+    const dbn = inp.dataset.dbname; const v = inp.value.trim();
+    if (dbn && v && v !== dbn) ingredientNames[dbn] = v;
+  });
+  const guaranteed = {};
+  g.querySelectorAll('.lbl-guar-input').forEach(inp => {
+    const k = inp.dataset.key; const v = inp.value.trim();
+    if (k && v !== '') guaranteed[k] = v;
+  });
+  return {
+    regNo: val('lbl-reg-no'), netContent: val('lbl-net'), mfgDate: val('lbl-mfg-date'),
+    expiry: val('lbl-expiry'), ptypeLabel: val('lbl-ptype'),
+    companyName: val('lbl-company-name'), companyAddr: val('lbl-company-addr'), companyTel: val('lbl-company-tel'),
+    drug: val('lbl-drug'), caution: val('lbl-caution'), storage: val('lbl-storage'), feeding: val('lbl-feeding'),
+    ingredientNames, guaranteed,
+  };
+}
+
+// 탭 진입 / init 시 전체를 다시 그린다. 입력 중에는 renderLabelPreview()만 갱신(포커스 유지).
+function renderLabelDraft() {
+  const root = document.getElementById('tab-label');
+  if (!root) return;
+  const d = loadLabelDraft();
+
+  const setIf = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v; };
+  const totalG = (typeof getMixTotalG === 'function') ? getMixTotalG() : 0;
+  // 제품명·급여대상은 제품 설정에서만 바뀌는 값 — 읽기 전용으로 그대로 비춘다(draft에 저장 안 함).
+  setIf('lbl-name-ro', (document.getElementById('sb-name')?.value || '').trim());
+  setIf('lbl-target-ro', labelTargetText());
+  setIf('lbl-reg-no', d.regNo || '');
+  setIf('lbl-net', d.netContent || (totalG ? `${Math.round(totalG).toLocaleString()} g` : ''));
+  setIf('lbl-mfg-date', d.mfgDate || '');
+  setIf('lbl-expiry', d.expiry || '');
+  setIf('lbl-ptype', d.ptypeLabel || labelPtypeDefault());
+  setIf('lbl-company-name', d.companyName || (document.getElementById('sb-maker')?.value || '').trim());
+  setIf('lbl-company-addr', d.companyAddr || '');
+  setIf('lbl-company-tel', d.companyTel || '');
+  setIf('lbl-drug', d.drug || '');
+  setIf('lbl-caution', d.caution || '');
+  setIf('lbl-storage', d.storage || '');
+  setIf('lbl-feeding', d.feeding || '');
+
+  const ingEl = document.getElementById('lbl-ing-list');
+  if (ingEl) {
+    const ings = labelIngredientRows();
+    ingEl.innerHTML = !ings.length
+      ? `<div class="lbl-empty" style="padding:8px 2px">배합 설계에서 원료·배합비를 입력하면 자동으로 표시됩니다.</div>`
+      : `<div class="lbl-row lbl-row-hd"><span>배합 원료 (계산기 DB명)</span><span class="lbl-num">배합비</span><span>표시용 원료명</span></div>` +
+        ings.map(([nm, pct]) => {
+          const disp = (d.ingredientNames && d.ingredientNames[nm]) || nm;
+          return `<div class="lbl-row">
+            <span class="lbl-dbn">${escHtml(nm)}</span>
+            <span class="lbl-num">${pct.toFixed(1)}%</span>
+            <input class="lbl-ing-name-input" type="text" data-dbname="${escHtml(nm)}" value="${escHtml(disp)}">
+          </div>`;
+        }).join('');
+  }
+
+  const guarEl = document.getElementById('lbl-guaranteed');
+  const auto = labelGuaranteedAuto();
+  if (guarEl) {
+    guarEl.innerHTML =
+      `<div class="lbl-row lbl-row-hd"><span>항목</span><span class="lbl-num">계산값</span><span>표시값 (%)</span></div>` +
+      LABEL_GUARANTEED_DEFS.map(([key, label, , sign]) => {
+        const autoVal = auto ? fmtLabelPct(auto[key]) : '';
+        const cur = (d.guaranteed && d.guaranteed[key] != null && d.guaranteed[key] !== '') ? d.guaranteed[key] : autoVal;
+        return `<div class="lbl-row">
+          <span>${label} <span class="lbl-empty">${sign}</span></span>
+          <span class="lbl-num">${autoVal !== '' ? autoVal : '─'}</span>
+          <span class="lbl-guar-cell"><input class="lbl-guar-input" type="text" inputmode="decimal" data-key="${key}" value="${escHtml(String(cur))}"><span class="lbl-unit">%</span></span>
+        </div>`;
+      }).join('');
+  }
+  const noteEl = document.getElementById('lbl-guaranteed-note');
+  if (noteEl) noteEl.textContent = !auto
+    ? '배합 설계를 완료하면 계산값이 채워집니다. 값은 실제 성분 분석 결과로 반드시 검증하세요.'
+    : (auto._anyMissing ? '⚠ 일부 배합 원료에 해당 성분 데이터가 없어 계산값이 실제보다 낮게 나올 수 있습니다. 실제 분석값으로 수정하세요.'
+                        : '계산값은 as-fed(있는 그대로) 100g 기준입니다. 실제 성분 분석 결과로 검증한 뒤 표시값을 확정하세요.');
+
+  renderLabelStatus();
+  renderLabelPreview();
+
+  if (!root.dataset.bound) {
+    const onEdit = debounce(() => { saveLabelDraft(collectLabelDraft()); renderLabelStatus(); renderLabelPreview(); }, 200);
+    root.addEventListener('input', (e) => {
+      if (e.target.closest('#lbl-manual-product, .lbl-ing-name-input, .lbl-guar-input, .lbl-textareas')) onEdit();
+    });
+    root.dataset.bound = '1';
+  }
+}
+
+// 상단 상태 요약 — 표시사항 필수 항목 중 아직 비어 있는 것의 개수·이름
+function labelMissingRequired() {
+  if (!document.getElementById('tab-label')) return [];
+  const filled = id => !!(document.getElementById(id)?.value || '').trim();
+  const req = [
+    ['제품명',           !!(document.getElementById('sb-name')?.value || '').trim()],
+    ['사료의 유형',      filled('lbl-ptype')],
+    ['성분등록번호',     filled('lbl-reg-no')],
+    ['내용량',           filled('lbl-net')],
+    ['제조/수입 연월일', filled('lbl-mfg-date')],
+    ['유통기한',         filled('lbl-expiry')],
+    ['업체 상호',        filled('lbl-company-name')],
+    ['업체 주소',        filled('lbl-company-addr')],
+    ['업체 전화번호',    filled('lbl-company-tel')],
+    ['주의사항',         filled('lbl-caution')],
+    ['원료(배합)',       labelIngredientRows().length > 0],
+    ['등록성분량(배합)', !!labelGuaranteedAuto()],
+  ];
+  return req.filter(([, ok]) => !ok).map(([k]) => k);
+}
+function renderLabelStatus() {
+  const el = document.getElementById('lbl-status');
+  if (!el) return;
+  const miss = labelMissingRequired();
+  el.innerHTML = miss.length
+    ? `<span class="lbl-status-badge">필수 항목 ${miss.length}개 미입력</span><span class="lbl-status-list">${miss.map(escHtml).join(' · ')}</span>`
+    : `<span class="lbl-status-badge ok">필수 항목 입력 완료</span><span class="lbl-status-list">표시 전 값·문구를 최종 검토하세요.</span>`;
+}
+
+function renderLabelPreview() {
+  const el = document.getElementById('lbl-preview');
+  if (!el) return;
+  const d = collectLabelDraft();
+  const name = (document.getElementById('sb-name')?.value || '').trim();
+  const ings = labelIngredientRows().map(([nm]) => (d.ingredientNames && d.ingredientNames[nm]) || nm);
+  const auto = labelGuaranteedAuto();
+  const guar = LABEL_GUARANTEED_DEFS.map(([key, label, , sign]) => {
+    const v = (d.guaranteed && d.guaranteed[key] != null && d.guaranteed[key] !== '') ? d.guaranteed[key] : (auto ? fmtLabelPct(auto[key]) : '');
+    return v === '' ? null : `${label} ${escHtml(String(v))}% ${sign}`;
+  }).filter(Boolean).join(' / ');
+
+  const miss = s => (s && s.trim()) ? escHtml(s) : '<span class="lbl-empty">(미입력)</span>';
+  const line = (k, v) => `<div class="lbl-pv-line"><span class="lbl-pv-k">${k}</span><span class="lbl-pv-v">${v}</span></div>`;
+
+  el.innerHTML = `
+    <div class="lbl-pv-name">${name ? escHtml(name) : '<span class="lbl-empty">(제품명 미입력)</span>'}</div>
+    ${line('사료의 유형', miss(d.ptypeLabel))}
+    ${line('급여대상', labelTargetText() ? escHtml(labelTargetText()) : '<span class="lbl-empty">(제품 설정에서 지정)</span>')}
+    ${line('성분등록번호', miss(d.regNo))}
+    ${line('등록성분량', guar ? guar + ' <span class="lbl-empty">(as-fed, 100g 기준 · 검증 필요)</span>' : '<span class="lbl-empty">(배합 미완성)</span>')}
+    ${line('원료명', ings.length ? escHtml(ings.join(', ')) : '<span class="lbl-empty">(배합 원료 없음)</span>')}
+    ${line('내용량', miss(d.netContent))}
+    ${line('동물용의약품 첨가내용', miss(d.drug))}
+    ${line('주의사항', miss(d.caution))}
+    ${line('보관방법', miss(d.storage))}
+    ${line('급여방법·급여량', miss(d.feeding))}
+    ${line('제조 / 수입 연월일', miss(d.mfgDate))}
+    ${line('유통기한', miss(d.expiry))}
+    ${line('제조원 / 수입판매원', [d.companyName, d.companyAddr, d.companyTel].filter(s => s && s.trim()).map(escHtml).join(' · ') || '<span class="lbl-empty">(업체정보 미입력)</span>')}
+  `;
+}
+
 // 영양소명/현재값/판정 상태(qi-badge)/게이지를 렌더링하는 카드 HTML을 만든다.
 // "분석 현황" 탭의 주요 영양소 빠른 확인과 대시보드 탭의 요약 카드가 이 함수를 공유해
 // 판정 로직(gateJudge)과 상태 스타일(qi-badge)이 두 곳에서 절대 어긋나지 않게 한다.
@@ -1258,6 +1474,7 @@ async function init() {
   calculate();
   initRecipeFolder();
   renderRecentRecipes();
+  renderLabelDraft();
 
   // 새로고침·뒤로가기 후 같은 화면 복원: URL 해시 > sessionStorage > 대시보드.
   const startTab = initialTabId();

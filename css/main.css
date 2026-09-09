@@ -1420,6 +1420,69 @@ ul.cb-list.law-cols > li { break-inside: avoid; }
 #tab-law .cb-subcard { min-width: 0; }
 #tab-law .cb-formula, #tab-law .cb-text, #tab-law .cb-list { overflow-wrap: anywhere; }
 
+/* ── 표시사항 작성 탭 ── 기존 .dash-section / .settings-grid / .sf-item / .cb-note 토큰 재사용.
+   모든 요소가 카드 폭 안에서 줄바꿈되어 좁은 화면에서도 가로 스크롤이 없다. */
+#tab-label textarea { width: 100%; font-size: 11px; padding: 6px 9px; border: 1px solid var(--border);
+  border-radius: 5px; background: var(--side2); color: var(--text); font-family: inherit; outline: none;
+  resize: vertical; transition: border-color .25s ease, box-shadow .25s ease; }
+#tab-label textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent); }
+#tab-label .lbl-textareas { display: flex; flex-direction: column; gap: 8px; }
+#tab-label textarea { min-height: 0; }
+.lbl-empty { color: var(--sub); font-weight: 400; }
+.lbl-sub { font-weight: 400; font-size: 10px; color: var(--sub); }
+input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed; }
+
+/* 좌: 입력 / 우: 미리보기 sticky. 900px 이하는 1열(미리보기가 아래로). */
+.lbl-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 20px; align-items: start; }
+.lbl-input-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.lbl-preview-col { position: sticky; top: 0; min-width: 0; }
+.lbl-preview-card { max-height: calc(100vh - 150px); overflow: auto; }
+@media (max-width: 900px) {
+  .lbl-cols { grid-template-columns: 1fr; }
+  .lbl-preview-col { position: static; }
+  .lbl-preview-card { max-height: none; }
+}
+
+/* 상단 상태 요약 */
+.lbl-status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px;
+  padding: 9px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--gray-l); font-size: 11.5px; }
+.lbl-status-badge { font-weight: 700; padding: 3px 11px; border-radius: 999px;
+  background: var(--warn-bg); color: var(--warn-t); white-space: nowrap; }
+.lbl-status-badge.ok { background: var(--pass-bg); color: var(--pass-t); }
+.lbl-status-list { color: var(--sub); min-width: 0; overflow-wrap: anywhere; }
+.lbl-table { display: flex; flex-direction: column; gap: 4px; }
+.lbl-row { display: grid; grid-template-columns: minmax(0,1.4fr) 64px minmax(0,1.6fr); gap: 8px; align-items: center;
+  padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--side2); font-size: 11px; }
+.lbl-row-hd { background: var(--gray-l); font-weight: 700; color: var(--sub); font-size: 9.5px;
+  text-transform: uppercase; letter-spacing: .3px; }
+.lbl-row .lbl-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--hdr); font-weight: 600; }
+.lbl-dbn { min-width: 0; overflow-wrap: anywhere; color: var(--text); }
+.lbl-row input { width: 100%; min-width: 0; font-size: 11px; padding: 5px 8px; border: 1px solid var(--border);
+  border-radius: 5px; background: var(--side2); color: var(--text); font-family: inherit; outline: none; }
+.lbl-row input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 25%, transparent); }
+.lbl-guar-cell { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.lbl-guar-cell input { flex: 1; }
+.lbl-unit { font-size: 10px; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
+.lbl-preview { border: 1px solid var(--border); border-radius: 8px; background: var(--side2);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+.lbl-pv-name { font-size: 15px; font-weight: 800; color: var(--hdr); padding-bottom: 8px;
+  border-bottom: 1px solid var(--border); margin-bottom: 4px; overflow-wrap: anywhere; }
+.lbl-pv-line { display: grid; grid-template-columns: 112px 1fr; gap: 8px; font-size: 11px; line-height: 1.55; }
+.lbl-pv-k { color: var(--sub); font-weight: 600; }
+.lbl-pv-v { color: var(--text); overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  .lbl-row { grid-template-columns: 1fr; }
+  .lbl-row .lbl-num { text-align: left; }
+  .lbl-pv-line { grid-template-columns: 1fr; gap: 2px; }
+}
+/* 아주 좁은 폭(사이드바가 안 접혀 콘텐츠 폭이 극단적으로 작아지는 경우)에서도
+   가로 스크롤이 생기지 않도록 — 다른 정보 탭과 동일한 방어 */
+#tab-label .dash-panel > *, #tab-label .lbl-cols > *, #tab-label .lbl-input-col > *,
+#tab-label .lbl-row > span, #tab-label .lbl-pv-line > span,
+#tab-label .cb-note, #tab-label .lbl-status-list { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; }
+/* 공유 .settings-grid의 최소 트랙(150px)이 좁은 폭에서 컨테이너를 넘기지 않도록 이 탭에서만 클램프 */
+#tab-label .settings-grid { grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr)); }
+
 /* ── 제품 유형 자동 판정 카드 & 배너 — "분석 결과 Hero Card" ──
    HEADER(작은 eyebrow) → PRIMARY(제품 유형명, 카드의 주인공 — 31px로 다른 어떤
    텍스트보다 압도적으로 큼) → DESCRIPTION(차분한 근거 요약) → STATS(하단 footer

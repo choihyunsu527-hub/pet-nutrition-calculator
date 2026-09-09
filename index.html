@@ -281,6 +281,11 @@
       <span>법령·광고기준</span>
     </div>
 
+    <div class="nav-item" data-tab="label" data-label="표시사항 작성" onclick="showTab('label', this)" role="button" tabindex="0">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M7.5 3H14l5 5v11a2 2 0 0 1-2 2H7.5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/><path d="M9 9h1.5"/></svg>
+      <span>표시사항 작성</span>
+    </div>
+
     <div class="nav-divider" style="margin-top:auto"></div>
     <div class="nav-section-label">시스템</div>
     <div class="nav-item" data-tab="admin" data-requires-role="super_admin" data-label="관리자" onclick="showTab('admin', this)" style="display:none" role="button" tabindex="0">
@@ -1579,6 +1584,79 @@
               <label class="law-check-row"><input type="checkbox" class="law-check" data-key="ad-claims"><span>광고 문구에서 <b>질병 예방·치료 표방, 무첨가·비교·비방</b> 표현을 점검했다(3번 항목)</span></label>
               <label class="law-check-row"><input type="checkbox" class="law-check" data-key="latest-law"><span>적용 법령·고시의 <b>시행일 기준 최신 원문</b>을 국가법령정보센터에서 대조했다</span></label>
             </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: 표시사항 작성 ── -->
+    <div class="tab-pane" id="tab-label">
+      <div class="hdr-bar hdr-bar-left">
+        <span class="hdr-title">표시사항 작성</span>
+        <span class="hdr-desc">배합 결과를 반려동물사료 표시사항 초안으로 정리 (참고용)</span>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 0 12px;background:var(--bg)">
+        <div class="dash-panel" style="display:flex;flex-direction:column;gap:16px">
+
+          <div class="lbl-status" id="lbl-status"></div>
+
+          <div class="lbl-cols">
+
+            <div class="lbl-input-col">
+
+              <div class="dash-section">
+                <h3>제품정보</h3>
+                <div class="settings-grid" id="lbl-manual-product">
+                  <div class="sf-item"><label>제품명 <span class="lbl-sub">(제품 설정에서 변경)</span></label><input id="lbl-name-ro" class="lbl-ro" type="text" readonly tabindex="-1" placeholder="제품 설정에서 입력"></div>
+                  <div class="sf-item"><label>급여대상 <span class="lbl-sub">(제품 설정에서 변경)</span></label><input id="lbl-target-ro" class="lbl-ro" type="text" readonly tabindex="-1" placeholder="─"></div>
+                  <div class="sf-item"><label>사료의 유형</label><input id="lbl-ptype" type="text" placeholder="예: 반려동물완전사료"></div>
+                  <div class="sf-item"><label>성분등록번호</label><input id="lbl-reg-no" type="text" placeholder="예: 제0000호"></div>
+                  <div class="sf-item"><label>내용량</label><input id="lbl-net" type="text" placeholder="예: 1,000 g"></div>
+                  <div class="sf-item"><label>제조 / 수입 연월일</label><input id="lbl-mfg-date" type="text" placeholder="예: 2026-01-15"></div>
+                  <div class="sf-item"><label>유통기한</label><input id="lbl-expiry" type="text" placeholder="예: 제조일로부터 18개월"></div>
+                  <div class="sf-item"><label>업체 상호</label><input id="lbl-company-name" type="text" placeholder="제조원 / 수입판매원"></div>
+                  <div class="sf-item full-width"><label>업체 주소</label><input id="lbl-company-addr" type="text" placeholder="사업장 주소"></div>
+                  <div class="sf-item"><label>업체 전화번호</label><input id="lbl-company-tel" type="text" placeholder="예: 02-000-0000"></div>
+                </div>
+              </div>
+
+              <div class="dash-section">
+                <h3>원료 <span class="lbl-sub">— 배합비 높은 순 · 표시용 명칭 수정 가능</span></h3>
+                <div id="lbl-ing-list" class="lbl-table"></div>
+              </div>
+
+              <div class="dash-section">
+                <h3>등록성분량 <span class="lbl-sub">— 계산값(as-fed, 100g)을 확인해 표시값으로 확정</span></h3>
+                <div id="lbl-guaranteed" class="lbl-table"></div>
+                <div class="cb-note" id="lbl-guaranteed-note" style="margin-top:6px"></div>
+              </div>
+
+              <div class="dash-section">
+                <h3>기타정보</h3>
+                <div class="lbl-textareas">
+                  <div class="sf-item"><label>동물용의약품 첨가 내용 (해당 시)</label><textarea id="lbl-drug" rows="2" placeholder="첨가한 동물용의약품이 있으면 그 명칭·함량"></textarea></div>
+                  <div class="sf-item"><label>주의사항</label><textarea id="lbl-caution" rows="2" placeholder="예: 신선한 물과 함께 급여 / 어린이 손이 닿지 않는 곳에 보관"></textarea></div>
+                  <div class="sf-item"><label>보관방법</label><textarea id="lbl-storage" rows="2" placeholder="예: 직사광선을 피해 서늘하고 건조한 곳에 보관"></textarea></div>
+                  <div class="sf-item"><label>급여방법 / 급여량</label><textarea id="lbl-feeding" rows="2" placeholder="체중별 1일 급여량 등"></textarea></div>
+                </div>
+              </div>
+
+              <div class="cb-note" style="margin:0">
+                ※ 자동으로 채워지는 값은 <b>제품 설정·배합 설계 입력</b>과 <b>영양 계산 결과</b>에서 가져온
+                <b>참고값</b>입니다. 표시 전 성분 분석값·법정 문구를 확인하고,
+                <span class="linkable" onclick="goTab('law')">법령·광고기준 (#law)</span>의 최신 기준을 대조하세요.
+              </div>
+
+            </div>
+
+            <div class="lbl-preview-col">
+              <div class="dash-section lbl-preview-card">
+                <h3>표시사항 미리보기</h3>
+                <div id="lbl-preview" class="lbl-preview"></div>
+              </div>
+            </div>
+
           </div>
 
         </div>
