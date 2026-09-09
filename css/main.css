@@ -305,6 +305,56 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .nav-group-inner { overflow: hidden; display: flex; flex-direction: column; gap: 2px; }
 .nav-subitem { padding-left: 30px; font-size: 12.5px; margin-top: 2px; }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   공통 UI 개선 — GitHub 스타일 업무용 SaaS (사이드바 네비 / 상단 헤더 / 페이지 헤더바)
+   CSS만. 기능·JS·이벤트·메뉴 ID·goTab()·hash 라우팅·반응형·다크 사이드바 색은 그대로.
+   위 원본 규칙을 지우지 않고 아래에서 시각값만 덮어써 diff를 명확히 한다.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── 사이드바 네비: 더 촘촘·정돈, 아이콘/텍스트 크기·간격 통일 (네이비 유지) ── */
+#sidebar { padding: 18px 12px; }
+#sidebar-nav { gap: 1px; }
+.nav-item, .nav-group-hdr {
+  font-size: 13px; font-weight: 500; gap: 10px;
+  padding: 8px 10px; border-radius: 6px; color: #c2cbd4;
+}
+.nav-item:hover, .nav-group-hdr:hover { color: #ffffff; background: rgba(255,255,255,0.06); }
+/* 활성 메뉴 = 유일한 청록 강조: 포인트색 텍스트 + 은은한 배경 + 얇은 좌측 인디케이터 */
+.nav-item.active { color: var(--acc); background: rgba(255,255,255,0.08); font-weight: 600; }
+.nav-item.active::before { top: 6px; bottom: 6px; width: 2px; border-radius: 0 2px 2px 0; }
+.nav-item.active:hover { background: rgba(255,255,255,0.10); color: var(--acc); }
+.nav-icon { width: 16px; height: 16px; }
+.nav-label { gap: 10px; }
+.nav-subitem { font-size: 13px; padding-left: 36px; }
+.nav-section-label {
+  font-size: 10px; font-weight: 600; letter-spacing: .6px; opacity: 1;
+  color: #8b949e; margin: 12px 10px 5px;
+}
+.nav-divider { margin: 10px 6px; background: rgba(255,255,255,0.06); }
+
+/* ── 상단 헤더: 장식 최소화, 페이지 제목 위계 강화, 검색창 자연스러운 정렬 ── */
+#top-row1 { padding: 0 20px; }
+#top-view-title { font-size: 20px; font-weight: 700; letter-spacing: -.2px; }
+/* absolute 중앙배치 → flex 흐름 안에서 제목과 우측 클러스터 사이에 자연스럽게 정렬 */
+#top-search-wrap {
+  position: static; transform: none; left: auto; top: auto; z-index: auto;
+  flex: 1 1 420px; width: auto; max-width: 480px; min-width: 200px; margin: 0 auto;
+  height: 34px; border-radius: 6px;
+}
+
+/* ── 상단 우측 보조 버튼: hover 상태 통일(중립 회색 — 청록은 활성/주요 동작 전용) ── */
+#top-undo-btn, #top-redo-btn, #top-recipe-folder-btn, .top-recipe-btn-sub { border-radius: 6px; }
+#top-undo-btn:hover:not(:disabled), #top-redo-btn:hover:not(:disabled),
+#top-recipe-folder-btn:hover, #top-recipe-select:hover,
+.top-recipe-btn-sub:hover:not(:disabled) {
+  border-color: var(--sub); background: var(--gray-l); color: var(--text);
+}
+
+/* ── 공통 페이지 헤더바: 흰 배경 + 하단 경계선만, 여백/정렬 정돈 ── */
+.hdr-bar { background: var(--side2); padding: 12px 20px; }
+.hdr-title { font-size: 13.5px; font-weight: 700; }
+.hdr-desc { font-size: 11px; }
+
 /* ── 대시보드 설정 폼 ── */
 .settings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px,1fr));
                  gap: 8px; margin-bottom: 10px; }
@@ -764,6 +814,48 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
              padding-right: 16px; margin-right: 16px;
              border-right: 1px solid var(--border); }
 #tot-me { font-size: 10.5px; color: var(--sub); font-weight: 400; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   배합 설계 탭 UI 개선 — 정보 위계 & 작업 흐름
+   ① 무엇을 만드는지(헤더 컨텍스트) → ② 어떤 원료(입력 테이블=핵심 영역) →
+   ③ 현재 배합비(합계 바) → ④ 계산·저장(주요 버튼).
+   기능/JS/이벤트/데이터/구조는 불변 — 위 원본 규칙 위에 시각값만 덮어쓴다.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ① 제품 컨텍스트를 헤더에서 또렷하게 (무엇을 만드는지) */
+#tab-mix .hdr-bar { padding: 12px 20px; }
+#tab-mix #mix-product-context { color: var(--text); font-weight: 600; }
+
+/* ④ 헤더 버튼 우선순위: 행 추가(주요=청록) / 선택 삭제(위험) / 내보내기 3종(보조=중립 GitHub) */
+#tab-mix .hdr-btns { gap: 6px; align-items: center; }
+#tab-mix .hdr-btns button { height: 30px; }
+#tab-mix .hdr-btns button:hover { filter: none; border-color: var(--sub);
+                                   background: var(--gray-l); color: var(--text); }
+#tab-mix .hdr-btns button.mix-btn-primary { padding: 0 16px; }
+#tab-mix .hdr-btns button.mix-btn-primary:hover { border-color: var(--acc); background: var(--acc); color: #fff; }
+#tab-mix .hdr-btns button.mix-btn-danger:hover { border-color: #B03A2E; background: #B03A2E; color: #fff; }
+#tab-mix .hdr-btns button[onclick^="loadRecipe"] { margin-left: 10px; }
+
+/* 제품/배합 설정 스트립 — 정렬(20px 거터)·라벨 타이포 정돈, 입력 테이블과 뚜렷이 구분 */
+#tab-mix .mix-unit-bar { padding: 12px 20px; gap: 20px; box-shadow: none; }
+#tab-mix .mix-unit-item label { font-size: 10px; letter-spacing: .3px; }
+#tab-mix #mix-total-g { width: 84px; font-weight: 700; color: var(--hdr); }
+#tab-mix .mix-unit-hint { font-size: 10.5px; }
+
+/* ② 배합 원료 입력 테이블 = 화면의 핵심. 헤더/입력 행 구분을 또렷하게, 열 정렬을 셀 내용과 일치 */
+#tab-mix .mix-table-wrap { --mix-line: color-mix(in srgb, var(--border) 70%, transparent);
+                            --mix-hdr-bg: var(--gray-l); }
+#mix-hdr { border-bottom: 2px solid var(--border); }
+#mix-hdr > * { font-size: 10px; }
+#mix-hdr #mix-hdr-name  { justify-content: flex-start; padding-left: 10px; font-size: 11px; }
+#mix-hdr #mix-hdr-ratio { justify-content: flex-end;   padding-right: 10px; font-size: 11px; }
+#mix-hdr #mix-hdr-actualg { justify-content: flex-end; padding-right: 10px; }
+.mix-row input[type=number] { font-size: 12.5px; }
+
+/* ③ 합계 배합비 / 총 중량 — 화면 하단에서 눈에 잘 띄게 (updateTotBar()의 상태색은 그대로) */
+#tot-bar { padding: 12px 20px; }
+#tot-ratio { font-size: 15px; padding-right: 18px; margin-right: 18px; }
+#tot-me { font-size: 11px; }
 
 /* ── 아미노산 탭 ── */
 .amino-info { background: var(--warn-bg); color: var(--warn-t); border-bottom: 1px solid rgba(217,179,108,0.3);
