@@ -43,27 +43,40 @@ function isKeepLoginOn() { return localStorage.getItem(KEEP_LOGIN_KEY) !== 'fals
 // 토큰 원문은 절대 출력하지 않고, 존재 여부·만료 시각 등 진단에 필요한 메타데이터만 남긴다.
 function authLog(...args) { console.log('%c[AUTH]', 'color:#5a6b7a;font-weight:700', ...args); }
 
-// Supabase 세션 저장소를 "로그인 유지하기" 체크 여부에 따라 localStorage(브라우저를 꺼도 유지)
-// 또는 sessionStorage(현재 탭을 닫으면 삭제)로 분기하는 커스텀 스토리지 어댑터.
-// setItem이 호출되는 시점(로그인 성공 시)마다 그때그때의 체크 상태를 반영한다.
+// Supabase 세션은 항상 sessionStorage에만 저장하는 커스텀 스토리지 어댑터.
+//  · 같은 탭 새로고침(Ctrl+R / Ctrl+Shift+R) → sessionStorage가 그대로 유지되므로 로그인 상태 유지
+//  · 브라우저(프로세스) 완전 종료 / 컴퓨터 재부팅 → sessionStorage 소멸 → 다음 실행 시 로그인 화면부터
+// 예전에는 "로그인 유지하기" 체크 시 localStorage(프로세스를 꺼도 유지)에 저장해, 재부팅 후에도
+// 자동 로그인되던 것을 이 어댑터에서 sessionStorage 단일 저장으로 바꿨다. localStorage는 더 이상
+// 세션 저장에 쓰지 않으며(레거시 토큰은 getItem에서 1회 이관 후 삭제), 임의로 통째 삭제하지 않고
+// Supabase가 관리하는 이 키만 다룬다.
 // Supabase 공식 커스텀 스토리지 예제와 동일하게 async 함수로 구현한다 — supabase-js가 내부적으로
 // storage 메서드를 Promise로 취급하는 경로가 있어, 동기 함수로 두면 버전에 따라 세션 하이드레이션이
 // 조용히 실패할 수 있다(새로고침마다 로그인 화면으로 돌아가는 문제의 원인이 될 수 있음).
 const authStorage = {
   getItem: async (key) => {
-    const fromLocal   = localStorage.getItem(key);
-    const fromSession = sessionStorage.getItem(key);
-    const found = fromLocal ?? fromSession;
-    authLog('storage.getItem', key, '→', found ? `found (${fromLocal !== null ? 'localStorage' : 'sessionStorage'}, ${found.length}자)` : 'NOT FOUND');
-    return found;
+    let value = sessionStorage.getItem(key);
+    if (value === null) {
+      // 이전 정책(localStorage 저장)에서 남은 세션이 있으면 sessionStorage로 1회 이관하고
+      // localStorage에서는 제거한다 — 이후에는 프로세스 종료 시 세션이 사라진다.
+      const legacy = localStorage.getItem(key);
+      if (legacy !== null) {
+        sessionStorage.setItem(key, legacy);
+        localStorage.removeItem(key);
+        value = legacy;
+        authLog('storage.getItem', key, '→ localStorage 레거시 세션을 sessionStorage로 이관');
+      }
+    }
+    authLog('storage.getItem', key, '→', value ? `found (sessionStorage, ${value.length}자)` : 'NOT FOUND');
+    return value;
   },
   setItem: async (key, value) => {
-    if (isKeepLoginOn()) { localStorage.setItem(key, value); sessionStorage.removeItem(key); }
-    else { sessionStorage.setItem(key, value); localStorage.removeItem(key); }
-    authLog('storage.setItem', key, '→', isKeepLoginOn() ? 'localStorage' : 'sessionStorage', `(${value.length}자)`);
+    sessionStorage.setItem(key, value);
+    localStorage.removeItem(key);   // 레거시/중복 저장 방지 — 세션은 sessionStorage에만 둔다
+    authLog('storage.setItem', key, '→ sessionStorage', `(${value.length}자)`);
   },
   removeItem: async (key) => {
-    localStorage.removeItem(key); sessionStorage.removeItem(key);
+    sessionStorage.removeItem(key); localStorage.removeItem(key);
     authLog('storage.removeItem', key);
   },
 };
