@@ -634,7 +634,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 원료명(선택 영역) 칼럼과 배합비(입력 영역) 칼럼 사이, 그리고 배합비와 그 뒤 스크롤 영역
    사이에 진한 구분선을 둬서 "무엇을 배합하는지"·"얼마나 배합하는지"·"분석값" 세 구간을
    한눈에 나눠 보이게 한다(아래 sticky 처리와 같은 경계). */
-#mix-hdr span[style*="width:200px"] { border-right-color: var(--border); }
+#mix-hdr span[style*="width:240px"] { border-right-color: var(--border); }
 #mix-hdr #mix-hdr-ratio { border-right-color: var(--border); }
 /* 배합표 컬럼 정렬 아이콘 — 헤더 라벨(.mix-hdr-label) 옆에 붙는 작은 버튼 하나.
    기본은 muted(--sub), 정렬이 걸린 컬럼만 accent(--acc)로 강조한다. */
@@ -663,23 +663,28 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #mix-hdr > *:nth-child(1), .mix-row > *:nth-child(1) { position: sticky; left: 0;    z-index: 2; background: inherit; }
 #mix-hdr > *:nth-child(2), .mix-row > *:nth-child(2) { position: sticky; left: 28px; z-index: 2; background: inherit; }
 #mix-hdr > *:nth-child(3), .mix-row > *:nth-child(3) { position: sticky; left: 60px; z-index: 2; background: inherit; }
-#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { position: sticky; left: 260px; z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { position: sticky; left: 300px; z-index: 2; background: inherit; }
 .mix-row .mix-no { width: 32px; text-align: center; font-size: 10px;
                    line-height: 34px; color: var(--sub); flex-shrink: 0; }
-.mix-row select { flex: 0 0 200px; border: none; border-right: 1px solid var(--border); background: transparent;
+.mix-row select { flex: 0 0 240px; border: none; border-right: 1px solid var(--border); background: transparent;
                   font-size: 11px; height: 34px; padding: 0 4px; font-family: inherit; outline: none; color: var(--text); }
-.mix-ing-wrap { position: relative; flex: 0 0 200px; border-right: 1px solid var(--border); height: 34px; box-sizing: border-box;
+.mix-ing-wrap { position: relative; flex: 0 0 240px; border-right: 1px solid var(--border); min-height: 34px; box-sizing: border-box;
                 box-shadow: inset 0 0 0 1px transparent; transition: box-shadow .15s ease; }
 .mix-ing-wrap:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
 .mix-ing-wrap:focus-within { box-shadow: inset 0 0 0 1px var(--acc); }
-.mix-ing-display { width: 100%; height: 34px; border: none; background: transparent; font-size: 12px;
-                  font-weight: 600; padding: 0 8px; font-family: inherit; outline: none; color: var(--hdr); box-sizing: border-box;
+.mix-ing-display { width: 100%; min-height: 34px; border: none; background: transparent; font-size: 12px;
+                  font-weight: 600; padding: 4px 8px; font-family: inherit; outline: none; color: var(--hdr); box-sizing: border-box;
                   display: flex; align-items: center; justify-content: space-between; gap: 6px;
                   cursor: pointer; text-align: left; }
 /* 원료명·배합비는 이 행에서 사용자가 "무엇을·얼마나" 결정하는 핵심 두 축이라 헤더도
    나머지 분석값 헤더보다 또렷하게(색 --hdr, weight 800). 값·색상 로직은 미변경. */
 #mix-hdr-name, #mix-hdr-ratio { color: var(--hdr); font-weight: 800; }
-.mix-ing-display .mix-ing-display-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 긴 KFOOD 원본 품목명(육류에 채소·부재료가 붙은 이름 등)이 원료명 칸을 벗어나 가로로
+   튀어나오지 않도록, 한 줄 말줄임 대신 2줄까지 자연스럽게 줄바꿈해 보여준다.
+   word-break:keep-all 로 한글 어절은 지키고, 아주 긴 토큰만 overflow-wrap 으로 강제 절단한다. */
+.mix-ing-display .mix-ing-display-txt { min-width: 0; white-space: normal; word-break: keep-all;
+                  overflow-wrap: anywhere; line-height: 1.25;
+                  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .mix-ing-display.placeholder .mix-ing-display-txt { color: var(--sub); }
 .mix-ing-display .mix-ing-arrow { flex-shrink: 0; font-size: 9px; color: var(--sub); }
 /* 알레르기 원료 경고 — 등록된 알레르기 원료가 배합 행에 선택되면 즉시 빨간 강조 + ⚠️ 표시 */
@@ -705,8 +710,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                  border: 1px solid var(--border); border-radius: 4px; background: var(--side2);
                  color: var(--text); font-family: inherit; outline: none; }
 .mix-ing-search-input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
-.mix-ing-options { flex: 1; overflow-y: auto; }
-.mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer; white-space: nowrap; }
+.mix-ing-options { flex: 1; overflow-y: auto; overflow-x: hidden; }
+/* 드롭다운 후보도 본문과 같은 규칙 — 긴 이름은 패널 폭 안에서 2줄까지 줄바꿈, 가로 스크롤 없음 */
+.mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer;
+               white-space: normal; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.3;
+               display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
 .mix-ing-opt.active { box-shadow: inset 2px 0 0 var(--acc); }
 .mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
@@ -900,6 +908,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   width: 72px !important;
   white-space: normal;
   word-break: keep-all;
+}
+/* 품목명 열(2번째)만: 긴 이름이 옆 열로 튀어나오지 않게 폭을 넓히고 줄바꿈을 허용한다.
+   본문 품목명 글자 크기만 한 단계 키운다(헤더·다른 열·다른 화면 폰트는 그대로).
+   table-layout:fixed + .tbl-wrap 가로 스크롤이라 전체 레이아웃·반응형은 그대로 유지된다. */
+#ing-table th:nth-child(2),
+#ing-table td:nth-child(2) {
+  width: 230px !important;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+#ing-table tbody tr:not(.cat-row) td:nth-child(2) {
+  font-size: 12px !important;
+  line-height: 1.35;
 }
 /* 상단 헤더행 고정(세로 스크롤) + 앞 2열(체크박스·원료명) 고정(가로 스크롤)
    ※ 카테고리 구분줄(.cat-row)은 colspan 단일 셀이라 nth-child(1)로 걸리지 않게 제외
