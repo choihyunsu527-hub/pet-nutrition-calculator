@@ -172,6 +172,7 @@ function showTab(id, el) {
   const vt = document.getElementById('top-view-title');
   if (vt) vt.textContent = TAB_LABELS[id] || '';
   sessionStorage.setItem('feedcalc_v4_tab', id);
+  syncTabHash(id);   // 현재 탭을 URL 해시(#dash, #ing, ...)에 반영 → 새로고침·뒤로가기에서 복원 가능
   if (lastResult) syncPanelWidths();
   // 관리자 탭은 클릭으로 진입하든(사이드바) 새로고침 후 마지막 탭 복원으로 진입하든
   // (goTab(savedTab)) 항상 최신 목록을 불러오도록 여기서 한 번만 트리거한다.
@@ -195,6 +196,50 @@ function syncMixRecipeNameField() {
 function goTab(id) {
   showTab(id, document.querySelector('.nav-item[data-tab="'+id+'"]'));
 }
+
+// ── URL 해시 기반 라우팅 ──────────────────────────────────────────────────────
+// 현재 탭을 URL 해시(#dash, #ing, #std, ...)에 반영해서
+//  · Ctrl+R / Ctrl+Shift+R 새로고침 후에도 보던 화면이 그대로 복원되고
+//  · 브라우저 뒤로/앞으로 가기로 탭 사이를 오갈 수 있게 한다.
+// 기존 sessionStorage(feedcalc_v4_tab) 저장은 그대로 두고, 복원 우선순위만
+// "해시 > sessionStorage > 대시보드(dash)". 탭 전환 로직 자체(showTab/goTab)는 그대로다.
+function isValidTabId(id) {
+  return !!id
+    && Object.prototype.hasOwnProperty.call(TAB_LABELS, id)
+    && !!document.getElementById('tab-' + id);
+}
+
+// showTab()에서 호출 — 현재 해시와 다를 때만 바꿔 hashchange 재귀를 피한다.
+// replace=true(초기 복원)면 히스토리 항목을 만들지 않고, 사용자의 탭 클릭은 항목을 남겨 뒤로가기가 동작한다.
+function syncTabHash(id, replace) {
+  if (!id) return;
+  const target = '#' + id;
+  if (location.hash === target) return;
+  if (/type=recovery/.test(location.hash)) return;   // 비밀번호 재설정 링크(#...type=recovery)는 건드리지 않음
+  if (replace && history.replaceState) history.replaceState(null, '', target);
+  else location.hash = target;
+}
+
+// 초기 로드 시 복원할 탭 ID 결정: 해시 > sessionStorage > 'dash'
+function initialTabId() {
+  if (/type=recovery/.test(location.hash)) return 'dash';
+  let hashId = '';
+  try { hashId = decodeURIComponent(location.hash.replace(/^#/, '')); } catch (e) { hashId = location.hash.replace(/^#/, ''); }
+  if (isValidTabId(hashId)) return hashId;
+  const saved = sessionStorage.getItem('feedcalc_v4_tab');
+  if (saved && document.getElementById('tab-' + saved)) return saved;
+  return 'dash';
+}
+
+// 뒤로/앞으로 가기 또는 주소창에서 해시를 직접 바꾼 경우 해당 탭으로 전환한다.
+// (탭 클릭으로 생긴 해시 변경은 이미 그 탭이 active라 아래 조건에서 걸러져 아무 일도 하지 않는다.)
+window.addEventListener('hashchange', () => {
+  let id = '';
+  try { id = decodeURIComponent(location.hash.replace(/^#/, '')); } catch (e) { id = location.hash.replace(/^#/, ''); }
+  if (!isValidTabId(id)) return;
+  if (document.getElementById('tab-' + id).classList.contains('active')) return;
+  goTab(id);
+});
 
 // ── 플로팅 액션 버튼 ──
 function toggleFab() {
