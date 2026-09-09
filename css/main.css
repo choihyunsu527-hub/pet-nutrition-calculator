@@ -1312,6 +1312,41 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #ds-overall-card.pass, #ds-overall-card.warn, #ds-overall-card.fail,
 #ds-warn-card.pass, #ds-warn-card.warn, #ds-warn-card.fail { color: #FFFFFF; }
 
+/* ── 대시보드 개편: 빠른 작업 · 설정 아코디언 · 상태 강조 ──
+   HTML 구조상의 ID·이벤트·JS 렌더 대상은 모두 그대로. 배치와 시각 위계만 조정한다. */
+.dash-quick-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
+.dash-qa-label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+                 letter-spacing: .5px; margin-right: 4px; }
+.dash-qa-btn { font-size: 11px; font-weight: 600; color: var(--text); background: var(--side2);
+               border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; cursor: pointer;
+               font-family: inherit; transition: border-color .15s ease, color .15s ease, transform .12s ease; }
+.dash-qa-btn:hover { border-color: var(--acc); color: var(--acc); }
+.dash-qa-btn:active { transform: scale(0.97); }
+
+/* 긴 입력폼(반려동물 정보·계산 설정)은 접어 두어 첫 화면을 비운다 — 값 자체는 그대로 유지. */
+.dash-settings-acc { border: 1px solid var(--border); border-radius: var(--radius-md);
+                     background: var(--side2); box-shadow: var(--sh); overflow: hidden; margin-top: 18px; }
+.dash-settings-acc > summary { list-style: none; cursor: pointer; padding: 14px 18px; user-select: none;
+                               font-size: var(--fs-title); font-weight: 700; color: var(--hdr);
+                               display: flex; align-items: center; gap: 8px; }
+.dash-settings-acc > summary::-webkit-details-marker { display: none; }
+.dash-settings-acc > summary::before { content: '\25B8'; color: var(--sub); font-size: 11px;
+                                       flex-shrink: 0; transition: transform .15s ease; }
+.dash-settings-acc[open] > summary::before { transform: rotate(90deg); }
+.dash-settings-acc[open] > summary { border-bottom: 1px solid var(--border); }
+.dash-settings-acc > summary:hover { color: var(--acc); }
+.dash-acc-hint { font-weight: 400; font-size: 10.5px; color: var(--sub); }
+.dash-settings-body { padding: 18px; }
+.dash-settings-body .dash-bottom-grid { margin-top: 0; }
+/* 접힘 상태에서 폼 영역을 확실히 숨긴다(브라우저 기본 details 동작에 의존하지 않음). */
+.dash-settings-acc:not([open]) > .dash-settings-body { display: none; }
+
+/* GitHub 스타일 화이트 UI는 이제 라이트 테마 토큰(css/variables.css :root)에서 전역으로 처리한다.
+   여기서는 대시보드 고유의 타이포 강조와 보조 영역 배경만 유지한다(색 아닌 굵기로 위계). */
+#tab-dash .dash-settings-body { background: var(--gray-l); }
+#tab-dash .dash-stat-val { font-weight: 800; }
+#tab-dash .ptype-card-type { font-weight: 800; }
+
 /* ── 대시보드: 막대 차트(영양소/아미노산 충족률) ── */
 .dash-bar-list { display: flex; flex-direction: column; justify-content: center; gap: 7px; flex: 1; }
 .dash-bar-row { display: grid; grid-template-columns: 66px 1fr 42px; align-items: center; gap: 8px; }

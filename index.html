@@ -394,6 +394,34 @@
           </div>
         </div>
         </div>
+
+        <div class="dash-quick-actions" aria-label="빠른 작업">
+          <span class="dash-qa-label">빠른 작업</span>
+          <button type="button" class="dash-qa-btn" onclick="goTab('mix')">배합 설계</button>
+          <button type="button" class="dash-qa-btn" onclick="goTab('ana')">영양 분석</button>
+          <button type="button" class="dash-qa-btn" onclick="goTab('warn')">경고 패널</button>
+          <button type="button" class="dash-qa-btn" onclick="goTab('product')">제품 / 정보</button>
+          <button type="button" class="dash-qa-btn" onclick="goTab('label')">표시사항 작성</button>
+        </div>
+
+        <div class="dash-section dash-recent-card">
+          <h3>레시피 관리</h3>
+          <div class="seg-control dash-recent-tabs">
+            <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근</button>
+            <button type="button" class="seg-btn" data-view="favorite" onclick="setDashRecipeView('favorite')">즐겨찾기</button>
+          </div>
+          <div class="dash-recent-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
+            <input type="text" id="dash-recipe-search" placeholder="레시피 이름 검색…" autocomplete="off" oninput="applyDashRecipeFilter()" aria-label="레시피 이름 검색">
+          </div>
+          <div class="dash-recent-list" id="dash-recent-recipe-list">
+            <div class="dash-recent-empty">저장된 레시피가 없습니다.</div>
+          </div>
+        </div>
+
+        <details class="dash-settings-acc">
+          <summary>반려동물 정보 · 계산 설정 <span class="dash-acc-hint">— 펼쳐서 입력</span></summary>
+          <div class="dash-settings-body">
         <div class="dash-bottom-grid">
         <div class="dash-bottom-col">
         <div class="dash-section">
@@ -550,22 +578,11 @@
             </div>
           </div>
         </div>
-        <div class="dash-section dash-recent-card">
-          <h3>레시피 관리</h3>
-          <div class="seg-control dash-recent-tabs">
-            <button type="button" class="seg-btn active" data-view="recent" onclick="setDashRecipeView('recent')">최근</button>
-            <button type="button" class="seg-btn" data-view="favorite" onclick="setDashRecipeView('favorite')">즐겨찾기</button>
-          </div>
-          <div class="dash-recent-search">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.34-4.34"/></svg>
-            <input type="text" id="dash-recipe-search" placeholder="레시피 이름 검색…" autocomplete="off" oninput="applyDashRecipeFilter()" aria-label="레시피 이름 검색">
-          </div>
-          <div class="dash-recent-list" id="dash-recent-recipe-list">
-            <div class="dash-recent-empty">저장된 레시피가 없습니다.</div>
-          </div>
         </div>
         </div>
-        </div>
+          </div>
+        </details>
+
         </div>
       </div>
     </div>
