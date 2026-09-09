@@ -634,7 +634,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 원료명(선택 영역) 칼럼과 배합비(입력 영역) 칼럼 사이, 그리고 배합비와 그 뒤 스크롤 영역
    사이에 진한 구분선을 둬서 "무엇을 배합하는지"·"얼마나 배합하는지"·"분석값" 세 구간을
    한눈에 나눠 보이게 한다(아래 sticky 처리와 같은 경계). */
-#mix-hdr span[style*="width:240px"] { border-right-color: var(--border); }
+#mix-hdr span[style*="width:320px"] { border-right-color: var(--border); }
 #mix-hdr #mix-hdr-ratio { border-right-color: var(--border); }
 /* 배합표 컬럼 정렬 아이콘 — 헤더 라벨(.mix-hdr-label) 옆에 붙는 작은 버튼 하나.
    기본은 muted(--sub), 정렬이 걸린 컬럼만 accent(--acc)로 강조한다. */
@@ -663,12 +663,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #mix-hdr > *:nth-child(1), .mix-row > *:nth-child(1) { position: sticky; left: 0;    z-index: 2; background: inherit; }
 #mix-hdr > *:nth-child(2), .mix-row > *:nth-child(2) { position: sticky; left: 28px; z-index: 2; background: inherit; }
 #mix-hdr > *:nth-child(3), .mix-row > *:nth-child(3) { position: sticky; left: 60px; z-index: 2; background: inherit; }
-#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { position: sticky; left: 300px; z-index: 2; background: inherit; }
+#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { position: sticky; left: 380px; z-index: 2; background: inherit; }
 .mix-row .mix-no { width: 32px; text-align: center; font-size: 10px;
                    line-height: 34px; color: var(--sub); flex-shrink: 0; }
-.mix-row select { flex: 0 0 240px; border: none; border-right: 1px solid var(--border); background: transparent;
+.mix-row select { flex: 0 0 320px; border: none; border-right: 1px solid var(--border); background: transparent;
                   font-size: 11px; height: 34px; padding: 0 4px; font-family: inherit; outline: none; color: var(--text); }
-.mix-ing-wrap { position: relative; flex: 0 0 240px; border-right: 1px solid var(--border); min-height: 34px; box-sizing: border-box;
+.mix-ing-wrap { position: relative; flex: 0 0 320px; border-right: 1px solid var(--border); min-height: 34px; box-sizing: border-box;
                 box-shadow: inset 0 0 0 1px transparent; transition: box-shadow .15s ease; }
 .mix-ing-wrap:hover { box-shadow: inset 0 0 0 1px var(--mix-line); }
 .mix-ing-wrap:focus-within { box-shadow: inset 0 0 0 1px var(--acc); }
