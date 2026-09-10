@@ -126,6 +126,13 @@ const INITIAL_URL_HASH = (function () {
 })();
 
 function toggleNavGroup(groupEl) {
+  // 축소 상태에서는 .nav-group-body 가 display:none 이라 아코디언 토글이 아무 효과가 없다(죽은 클릭).
+  // 대신 그룹의 첫 하위 항목이 가리키는 탭으로 바로 이동한다(하위 항목이 쓰는 showTab 그대로 재사용).
+  if (document.documentElement.classList.contains('sidebar-collapsed')) {
+    const first = groupEl.querySelector('.nav-group-body .nav-subitem[data-tab]');
+    if (first) showTab(first.dataset.tab, first);
+    return;
+  }
   const willOpen = !groupEl.classList.contains('open');
   // 한 번에 하나의 그룹만 펼쳐 사이드바가 길어지지 않도록 아코디언 방식으로 동작한다.
   document.querySelectorAll('.nav-group.open').forEach(g => { if (g !== groupEl) g.classList.remove('open'); });
