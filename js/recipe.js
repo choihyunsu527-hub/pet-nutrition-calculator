@@ -287,6 +287,24 @@ async function saveRecipeAs() {
   await saveRecipe();
 }
 
+// 레시피 파일에 실려온 커스텀 원료(incoming)를 현재 라이브러리(current)에 병합한다 — 치환하지 않는다.
+//   - 유효한 행([문자열 이름, ...48])만 대상
+//   - current 에 이미 같은 이름이 있으면 사용자의 기존 정의를 그대로 유지(덮어쓰지 않음)
+//   - builtinNames(내장 ING_DB 이름 집합)에 있는 이름은 커스텀으로 추가하지 않음
+//   - 그 외 새 원료만 뒤에 덧붙인다 → 결과 길이는 항상 current 이상(레시피 로드로 줄지 않음)
+function mergeRecipeCustomIngs(current, incoming, builtinNames) {
+  const merged = Array.isArray(current) ? current.slice() : [];
+  const seen = new Set(merged.map(r => r[0]));
+  const builtin = builtinNames instanceof Set ? builtinNames : new Set(builtinNames || []);
+  (Array.isArray(incoming) ? incoming : []).forEach(row => {
+    if (!Array.isArray(row) || typeof row[0] !== 'string') return;
+    if (seen.has(row[0]) || builtin.has(row[0])) return;
+    merged.push(row);
+    seen.add(row[0]);
+  });
+  return merged;
+}
+
 function applyRecipeData(data, displayName, fileHandle=null) {
   // 이 레시피를 "연다" — 이후 저장 시 새 파일을 만들지 않고 이 문서를 업데이트한다.
   currentRecipeFilename   = displayName || null;
@@ -329,12 +347,19 @@ function applyRecipeData(data, displayName, fileHandle=null) {
   }
 
   if (Array.isArray(data.customIngs)) {
-    // 외부에서 불러온 파일이므로 형식만 방어적으로 검증한다 — 원소가 배열([이름, ...])이 아닌
-    // 것은 버린다(형식/데이터 의미는 그대로, 손상·악의적 파일로 인한 오류만 차단).
-    customIngs = data.customIngs.filter(r => Array.isArray(r) && typeof r[0] === 'string');
+    if (isRestoringRecipeHistory) {
+      // Undo/Redo 복원 — 같은 세션에서 만든 스냅샷이라 편집 상태를 정확히 되돌리기 위해 그대로 치환한다.
+      // (형식만 방어적으로 검증: 원소가 배열([이름, ...])이 아니거나 이름이 문자열이 아니면 버린다.)
+      customIngs = data.customIngs.filter(r => Array.isArray(r) && typeof r[0] === 'string');
+    } else {
+      // 일반 레시피 로드 — 파일의 customIngs 로 통째 치환하면 사용자가 그동안 만든 커스텀 원료가
+      // 사라지고 localStorage 에도 영구 반영된다. 치환 대신 현재 라이브러리에 "병합"한다
+      // (이름 중복은 기존 사용자 정의 유지, 내장 원료와 같은 이름은 추가 안 함, 로드로 줄지 않음).
+      customIngs = mergeRecipeCustomIngs(customIngs, data.customIngs, new Set(ING_DB.map(r => r[0])));
+    }
     // 레시피 저장 형식은 이름 기반(ID 미포함) 그대로다 — 실려온 원료마다 안정 ID를 새로 매핑한다.
     CustomIngredients.syncRows(customIngs, { allocMissing: true });
-    rebuildIngIndex();   // 레시피에 실려온 사용자 원료로 교체됐으니 조회 인덱스도 갱신
+    rebuildIngIndex();   // customIngs 가 바뀌었으니 조회 인덱스도 갱신
     renderIngInitial();
   }
 
@@ -823,3 +848,6 @@ function toggleRecentFavorite(name) {
   localStorage.setItem(FAVORITE_RECIPES_KEY, JSON.stringify(list));
   if (dashRecipeView === 'favorite') renderFavoriteRecipes(); else renderRecentRecipes();
 }
+
+// 순수 병합 로직만 테스트에서 검증할 수 있도록 노출한다(브라우저 <script> 로드 시엔 무시됨).
+if (typeof module !== 'undefined' && module.exports) module.exports = { mergeRecipeCustomIngs };

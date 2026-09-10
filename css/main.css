@@ -245,8 +245,10 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 html.sidebar-collapsed #sidebar { width: 76px; }
 html.sidebar-collapsed #sidebar-logo-row { flex-direction: column; gap: 8px; }
 html.sidebar-collapsed #sidebar-home-btn { flex: none; }
+/* 로고 원본(903×977, 세로가 더 김)을 44×44에 object-fit:cover로 채우면 상·하단이 잘린다.
+   확장 상태(#sidebar-logo img)와 동일하게 contain으로 전체가 보이게 하고 슬롯 중앙에 정렬한다. */
 html.sidebar-collapsed #sidebar-logo img { width: 44px; height: 44px;
-                                            object-fit: cover; object-position: left center; border-radius: 6px; }
+                                            object-fit: contain; object-position: center; border-radius: 6px; }
 html.sidebar-collapsed #sidebar-brand-text,
 html.sidebar-collapsed #sidebar-foot { display: none; }
 html.sidebar-collapsed #sidebar-nav { gap: 4px; }
