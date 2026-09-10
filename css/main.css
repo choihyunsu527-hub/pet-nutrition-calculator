@@ -2,6 +2,11 @@
 html { visibility: hidden; }
 html.fonts-ready { visibility: visible; }
 
+/* ── 인증 완료 후 탭 복원(goTab(startTab)) 전까지 탭 콘텐츠 숨김 ── */
+/* 정적 마크업엔 .tab-pane.active가 없지만, 만일 어딘가 남아 있어도 부팅 중엔 강제로 가린다.
+   js/app.js init()이 goTab(startTab)까지 마치면 html.tabs-booting을 제거한다. */
+html.tabs-booting .tab-pane { display: none !important; }
+
 /* ── 기본 리셋 ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 /* CSS 변수(디자인 토큰)는 css/variables.css로 분리됨 — <head>의 <link>로 로드 */

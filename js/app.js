@@ -1371,17 +1371,15 @@ async function initAuthGate() {
   // 1. 앱 시작
   authLog('1. 앱 시작 — initAuthGate() 진입', {
     url: window.location.href,
-    keepLoginOn: isKeepLoginOn(),
     supabaseClientReady: !!supabaseClient,
   });
   
-  // 저장된 "아이디 저장"/"로그인 유지하기" 설정을 로그인 화면에 반영
+  // 저장된 "아이디 저장" 설정을 로그인 화면에 반영
   const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
   if (savedEmail) {
     document.getElementById('login-email').value = savedEmail;
     document.getElementById('login-remember-id').checked = true;
   }
-  document.getElementById('login-keep').checked = isKeepLoginOn();
 
   document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
   document.getElementById('login-pw').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
@@ -1480,6 +1478,9 @@ async function init() {
   const startTab = initialTabId();
   syncTabHash(startTab, true);   // 히스토리 항목 없이 현재 탭을 해시에 반영
   goTab(startTab);
+  // 여기까지 와서야 실제로 보여줄 탭이 확정된다 — <head>에서 걸어 둔 부팅용 숨김을 해제해
+  // 인증 대기 중 정적 대시보드가 잠깐 노출되던 문제를 없앤다.
+  document.documentElement.classList.remove('tabs-booting');
 
   // 변경 시마다 dirty 플래그를 세운다(원료DB 갱신 목적의 저장은 saveToStorage()가 계속 담당).
   // 레시피 작업 자체는 더 이상 localStorage에 자동 저장하지 않는다 — 새로고침/재실행 시 항상 새 작업으로 시작한다.

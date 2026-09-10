@@ -35,7 +35,6 @@ async function tryLogin() {
   const idInput     = document.getElementById('login-email');
   const pwInput     = document.getElementById('login-pw');
   const rememberEl  = document.getElementById('login-remember-id');
-  const keepLoginEl = document.getElementById('login-keep');
   const btn         = document.getElementById('login-btn');
   const err         = document.getElementById('login-err');
   const id = idInput.value.trim();
@@ -43,10 +42,6 @@ async function tryLogin() {
 
   if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
   if (!id || !password) { err.textContent = '아이디와 비밀번호를 모두 입력하세요.'; return; }
-
-  // "로그인 유지하기" 체크 상태를 세션 발급 전에 먼저 저장해야, authStorage가 이번 로그인 결과를
-  // 올바른 저장소(localStorage/sessionStorage)에 기록한다.
-  localStorage.setItem(KEEP_LOGIN_KEY, keepLoginEl.checked ? 'true' : 'false');
 
   btn.disabled = true; btn.textContent = '로그인 중...'; err.textContent = '';
   // '@'가 있으면 기존 이메일 기반 계정으로 보고 입력값을 그대로 이메일로 쓴다 — 무조건

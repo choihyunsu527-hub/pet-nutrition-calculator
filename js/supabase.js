@@ -34,54 +34,29 @@ async function extractFnError(error, fallbackMsg) {
   return (error && error.message) || fallbackMsg;
 }
 
-// "로그인 유지하기" 체크박스 상태 저장용 키(순수 로컬 설정값 — Supabase 세션 자체와는 별개)
-const KEEP_LOGIN_KEY = 'feedcalc_v4_keep_login';
-const REMEMBER_EMAIL_KEY = 'feedcalc_v4_remember_email';
-function isKeepLoginOn() { return localStorage.getItem(KEEP_LOGIN_KEY) !== 'false'; } // 기본값: 유지함
+const REMEMBER_EMAIL_KEY = 'feedcalc_v4_remember_email';   // "아이디 저장" 체크 상태(세션과 무관한 편의 설정)
 
 // 새로고침 후 로그인 화면으로 돌아가는 문제의 원인을 콘솔에서 바로 확인하기 위한 디버그 로그.
 // 토큰 원문은 절대 출력하지 않고, 존재 여부·만료 시각 등 진단에 필요한 메타데이터만 남긴다.
 function authLog(...args) { console.log('%c[AUTH]', 'color:#5a6b7a;font-weight:700', ...args); }
 
-// Supabase 세션을 localStorage에 저장하는 커스텀 스토리지 어댑터.
-// localStorage는 탭/창을 닫아도, 브라우저를 재시작해도, 컴퓨터를 재부팅해도 유지되므로,
-// 사용자가 명시적으로 로그아웃(auth.signOut())하기 전까지는 다음 실행에서 자동 로그인된다.
-// persistSession + autoRefreshToken(아래 createClient 옵션)이 이 저장소를 읽어 세션을 복원하고
-// 만료 전 refresh token으로 액세스 토큰을 자동 갱신한다.
-// getItem에서 sessionStorage도 한 번 확인하는 이유: 직전 정책(sessionStorage 저장)으로 로그인해 둔
-// 사용자를 로그아웃 없이 이어받기 위함(있으면 localStorage로 옮겨 이후 재시작에도 유지되게 한다).
-// Supabase 공식 커스텀 스토리지 예제와 동일하게 async 함수로 구현한다 — supabase-js가 내부적으로
-// storage 메서드를 Promise로 취급하는 경로가 있어, 동기 함수로 두면 버전에 따라 세션 하이드레이션이
-// 조용히 실패할 수 있다.
-const authStorage = {
-  getItem: async (key) => {
-    let value = localStorage.getItem(key);
-    if (value === null) {
-      const carried = sessionStorage.getItem(key);
-      if (carried !== null) {
-        localStorage.setItem(key, carried);
-        value = carried;
-        authLog('storage.getItem', key, '→ sessionStorage 세션을 localStorage로 이관');
-      }
-    }
-    authLog('storage.getItem', key, '→', value ? `found (localStorage, ${value.length}자)` : 'NOT FOUND');
-    return value;
-  },
-  setItem: async (key, value) => {
-    localStorage.setItem(key, value);
-    authLog('storage.setItem', key, '→ localStorage', `(${value.length}자)`);
-  },
-  removeItem: async (key) => {
-    // 로그아웃 시 양쪽 저장소의 세션 키를 모두 정리한다(직전 정책의 잔여분 포함).
-    localStorage.removeItem(key); sessionStorage.removeItem(key);
-    authLog('storage.removeItem', key);
-  },
-};
+// ── 세션 저장 정책: sessionStorage 전용 ────────────────────────────────────────
+// 인증 세션을 sessionStorage에만 둔다 → 페이지 새로고침(같은 탭)에는 유지되지만,
+// 브라우저를 완전히 종료하거나 PC를 재부팅하면 사라져 다음 실행에서 다시 로그인해야 한다.
+// (localStorage에 영구 저장하던 "로그인 유지" 동작은 제거했다.)
+// 예전 정책으로 localStorage에 남아 있을 수 있는 Supabase 세션/설정 키를 최초 1회 정리한다.
+try {
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith('sb-') && k.includes('-auth-token')) localStorage.removeItem(k);
+  }
+  localStorage.removeItem('feedcalc_v4_keep_login');
+} catch (e) {}
 
 const supabaseClient = (window.supabase && SUPABASE_URL.startsWith('http'))
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
-        storage: authStorage,
+        storage: window.sessionStorage,
         // CDN 스크립트가 메이저 버전(@2)만 고정돼 있어 마이너/패치 버전이 바뀌면 기본값이
         // 달라질 수 있다 — 새로고침 시 세션 유지에 필요한 옵션들을 명시적으로 켜 둔다.
         persistSession: true,
