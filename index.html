@@ -1741,6 +1741,13 @@
                   선택 삭제
                 </button>
                 <button
+                  id="mix-normalize-btn"
+                  onclick="normalizeMixRatios()"
+                  title="원료명이 있고 배합비가 0보다 큰 행의 비율은 그대로 둔 채, 합계가 정확히 100.0%가 되도록 맞춥니다 (% 모드 전용)"
+                >
+                  배합비 100% 맞추기
+                </button>
+                <button
                   onclick="loadRecipe()"
                   title="내 컴퓨터의 레시피 파일(.json)을 열기 — 상단의 폴더 목록과는 별개입니다"
                 >

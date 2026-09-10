@@ -611,6 +611,47 @@ function updateUnitHint() {
   // 같이 지워진다.
   const rl = document.getElementById('mix-hdr-ratio-label');
   if (rl) rl.textContent = labelMap[unit];
+
+  // "배합비 100% 맞추기"는 % 모드 전용 — g/kg 모드에서는 총 배치량이 곧 100% 기준이라 의미가 없다.
+  const normBtn = document.getElementById('mix-normalize-btn');
+  if (normBtn) normBtn.hidden = unit !== 'pct';
+}
+
+// 배합비 100% 맞추기 — % 모드에서만 동작한다. 원료명이 있고 배합비 > 0 인 행만 대상으로,
+// 서로의 비율은 그대로 둔 채 합계가 정확히 100.0%(소수 1자리)가 되도록 스케일한다.
+// 반올림 잔차는 배합비가 가장 큰 유효 행 하나에 몰아 넣어 합계를 100.0으로 맞춘다.
+// 빈 행/0 행은 건드리지 않고, 되쓴 뒤에는 기존 calculate() 흐름(합계 표시·판정·Undo·저장)을 그대로 탄다.
+function normalizeMixRatios() {
+  if ((document.getElementById('unit-select')?.value || 'pct') !== 'pct') return;
+
+  // DOM의 실제 입력값 기준 — 정렬로 행 순서가 바뀌어 있어도 각 행 자체를 대상으로 한다.
+  const targets = [];
+  mixRows.forEach(row => {
+    const nameEl = row.querySelector('.mix-ing-value');
+    const inp = row.querySelector('input[type=number]');
+    const val = parseFloat(inp && inp.value) || 0;
+    if (nameEl && nameEl.value && inp && val > 0) targets.push({ inp, val });
+  });
+
+  const sum = targets.reduce((s, t) => s + t.val, 0);
+  if (!(sum > 0)) return; // 유효 행 없음 / 합계 0 → no-op
+
+  // 소수 1자리로 스케일한 뒤, 100.0과의 차이를 최대 행에 흡수시킨다.
+  const scaled = targets.map(t => ({ inp: t.inp, v: Math.round((t.val * 1000) / sum) / 10 }));
+  const scaledSum = scaled.reduce((s, r) => s + r.v, 0);
+  const residual = Math.round((100 - scaledSum) * 10) / 10;
+  if (residual !== 0) {
+    let maxIdx = 0;
+    for (let i = 1; i < scaled.length; i++) if (scaled[i].v > scaled[maxIdx].v) maxIdx = i;
+    scaled[maxIdx].v = Math.round((scaled[maxIdx].v + residual) * 10) / 10;
+  }
+
+  let changed = false;
+  scaled.forEach(r => {
+    const next = String(r.v);
+    if (r.inp.value !== next) { r.inp.value = next; changed = true; }
+  });
+  if (changed) calculate();
 }
 
 function onUnitChange() {
