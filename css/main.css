@@ -608,6 +608,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .ana-contrib-nutbtn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
 .ana-contrib-summary { font-size: 12px; font-weight: 600; color: var(--hdr); background: var(--calc);
                         padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; line-height: 1.5; }
+/* 원료를 아직 하나도 선택하지 않아 JS가 내용을 채우기 전에는, 빈 색상 막대만 떠 있는
+   대신 아예 숨긴다(로직 미변경 — updateAnaContrib()가 채우면 :empty가 풀리며 그대로 보임). */
+.ana-contrib-summary:empty { display: none; }
 .ana-contrib-bar-row { margin-bottom: 12px; cursor: pointer; }
 .ana-contrib-bar-row:hover .ana-contrib-bar-name { color: var(--acc); }
 .ana-contrib-bar-toprow { display: flex; justify-content: space-between; align-items: baseline;
@@ -892,6 +895,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .amino-lim-subtitle { font-size: 10.5px; color: var(--sub); margin: -6px 0 10px; line-height: 1.5; }
 .amino-lim-summary { font-size: 12px; font-weight: 600; color: var(--hdr); background: var(--calc);
                       padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; line-height: 1.6; }
+/* ana-contrib-summary와 같은 이유로, 배합비 입력 전 빈 색상 막대를 숨긴다(로직 미변경). */
+.amino-lim-summary:empty { display: none; }
 .amino-lim-bar-row { margin-bottom: 12px; }
 .amino-lim-bar-toprow { display: flex; justify-content: space-between; align-items: baseline;
                          font-size: 11px; margin-bottom: 3px; gap: 8px; }
