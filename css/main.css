@@ -468,24 +468,6 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .hdr-title { font-size: 12.5px; font-weight: 600; color: var(--hdr); }
 .hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
 .hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
-/* 배합 설계 액션 버튼 hierarchy — 원료DB 툴바(.ing-toolbar button/.ing-btn-primary)와
-   같은 언어(중립 아웃라인 = 기본, 포인트 컬러 = 주요 동작, 기존 위험색(#B03A2E) = 파괴적 동작)를
-   그대로 재사용해 화면 간 툴바 스타일을 통일한다.
-   전역 상단바(#top-recipe-save-btn/.top-recipe-btn-sub)와 같은 체급(32px 높이, radius 6px)으로
-   맞춰, 같은 "레시피/배합 관리" 액션인데 두 바의 버튼 크기가 달라 보이던 문제를 줄인다. */
-#tab-mix .hdr-btns { gap: 8px; }
-#tab-mix .hdr-btns button { display: inline-flex; align-items: center; gap: 5px;
-                             background: var(--side2); color: var(--text); border: 1px solid var(--border);
-                             padding: 0 12px; height: 32px; box-sizing: border-box;
-                             font-size: 11px; font-weight: 600; border-radius: var(--radius-md); }
-#tab-mix .hdr-btns button svg { flex-shrink: 0; }
-#tab-mix .hdr-btns button:hover { filter: none; border-color: var(--acc); background: var(--hover-tint); }
-#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); font-weight: 500; padding: 0 14px; }
-#tab-mix .hdr-btns button.mix-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
-#tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
-#tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
-
-
 /* ── 카드 ── */
 .cards { display: flex; gap: 8px; padding: 10px 14px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
@@ -842,21 +824,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    ① 무엇을 만드는지(헤더 컨텍스트) → ② 어떤 원료(입력 테이블=핵심 영역) →
    ③ 현재 배합비(합계 바) → ④ 계산·저장(주요 버튼).
    기능/JS/이벤트/데이터/구조는 불변 — 위 원본 규칙 위에 시각값만 덮어쓴다.
-   ══════════════════════════════════════════════════════════════════════════════ */
-
-/* ① 제품 컨텍스트를 헤더에서 또렷하게 (무엇을 만드는지) */
+   (2차 개편에서 ④의 버튼들은 헤더 밖 별도 "작업 도구" 섹션으로 옮겼다 — 아래 2차 개편
+   섹션의 .mix-toolbar 규칙 참고. 헤더 컨텍스트(#mix-product-context)는 페이지 제목 아래
+   보조 정보로 톤을 낮췄다.) */
 #tab-mix .hdr-bar { padding: 14px 24px; }
-#tab-mix #mix-product-context { color: var(--text); font-weight: 600; }
-
-/* ④ 헤더 버튼 우선순위: 행 추가(주요=청록) / 선택 삭제(위험) / 내보내기 3종(보조=중립 GitHub) */
-#tab-mix .hdr-btns { gap: 6px; align-items: center; }
-#tab-mix .hdr-btns button { height: 30px; }
-#tab-mix .hdr-btns button:hover { filter: none; border-color: var(--sub);
-                                   background: var(--gray-l); color: var(--text); }
-#tab-mix .hdr-btns button.mix-btn-primary { padding: 0 16px; }
-#tab-mix .hdr-btns button.mix-btn-primary:hover { border-color: var(--acc); background: var(--acc); color: #fff; }
-#tab-mix .hdr-btns button.mix-btn-danger:hover { border-color: #B03A2E; background: #B03A2E; color: #fff; }
-#tab-mix .hdr-btns button[onclick^="loadRecipe"] { margin-left: 10px; }
+#tab-mix #mix-product-context { color: var(--sub); font-weight: 500; }
 
 /* 제품/배합 설정 스트립 — 정렬(24px 거터)·라벨 타이포 정돈, 입력 테이블과 뚜렷이 구분 */
 #tab-mix .mix-unit-bar { padding: 14px 24px; gap: 22px; box-shadow: none; }
@@ -878,6 +850,65 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #tot-bar { padding: 12px 20px; }
 #tot-ratio { font-size: 15px; padding-right: 18px; margin-right: 18px; }
 #tot-me { font-size: 11px; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   배합 설계 탭 UI 2차 개편 — 정보 구조 재정리 (c70e188 디자인 시스템 계승: 순백+다크 네이비
+   사이드바, 얇은 #E5E7EB 보더, 장식용 shadow 없음, radius 4~8px).
+   HTML은 기존 요소를 최소 재배치만 했다 — 헤더에 몰려 있던 6개 버튼을 별도 "작업 도구"
+   섹션으로 옮기고(class/onclick/id 완전 동일), 섹션 구분용 eyebrow 라벨 2개(레시피 설정/
+   작업 도구)만 새로 추가했다. sticky 컬럼 left 좌표·행 구조·입력 이벤트는 미변경.
+   시각 순서: 페이지 헤더 → 레시피 설정 → 작업 도구 → 원료/배합표 → 배합비 합계 → 영양성분 상세.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* 페이지 헤더 — 정적 설명 1줄이 1순위, 동적 컨텍스트(제품명·유형)는 그 아래 보조 정보 줄로 */
+#tab-mix .hdr-bar { flex-wrap: wrap; row-gap: 2px; }
+#tab-mix .mix-ctx-desc { flex-basis: 100%; }
+#tab-mix .mix-ctx-desc::before { content: '·'; margin: 0 8px; color: var(--sub); }
+
+/* 섹션 eyebrow 라벨 — 대시보드 KPI 카드 라벨(.dash-stat-label)과 같은 톤(10px/600/대문자+점)
+   으로 "레시피 설정"/"작업 도구" 두 섹션이 시작되는 지점을 명확히 표시한다. */
+.mix-section-hdr { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600;
+                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px;
+                    padding: 10px 20px 0; background: var(--side2); }
+.mix-section-hdr::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
+                            background: var(--acc); flex-shrink: 0; }
+
+/* 작업 도구 — 행 추가/선택 삭제/100% 맞추기(핵심 편집 동작)는 왼쪽에, 파일 작업 3종(보조 동작)은
+   오른쪽에 둬 우선순위를 분리한다. 버튼 요소 자체(class/onclick)는 기존과 완전히 같고 위치만
+   옮겼다 — primary 버튼은 전역 디자인 시스템과 맞춰 다크 네이비(--hdr) 채움으로 통일. */
+.mix-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+               gap: 8px; padding: 10px 20px 12px; background: var(--side2);
+               border-bottom: 1px solid var(--border); }
+.mix-toolbar-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+#tab-mix .mix-toolbar-group button { display: inline-flex; align-items: center; gap: 5px;
+               height: 30px; padding: 0 12px; font-size: 11px; font-weight: 500;
+               border: 1px solid var(--border); border-radius: var(--radius-md);
+               background: var(--side2); color: var(--text); cursor: pointer;
+               font-family: inherit; white-space: nowrap;
+               transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
+#tab-mix .mix-toolbar-group button svg { flex-shrink: 0; }
+#tab-mix .mix-toolbar-group button:hover { border-color: var(--sub); background: var(--gray-l); color: var(--text); }
+#tab-mix .mix-toolbar-group button.mix-btn-primary { background: var(--hdr); color: #fff; border-color: var(--hdr); font-weight: 600; }
+#tab-mix .mix-toolbar-group button.mix-btn-primary:hover { filter: brightness(1.15); background: var(--hdr); }
+#tab-mix .mix-toolbar-group button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
+#tab-mix .mix-toolbar-group button.mix-btn-danger:hover { background: #B03A2E; color: #fff; }
+
+/* 원료/배합표 — 핵심 작업 4컬럼(체크박스/#/원료명/배합비, sticky 유지)과 오른쪽으로 스크롤되는
+   상세 영양성분 영역의 경계를 한 단계 진한 보더로 명확히 한다(컬럼 순서·폭·sticky left 값은
+   기존 그대로, 시각 강조만 추가). 배합비 입력은 굵게 표시해 "지금 입력하는 값"이 먼저 읽히게 한다. */
+#mix-hdr > *:nth-child(4), .mix-row > *:nth-child(4) { border-right-width: 2px; }
+.mix-row input[type=number] { font-weight: 600; }
+
+/* 배합비 합계 — 두꺼운 색 스트립 대신 얇은 보더(위/아래 1px) + 옅은 상태 배경으로 절제한다.
+   updateTotBar()가 지정하는 pass/warn/fail 배경·보더색 로직 자체는 그대로이며(정확히 100%만
+   정상, 100% 미만은 주의, 초과만 오류 — 0%도 더는 오류색으로 시작하지 않음), 여기서는 캔버스만
+   차분하게 다듬는다. "목표 100.0%"는 항상 같은 고정값이라 별도 정적 텍스트로 추가했다. */
+#tot-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.tot-target-hint { font-size: 11px; color: var(--sub); font-weight: 500; margin-right: 16px; }
+
+/* 하단 여백 — 원료가 적거나 없을 때도 배합비 합계 바가 아래쪽 경계를 명확히 지어, 표 밑
+   빈 공간이 "미완성" 대신 "여기까지가 이 화면"으로 읽히게 한다(새 콘텐츠 없음, 마감선만). */
+#tab-mix { background: var(--panel-bg); }
 
 /* ── 아미노산 탭 ── */
 .amino-info { background: var(--warn-bg); color: var(--warn-t); border-bottom: 1px solid rgba(217,179,108,0.3);

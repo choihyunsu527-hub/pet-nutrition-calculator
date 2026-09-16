@@ -1731,11 +1731,57 @@
           <div class="tab-pane" id="tab-mix">
             <div class="hdr-bar hdr-bar-left">
               <span class="hdr-title">배합 설계</span>
-              <span class="hdr-desc">원료 선택 후 배합비(%) 입력</span>
-              <span class="hdr-desc" id="mix-product-context"
+              <span class="hdr-desc"
+                >레시피를 구성하고 배합비와 영양성분을 확인합니다.</span
+              >
+              <span class="hdr-desc mix-ctx-desc" id="mix-product-context"
                 >제품명 미입력 · 배합비 입력 전</span
               >
-              <div class="hdr-btns">
+            </div>
+            <div class="mix-section-hdr">레시피 설정</div>
+            <div class="ptype-banner" id="mix-ptype-banner"></div>
+            <div class="mix-unit-bar">
+              <div class="mix-unit-item" style="min-width: 220px">
+                <label for="mix-recipe-name">레시피명</label>
+                <input
+                  type="text"
+                  id="mix-recipe-name"
+                  placeholder="레시피 이름 입력"
+                  oninput="onMixRecipeNameInput(this.value)"
+                  style="width: 100%; text-align: left"
+                />
+              </div>
+              <div class="mix-unit-item">
+                <label for="unit-select">입력 단위</label>
+                <select id="unit-select" onchange="onUnitChange()">
+                  <option value="pct">배합 (%)</option>
+                  <option value="g">중량 (g)</option>
+                  <option value="kg">중량 (kg)</option>
+                </select>
+              </div>
+              <div class="mix-unit-item">
+                <label for="mix-total-g">총 배치량</label>
+                <div style="display: flex; align-items: center; gap: 4px">
+                  <input
+                    type="number"
+                    id="mix-total-g"
+                    value="1000"
+                    min="1"
+                    step="10"
+                    oninput="debouncedTotalGChange()"
+                    onchange="onTotalGChange()"
+                    onfocus="this.select()"
+                  />
+                  <span style="font-size: 11px; color: var(--sub)">g</span>
+                </div>
+              </div>
+              <div class="mix-unit-hint" id="unit-hint">
+                100% = 1000g = 1kg 기준
+              </div>
+            </div>
+            <div class="mix-section-hdr">작업 도구</div>
+            <div class="mix-toolbar">
+              <div class="mix-toolbar-group">
                 <button class="mix-btn-primary" onclick="addMixRow()">
                   행 추가
                 </button>
@@ -1749,6 +1795,8 @@
                 >
                   배합비 100% 맞추기
                 </button>
+              </div>
+              <div class="mix-toolbar-group mix-toolbar-group-secondary">
                 <button
                   onclick="loadRecipe()"
                   title="내 컴퓨터의 레시피 파일(.json)을 열기 — 상단의 폴더 목록과는 별개입니다"
@@ -1815,46 +1863,6 @@
                 </button>
               </div>
             </div>
-            <div class="ptype-banner" id="mix-ptype-banner"></div>
-            <div class="mix-unit-bar">
-              <div class="mix-unit-item" style="min-width: 220px">
-                <label for="mix-recipe-name">레시피명</label>
-                <input
-                  type="text"
-                  id="mix-recipe-name"
-                  placeholder="레시피 이름 입력"
-                  oninput="onMixRecipeNameInput(this.value)"
-                  style="width: 100%; text-align: left"
-                />
-              </div>
-              <div class="mix-unit-item">
-                <label for="unit-select">입력 단위</label>
-                <select id="unit-select" onchange="onUnitChange()">
-                  <option value="pct">배합 (%)</option>
-                  <option value="g">중량 (g)</option>
-                  <option value="kg">중량 (kg)</option>
-                </select>
-              </div>
-              <div class="mix-unit-item">
-                <label for="mix-total-g">총 배치량</label>
-                <div style="display: flex; align-items: center; gap: 4px">
-                  <input
-                    type="number"
-                    id="mix-total-g"
-                    value="1000"
-                    min="1"
-                    step="10"
-                    oninput="debouncedTotalGChange()"
-                    onchange="onTotalGChange()"
-                    onfocus="this.select()"
-                  />
-                  <span style="font-size: 11px; color: var(--sub)">g</span>
-                </div>
-              </div>
-              <div class="mix-unit-hint" id="unit-hint">
-                100% = 1000g = 1kg 기준
-              </div>
-            </div>
             <div
               id="mix-nutrient-note"
               style="
@@ -1898,6 +1906,7 @@
             </div>
             <div id="tot-bar">
               <span id="tot-ratio">배합비 합계: 0.0%</span>
+              <span class="tot-target-hint">목표 100.0%</span>
               <span id="tot-me"></span>
             </div>
           </div>

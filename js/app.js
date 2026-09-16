@@ -92,11 +92,13 @@ function updateTotBar(result, rows) {
     return;
   }
 
+  // 상태 톤(표시 전용, 계산값 tot 자체는 미변경): 정확히 100%만 정상, 100% 미만은 전부
+  // "아직 덜 채움" 주의 상태(0%인 초기 상태도 오류가 아니라 이 톤), 100% 초과만 오류로 본다.
   if (Math.abs(tot-100) < 0.01) {
     bar.style.background = 'var(--pass-bg)';
     bar.style.borderTopColor = 'var(--pass-t)';
     ratioEl.style.color = 'var(--pass-t)';
-  } else if (Math.abs(tot-100) < 5) {
+  } else if (tot < 100) {
     bar.style.background = 'var(--warn-bg)';
     bar.style.borderTopColor = 'var(--warn-t)';
     ratioEl.style.color = 'var(--warn-t)';
