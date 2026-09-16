@@ -6,6 +6,15 @@ html.fonts-ready { visibility: visible; }
 /* 정적 마크업엔 .tab-pane.active가 없지만, 만일 어딘가 남아 있어도 부팅 중엔 강제로 가린다.
    js/app.js init()이 goTab(startTab)까지 마치면 html.tabs-booting을 제거한다. */
 html.tabs-booting .tab-pane { display: none !important; }
+/* #top-view-title(정적 텍스트 "대시보드")와 사이드바의 기본 활성 메뉴(.nav-item[data-tab="dash"]에
+   정적으로 붙어있는 class="active")는 .tab-pane이 아니라서 위 규칙에 가려지지 않는다 — 이 둘은
+   showTab()이 실행되는 시점(=goTab(startTab), init() 끝)까지 그대로 "대시보드"로 보여, 다른
+   탭(#mix 등)으로 새로고침해도 부팅 중 잠깐 "대시보드"가 보였다가 바뀌는 것처럼 느껴졌다.
+   goTab(startTab)이 그 즉시 실제 탭에 맞게 갱신하므로, 부팅 중에는 이 두 곳의 "활성 상태 표시"만
+   숨기면 된다(탭 콘텐츠 자체는 이미 위 규칙으로 안전하게 가려져 있음). */
+html.tabs-booting #top-view-title { visibility: hidden; }
+html.tabs-booting .nav-item.active { color: #c2cbd4; background: transparent; }
+html.tabs-booting .nav-item.active::before { display: none; }
 
 /* ── 기본 리셋 ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
