@@ -57,10 +57,11 @@ Deno.serve(async (req) => {
   const { data: { user }, error: userErr } = await admin.auth.getUser(jwt);
   if (userErr || !user) return json({ error: '유효하지 않은 세션입니다.' }, 401);
 
-  // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회)
+  // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회) — name은 감사 로그에
+  //    "누가" 작업했는지 스냅샷으로 남기기 위해 함께 조회한다.
   const { data: callerProfile, error: callerProfileErr } = await admin
     .from('profiles')
-    .select('role')
+    .select('role, name')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -88,7 +89,7 @@ Deno.serve(async (req) => {
   //    여기(서버)에서 재검증한다 — 프런트의 버튼 비활성화는 UX일 뿐 우회 호출로 뚫릴 수 있다.
   const { data: targetProfile, error: targetProfileErr } = await admin
     .from('profiles')
-    .select('role')
+    .select('username, name, role')
     .eq('id', targetUserId)
     .maybeSingle();
 
@@ -110,6 +111,16 @@ Deno.serve(async (req) => {
 
   const { error: authDelErr } = await admin.auth.admin.deleteUser(targetUserId);
   if (authDelErr) return json({ error: authDelErr.message }, 400);
+
+  // 7) 감사 로그 기록 — 계정은 이미 삭제됐으니 실패해도 응답에는 영향을 주지 않는다.
+  await admin.from('audit_logs').insert({
+    user_id: user.id,
+    user_name: callerProfile.name ?? null,
+    action: 'delete_user',
+    target_type: 'profile',
+    target_id: targetUserId,
+    details: { username: targetProfile?.username ?? null, name: targetProfile?.name ?? null, role: targetProfile?.role ?? null },
+  });
 
   return json({ ok: true });
 });

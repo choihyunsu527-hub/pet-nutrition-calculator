@@ -281,6 +281,130 @@ async function deleteUserAccount(row) {
   loadAdminUsers();
 }
 
+// ── 변경 이력(Audit Log) — create-user/update-user/delete-user Edge Function이 남긴
+// audit_logs 행을 조회해 최신순으로 표시한다. super_admin만 select 가능하도록 RLS에서
+// 막혀 있지만(005_audit_logs.sql), UI 쪽에서도 한 번 더 방어적으로 확인한다.
+let adminAuditReqSeq = 0; // loadAdminUsers()와 동일하게, 오래된 응답이 최신 렌더링을
+                          // 덮어쓰지 않도록 요청 순번 가드를 둔다.
+const AUDIT_ACTION_LABELS = {
+  create_user: '사용자 생성',
+  update_user_name: '이름 변경',
+  update_user_role: '권한 변경',
+  delete_user: '사용자 삭제',
+};
+const AUDIT_ROLE_LABELS = { user: '일반 사용자', super_admin: '관리자' };
+function auditRoleLabel(role) { return AUDIT_ROLE_LABELS[role] || role || '─'; }
+
+function auditDetailText(row) {
+  const d = row.details || {};
+  switch (row.action) {
+    case 'create_user':
+      return `아이디 ${d.username || '─'} · 이름 ${d.name || '─'} · 권한 ${auditRoleLabel(d.role)}`;
+    case 'update_user_name':
+      return `${d.old_name || '(없음)'} → ${d.new_name || '─'}`;
+    case 'update_user_role':
+      return `${auditRoleLabel(d.old_role)} → ${auditRoleLabel(d.new_role)}`;
+    case 'delete_user':
+      return `아이디 ${d.username || '─'} · 이름 ${d.name || '─'} · 권한 ${auditRoleLabel(d.role)}`;
+    default:
+      return d && Object.keys(d).length ? JSON.stringify(d) : '─';
+  }
+}
+
+async function loadAuditLogs() {
+  const box = document.getElementById('admin-audit-list');
+  if (!box || !supabaseClient) return;
+  if (!isSuperAdmin()) return;
+
+  const seq = ++adminAuditReqSeq;
+
+  box.innerHTML = '';
+  const loading = document.createElement('div');
+  loading.style.cssText = 'font-size:11px;color:var(--sub)';
+  loading.textContent = '변경 이력을 불러오는 중...';
+  box.appendChild(loading);
+
+  const { data, error } = await supabaseClient
+    .from('audit_logs')
+    .select('id, created_at, user_id, user_name, action, target_type, target_id, details')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (seq !== adminAuditReqSeq) return; // 이 사이 더 최신 요청이 시작됐으면 이 응답은 버린다
+
+  if (error) {
+    box.innerHTML = '';
+    const errEl = document.createElement('div');
+    errEl.style.cssText = 'font-size:11px;color:#B03A2E';
+    errEl.textContent = '변경 이력을 불러오지 못했습니다: ' + error.message;
+    box.appendChild(errEl);
+    return;
+  }
+  renderAuditLogTable(box, data || []);
+}
+
+function renderAuditLogTable(box, rows) {
+  box.innerHTML = '';
+  if (rows.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:11px;color:var(--sub);text-align:center;padding:10px 8px';
+    empty.textContent = '기록된 변경 이력이 없습니다.';
+    box.appendChild(empty);
+    return;
+  }
+
+  const tableWrap = document.createElement('div');
+  tableWrap.style.cssText = 'width:100%;max-width:100%;overflow-x:auto';
+  const table = document.createElement('table');
+  table.id = 'admin-audit-table';
+
+  const thead = document.createElement('thead');
+  const headRow = document.createElement('tr');
+  ['날짜/시간', '사용자', '작업', '대상', '상세'].forEach(text => {
+    const th = document.createElement('th');
+    th.textContent = text;
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+
+    const tdTime = document.createElement('td');
+    tdTime.className = 'center';
+    tdTime.textContent = row.created_at ? new Date(row.created_at).toLocaleString('ko-KR') : '─';
+
+    const tdActor = document.createElement('td');
+    tdActor.className = 'left';
+    tdActor.textContent = row.user_name || '(알 수 없음)';
+
+    const tdAction = document.createElement('td');
+    tdAction.className = 'center';
+    tdAction.textContent = AUDIT_ACTION_LABELS[row.action] || row.action;
+
+    const tdTarget = document.createElement('td');
+    tdTarget.className = 'left';
+    tdTarget.textContent = (row.details && row.details.username) || row.target_id || '─';
+
+    const tdDetails = document.createElement('td');
+    tdDetails.className = 'left';
+    tdDetails.textContent = auditDetailText(row);
+    tdDetails.title = tdDetails.textContent;
+
+    tr.appendChild(tdTime);
+    tr.appendChild(tdActor);
+    tr.appendChild(tdAction);
+    tr.appendChild(tdTarget);
+    tr.appendChild(tdDetails);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  tableWrap.appendChild(table);
+  box.appendChild(tableWrap);
+}
+
 async function enterApp(session) {
   authLog('enterApp() 실행 — 로그인 오버레이 숨기고 메인 화면 표시', { userEmail: session?.user?.email ?? null, appAlreadyStarted: appStarted });
   currentUser = session ? session.user : null;

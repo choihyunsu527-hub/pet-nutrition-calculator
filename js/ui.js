@@ -196,7 +196,7 @@ function showTab(id, el) {
   if (lastResult) syncPanelWidths();
   // 관리자 탭은 클릭으로 진입하든(사이드바) 새로고침 후 마지막 탭 복원으로 진입하든
   // (goTab(savedTab)) 항상 최신 목록을 불러오도록 여기서 한 번만 트리거한다.
-  if (id === 'admin') loadAdminUsers();
+  if (id === 'admin') { loadAdminUsers(); loadAuditLogs(); }
   if (id === 'mix') syncMixRecipeNameField();
   if (id === 'history') renderChangeHistory();
   if (id === 'label' && typeof renderLabelDraft === 'function') renderLabelDraft();

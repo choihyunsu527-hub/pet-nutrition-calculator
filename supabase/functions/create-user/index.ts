@@ -80,10 +80,11 @@ async function handle(req: Request, json: (body: unknown, status?: number) => Re
   const { data: { user }, error: userErr } = await admin.auth.getUser(jwt);
   if (userErr || !user) return json({ error: '유효하지 않은 세션입니다.' }, 401);
 
-  // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회)
+  // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회) — name은 감사 로그에
+  //    "누가" 작업했는지 스냅샷으로 남기기 위해 함께 조회한다.
   const { data: callerProfile, error: callerProfileErr } = await admin
     .from('profiles')
-    .select('role')
+    .select('role, name')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -137,6 +138,16 @@ async function handle(req: Request, json: (body: unknown, status?: number) => Re
       .from('profiles')
       .upsert({ id: newUserId, username, email: null, role, name }, { onConflict: 'id' });
     if (roleErr) return json({ error: `계정은 생성됐지만 권한 저장에 실패했습니다: ${roleErr.message}` }, 500);
+
+    // 6) 감사 로그 기록 — 실패해도 계정 생성 자체는 이미 끝났으니 응답에 영향을 주지 않는다.
+    await admin.from('audit_logs').insert({
+      user_id: user.id,
+      user_name: callerProfile.name ?? null,
+      action: 'create_user',
+      target_type: 'profile',
+      target_id: newUserId,
+      details: { username, role, name },
+    });
   }
 
   return json({ ok: true, user: { id: newUserId, username, name } });

@@ -55,10 +55,11 @@ Deno.serve(async (req) => {
   const { data: { user }, error: userErr } = await admin.auth.getUser(jwt);
   if (userErr || !user) return json({ error: '유효하지 않은 세션입니다.' }, 401);
 
-  // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회)
+  // 2) super_admin 권한 재검증 (service_role로 RLS 우회해 직접 조회) — name은 감사 로그에
+  //    "누가" 작업했는지 스냅샷으로 남기기 위해 함께 조회한다.
   const { data: callerProfile, error: callerProfileErr } = await admin
     .from('profiles')
-    .select('role')
+    .select('role, name')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -101,8 +102,15 @@ Deno.serve(async (req) => {
 
   // 6) 권한/이름 변경 — profiles에는 update 정책이 없어(001_profiles_role.sql) 일반
   //    사용자는 스스로 이름을 바꿀 수 없고, 오직 이 Edge Function(service_role)을 통해
-  //    super_admin만 변경할 수 있다.
+  //    super_admin만 변경할 수 있다. 감사 로그에 "무엇이 바뀌었는지" 남기려면 변경 전 값이
+  //    필요해 patch 전에 대상 프로필을 먼저 조회한다.
   if (role !== undefined || name !== undefined) {
+    const { data: targetBefore } = await admin
+      .from('profiles')
+      .select('username, name, role')
+      .eq('id', targetUserId)
+      .maybeSingle();
+
     const patch: Record<string, string> = {};
     if (role !== undefined) patch.role = role;
     if (name !== undefined) patch.name = name;
@@ -111,6 +119,31 @@ Deno.serve(async (req) => {
       .update(patch)
       .eq('id', targetUserId);
     if (profileErr) return json({ error: profileErr.message }, 400);
+
+    // 7) 감사 로그 기록 — 실제로 값이 바뀐 항목만, 이름 변경과 권한 변경을 별도 항목으로 남긴다.
+    //    실패해도 이미 반영된 변경 자체에는 영향을 주지 않는다.
+    const logEntries: Record<string, unknown>[] = [];
+    if (name !== undefined && name !== targetBefore?.name) {
+      logEntries.push({
+        user_id: user.id,
+        user_name: callerProfile.name ?? null,
+        action: 'update_user_name',
+        target_type: 'profile',
+        target_id: targetUserId,
+        details: { username: targetBefore?.username ?? null, old_name: targetBefore?.name ?? null, new_name: name },
+      });
+    }
+    if (role !== undefined && role !== targetBefore?.role) {
+      logEntries.push({
+        user_id: user.id,
+        user_name: callerProfile.name ?? null,
+        action: 'update_user_role',
+        target_type: 'profile',
+        target_id: targetUserId,
+        details: { username: targetBefore?.username ?? null, old_role: targetBefore?.role ?? null, new_role: role },
+      });
+    }
+    if (logEntries.length > 0) await admin.from('audit_logs').insert(logEntries);
   }
 
   return json({ ok: true });
