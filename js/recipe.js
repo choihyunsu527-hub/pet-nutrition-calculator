@@ -61,6 +61,8 @@ function recordChangeHistory(type, recipeName, detail) {
       recipe: (recipeName || '').trim() || '(제목 없음)',
       type: type,
       detail: detail || '',
+      user_id: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.id : null,
+      user_name: (typeof currentUserName !== 'undefined' && currentUserName) || (typeof currentUserLabel === 'function' ? currentUserLabel() : ''),
     });
     if (list.length > CHANGE_HISTORY_MAX) list.length = CHANGE_HISTORY_MAX;
     localStorage.setItem(CHANGE_HISTORY_KEY, JSON.stringify(list));
@@ -129,11 +131,12 @@ function renderChangeHistory() {
   if (!body) return;
   const list = getChangeHistory();
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="4" class="table-empty-row">기록된 변경 이력이 없습니다.</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="table-empty-row">기록된 변경 이력이 없습니다.</td></tr>';
     return;
   }
   body.innerHTML = list.map(e => `<tr>
       <td>${chFmtTime(e.ts)}</td>
+      <td>${escHtml(e.user_name || '')}</td>
       <td>${escHtml(e.recipe)}</td>
       <td>${escHtml(e.type)}</td>
       <td class="left">${escHtml(e.detail)}</td>

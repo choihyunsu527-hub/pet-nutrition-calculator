@@ -11,20 +11,22 @@
 // ════════════════════════════════════════════════════════════════════════════
 const ROLES = { SUPER_ADMIN: 'super_admin', USER: 'user' };
 let currentUserRole = null; // 로그인 후 fetchCurrentUserRole()로 채워짐 — 로그아웃 상태면 null
+let currentUserName = null; // 로그인 후 fetchCurrentUserRole()로 함께 채워짐(profiles.name) — 변경 이력 표시용
 
 function isSuperAdmin() { return currentUserRole === ROLES.SUPER_ADMIN; }
 
-// profiles 테이블에서 현재 로그인 사용자의 role을 조회한다.
+// profiles 테이블에서 현재 로그인 사용자의 role/name을 조회한다.
 // 행이 없거나 조회에 실패하면 안전하게 'user' 권한으로 취급한다(fail-closed).
 async function fetchCurrentUserRole() {
-  if (!supabaseClient || !currentUser) { currentUserRole = null; return currentUserRole; }
+  if (!supabaseClient || !currentUser) { currentUserRole = null; currentUserName = null; return currentUserRole; }
   const { data, error } = await supabaseClient
     .from('profiles')
-    .select('role')
+    .select('role, name')
     .eq('id', currentUser.id)
     .maybeSingle();
   if (error) console.warn('사용자 role 조회 실패 — user 권한으로 처리합니다:', error.message);
   currentUserRole = (data && data.role) || ROLES.USER;
+  currentUserName = (data && data.name) || null;
   return currentUserRole;
 }
 
