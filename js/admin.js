@@ -82,10 +82,14 @@ async function createUserAccount() {
 // super_admin만 select 가능하도록 RLS에서도 막혀 있지만(001_profiles_role.sql의
 // "profiles: super_admin select all" 정책), UI 쪽에서도 한 번 더 방어적으로 확인한다.
 // 향후 역할 변경 등 관리 기능을 추가할 때도 이 테이블 렌더링 방식을 그대로 확장하면 된다.
+let adminUsersReqSeq = 0; // 연속 호출 시 응답이 요청 순서대로 오지 않을 수 있어, 가장 마지막에
+                           // "보낸" 요청의 응답만 반영하도록 순번을 매겨 오래된 응답을 무시한다.
 async function loadAdminUsers() {
   const box = document.getElementById('admin-user-list');
   if (!box || !supabaseClient) return;
   if (!isSuperAdmin()) return;
+
+  const seq = ++adminUsersReqSeq;
 
   box.innerHTML = '';
   const loading = document.createElement('div');
@@ -97,6 +101,8 @@ async function loadAdminUsers() {
     .from('profiles')
     .select('id, username, email, name, role, created_at')
     .order('created_at', { ascending: true });
+
+  if (seq !== adminUsersReqSeq) return; // 이 사이 더 최신 요청이 시작됐으면 이 응답은 버린다
 
   if (error) {
     box.innerHTML = '';
@@ -254,7 +260,7 @@ async function saveEditUser() {
       return;
     }
     closeModal('admin-edit-modal');
-    loadAdminUsers();
+    await loadAdminUsers();
   } finally {
     btn.disabled = false; btn.textContent = '저장';
   }
