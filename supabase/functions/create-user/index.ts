@@ -95,11 +95,13 @@ async function handle(req: Request, json: (body: unknown, status?: number) => Re
   let username = '';
   let password = '';
   let role = 'user';
+  let name = '';
   try {
     const body = await req.json();
     username = typeof body?.username === 'string' ? body.username.trim() : '';
     password = typeof body?.password === 'string' ? body.password : '';
     role = typeof body?.role === 'string' ? body.role : 'user';
+    name = typeof body?.name === 'string' ? body.name.trim() : '';
   } catch {
     return json({ error: '요청 본문이 올바르지 않습니다.' }, 400);
   }
@@ -107,6 +109,7 @@ async function handle(req: Request, json: (body: unknown, status?: number) => Re
   if (!USERNAME_RE.test(username)) return json({ error: '아이디는 영문/숫자/밑줄(_) 3~20자여야 합니다.' }, 400);
   if (!password || password.length < 4) return json({ error: '비밀번호는 4자 이상이어야 합니다.' }, 400);
   if (!ALLOWED_ROLES.includes(role)) return json({ error: '올바르지 않은 권한입니다.' }, 400);
+  if (!name) return json({ error: '이름을 입력하세요.' }, 400);
 
   // 4) 계정 즉시 생성 — 이메일 인증 없이 바로 로그인 가능하도록 email_confirm: true.
   //    실제 이메일 대신 아이디를 결정적으로 변환한 내부용 이메일을 사용하고, user_metadata에
@@ -132,9 +135,9 @@ async function handle(req: Request, json: (body: unknown, status?: number) => Re
   if (newUserId) {
     const { error: roleErr } = await admin
       .from('profiles')
-      .upsert({ id: newUserId, username, email: null, role }, { onConflict: 'id' });
+      .upsert({ id: newUserId, username, email: null, role, name }, { onConflict: 'id' });
     if (roleErr) return json({ error: `계정은 생성됐지만 권한 저장에 실패했습니다: ${roleErr.message}` }, 500);
   }
 
-  return json({ ok: true, user: { id: newUserId, username } });
+  return json({ ok: true, user: { id: newUserId, username, name } });
 }

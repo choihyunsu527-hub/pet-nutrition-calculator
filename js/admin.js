@@ -44,23 +44,26 @@ function applyRoleUI() {
 // isSuperAdmin() 체크는 UX상 즉시 피드백을 주기 위한 1차 방어일 뿐이다.
 async function createUserAccount() {
   const emailInput = document.getElementById('create-user-email');
+  const nameInput = document.getElementById('create-user-name');
   const pwInput = document.getElementById('create-user-password');
   const roleSelect = document.getElementById('create-user-role');
   const btn = document.getElementById('create-user-btn');
   const msg = document.getElementById('create-user-msg');
   const id = emailInput.value.trim();
+  const name = nameInput.value.trim();
   const password = pwInput.value;
   const role = roleSelect.value;
 
   msg.style.color = '#B03A2E';
   if (!isSuperAdmin()) { msg.textContent = 'super_admin 권한이 필요합니다.'; return; }
   if (!id) { msg.textContent = '아이디를 입력하세요.'; return; }
+  if (!name) { msg.textContent = '이름을 입력하세요.'; return; }
   if (!password || password.length < 4) { msg.textContent = '초기 비밀번호는 4자 이상이어야 합니다.'; return; }
   if (!supabaseClient) { msg.textContent = friendlyAuthError(); return; }
 
   btn.disabled = true; btn.textContent = '생성 중...'; msg.textContent = '';
   try {
-    const { data, error } = await supabaseClient.functions.invoke('create-user', { body: { username: id, password, role } });
+    const { data, error } = await supabaseClient.functions.invoke('create-user', { body: { username: id, name, password, role } });
     if (error || data?.error) {
       msg.style.color = '#B03A2E';
       msg.textContent = (data && data.error) || await extractFnError(error, '계정 생성 중 오류가 발생했습니다.');
@@ -68,7 +71,7 @@ async function createUserAccount() {
     }
     msg.style.color = 'var(--pass-t)';
     msg.textContent = `계정이 생성되었습니다.\n아이디: ${id}\n초기 비밀번호: ${password}`;
-    emailInput.value = ''; pwInput.value = ''; roleSelect.value = 'user';
+    emailInput.value = ''; nameInput.value = ''; pwInput.value = ''; roleSelect.value = 'user';
     loadAdminUsers();
   } finally {
     btn.disabled = false; btn.textContent = '계정 생성';
@@ -92,7 +95,7 @@ async function loadAdminUsers() {
 
   const { data, error } = await supabaseClient
     .from('profiles')
-    .select('id, username, email, role, created_at')
+    .select('id, username, email, name, role, created_at')
     .order('created_at', { ascending: true });
 
   if (error) {
@@ -126,7 +129,7 @@ function renderAdminUserTable(box, rows) {
 
   const thead = document.createElement('thead');
   const headRow = document.createElement('tr');
-  ['아이디', 'Role', '생성일', '상태', '관리'].forEach(text => {
+  ['아이디', '이름', 'Role', '생성일', '상태', '관리'].forEach(text => {
     const th = document.createElement('th');
     th.textContent = text;
     headRow.appendChild(th);
@@ -142,6 +145,11 @@ function renderAdminUserTable(box, rows) {
     tdEmail.className = 'left';
     tdEmail.textContent = row.username || row.email || '─';
     tdEmail.title = tdEmail.textContent; // 말줄임표로 잘린 아이디를 마우스 오버로 확인 가능하게
+
+    const tdName = document.createElement('td');
+    tdName.className = 'left';
+    tdName.textContent = row.name || '─';
+    tdName.title = tdName.textContent;
 
     const tdRole = document.createElement('td');
     tdRole.className = 'center';
@@ -186,6 +194,7 @@ function renderAdminUserTable(box, rows) {
     tdActions.appendChild(delBtn);
 
     tr.appendChild(tdEmail);
+    tr.appendChild(tdName);
     tr.appendChild(tdRole);
     tr.appendChild(tdCreated);
     tr.appendChild(tdStatus);
@@ -202,6 +211,7 @@ let editUserTargetId = null;
 function openEditUserModal(row) {
   editUserTargetId = row.id;
   document.getElementById('edit-user-email').value = row.username || row.email || '';
+  document.getElementById('edit-user-name').value = row.name || '';
   const roleSelect = document.getElementById('edit-user-role');
   roleSelect.value = row.role || 'user';
   const isSelf = row.id === (currentUser && currentUser.id);
@@ -220,23 +230,21 @@ async function saveEditUser() {
   const err = document.getElementById('edit-user-err');
   const roleSelect = document.getElementById('edit-user-role');
   const pwInput = document.getElementById('edit-user-password');
+  const nameInput = document.getElementById('edit-user-name');
   const isSelf = editUserTargetId === (currentUser && currentUser.id);
   const password = pwInput.value;
+  const name = nameInput.value.trim();
 
   err.textContent = '';
   if (!isSuperAdmin()) { err.textContent = 'super_admin 권한이 필요합니다.'; return; }
   if (!editUserTargetId) { err.textContent = '대상 사용자를 확인할 수 없습니다.'; return; }
+  if (!name) { err.textContent = '이름을 입력하세요.'; return; }
   if (password && password.length < 4) { err.textContent = '비밀번호는 4자 이상이어야 합니다.'; return; }
   if (!supabaseClient) { err.textContent = friendlyAuthError(); return; }
 
-  const body = { targetUserId: editUserTargetId };
+  const body = { targetUserId: editUserTargetId, name };
   if (!isSelf) body.role = roleSelect.value;
   if (password) body.password = password;
-
-  if (body.role === undefined && body.password === undefined) {
-    err.textContent = '변경할 내용이 없습니다.';
-    return;
-  }
 
   btn.disabled = true; btn.textContent = '저장 중...'; err.textContent = '';
   try {

@@ -97,7 +97,7 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-recipe-folder-btn { margin-right: 6px; }
 #top-recipe-folder-btn::after { content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
                                  width: 1px; height: 18px; background: var(--border); }
-#top-recipe-save-btn { font-size: 11px; font-weight: 700; color: #fff; background: var(--acc);
+#top-recipe-save-btn { font-size: 11px; font-weight: 500; color: #fff; background: var(--acc);
                         border: none; border-radius: 6px; padding: 0 14px; height: 32px; box-sizing: border-box;
                         cursor: pointer; font-family: inherit; white-space: nowrap; transition: filter .2s ease; }
 #top-recipe-save-btn:hover { filter: brightness(1.08); }
@@ -119,7 +119,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 /* ── 프로필(우측 상단) ── */
 #profile-menu-wrap { position: relative; flex-shrink: 0; }
 #profile-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--acc);
-               color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; display: flex;
+               color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; display: flex;
                align-items: center; justify-content: center; font-family: inherit; padding: 0;
                transition: filter .2s ease; }
 #profile-btn:hover { filter: brightness(1.1); }
@@ -160,7 +160,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 
 #notif-drawer-hdr { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
                     padding: 18px 20px; border-bottom: 1px solid var(--border); }
-#notif-drawer-hdr span { font-size: 14.5px; font-weight: 700; color: var(--hdr); }
+#notif-drawer-hdr span { font-size: 14.5px; font-weight: 600; color: var(--hdr); }
 #notif-close-btn { width: 30px; height: 30px; border-radius: 8px; border: none; background: transparent;
                     color: var(--sub); cursor: pointer; display: flex; align-items: center; justify-content: center;
                     padding: 0; transition: background-color .2s ease, color .2s ease; }
@@ -172,7 +172,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
 .notif-dot-col { width: 8px; flex-shrink: 0; padding-top: 5px; }
 .notif-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #34c759; display: block; }
 .notif-body { flex: 1; min-width: 0; }
-.notif-title { font-size: 12.5px; font-weight: 700; color: var(--hdr); line-height: 1.4; }
+.notif-title { font-size: 12.5px; font-weight: 500; color: var(--hdr); line-height: 1.4; }
 .notif-desc { font-size: 11.5px; color: var(--text); line-height: 1.55; margin-top: 3px; }
 .notif-time { font-size: 10px; color: var(--sub); margin-top: 6px; }
 .notif-empty { padding: 10px 8px; text-align: center; color: var(--sub); font-size: 11px; }
@@ -318,39 +318,45 @@ html.sidebar-collapsed .nav-group-body { display: none; }
    위 원본 규칙을 지우지 않고 아래에서 시각값만 덮어써 diff를 명확히 한다.
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* ── 사이드바 네비: 더 촘촘·정돈, 아이콘/텍스트 크기·간격 통일 (네이비 유지) ── */
-#sidebar { padding: 18px 12px; }
-#sidebar-nav { gap: 1px; }
+/* ── 사이드바 네비: 촘촘함은 유지하되 여백을 한 단계 더 넉넉하게, 아이콘/텍스트 크기·
+   간격 통일 (딥 네이비 유지 — css/variables.css --topbar-bg) ── */
+#sidebar { padding: 20px 14px; }
+#sidebar-nav { gap: 2px; }
 .nav-item, .nav-group-hdr {
   font-size: 13px; font-weight: 500; gap: 10px;
-  padding: 8px 10px; border-radius: 6px; color: #c2cbd4;
+  padding: 9px 12px; border-radius: var(--radius-md); color: #c2cbd4;
 }
 .nav-item:hover, .nav-group-hdr:hover { color: #ffffff; background: rgba(255,255,255,0.06); }
-/* 활성 메뉴 = 유일한 청록 강조: 포인트색 텍스트 + 은은한 배경 + 얇은 좌측 인디케이터 */
-.nav-item.active { color: var(--acc); background: rgba(255,255,255,0.08); font-weight: 600; }
-.nav-item.active::before { top: 6px; bottom: 6px; width: 2px; border-radius: 0 2px 2px 0; }
-.nav-item.active:hover { background: rgba(255,255,255,0.10); color: var(--acc); }
+/* 활성 메뉴 = 유일한 청록 강조: 포인트색 텍스트 + 은은한 배경 + 얇은 좌측 인디케이터.
+   배경을 카드형 톤(면 전체가 아니라 좌측 인디케이터 중심)으로 유지해 "AI 대시보드"식
+   화려한 필(pill) 강조 대신 절제된 실무 SaaS 느낌을 준다. */
+.nav-item.active { color: var(--acc); background: rgba(79,179,166,0.12); font-weight: 500; }
+.nav-item.active::before { top: 7px; bottom: 7px; width: 2px; border-radius: 0 2px 2px 0; }
+.nav-item.active:hover { background: rgba(79,179,166,0.16); color: var(--acc); }
 .nav-icon { width: 16px; height: 16px; }
 .nav-label { gap: 10px; }
 .nav-subitem { font-size: 13px; padding-left: 36px; }
 .nav-section-label {
   font-size: 10px; font-weight: 600; letter-spacing: .6px; opacity: 1;
-  color: #8b949e; margin: 12px 10px 5px;
+  color: #8b949e; margin: 14px 12px 6px;
 }
-.nav-divider { margin: 10px 6px; background: rgba(255,255,255,0.06); }
+.nav-divider { margin: 12px 8px; background: rgba(255,255,255,0.06); }
 
 /* ── 상단 헤더: 장식 최소화, 페이지 제목 위계 강화, 검색창 자연스러운 정렬 ── */
-#top-row1 { padding: 0 20px; }
-#top-view-title { font-size: 20px; font-weight: 700; letter-spacing: -.2px; }
+#top-row1 { padding: 0 24px; height: 66px; }
+#top-view-title { font-size: 20px; font-weight: 600; letter-spacing: -.2px; color: var(--hdr); }
 /* absolute 중앙배치 → flex 흐름 안에서 제목과 우측 클러스터 사이에 자연스럽게 정렬 */
 #top-search-wrap {
   position: static; transform: none; left: auto; top: auto; z-index: auto;
   flex: 1 1 420px; width: auto; max-width: 480px; min-width: 200px; margin: 0 auto;
-  height: 34px; border-radius: 6px;
+  height: 36px; border-radius: var(--radius-md);
 }
 
-/* ── 상단 우측 보조 버튼: hover 상태 통일(중립 회색 — 청록은 활성/주요 동작 전용) ── */
-#top-undo-btn, #top-redo-btn, #top-recipe-folder-btn, .top-recipe-btn-sub { border-radius: 6px; }
+/* ── 상단 우측 보조 버튼: hover 상태 통일(중립 회색 — 청록은 활성/주요 동작 전용),
+   radius는 검색창·사이드바와 같은 토큰(--radius-md)으로 통일해 헤더 전체가 한 벌의
+   각진 톤으로 보이게 한다(하드코딩된 6px 산발을 정리). */
+#top-undo-btn, #top-redo-btn, #top-recipe-folder-btn, .top-recipe-btn-sub,
+#top-recipe-select, #top-recipe-save-btn { border-radius: var(--radius-md); }
 #top-undo-btn:hover:not(:disabled), #top-redo-btn:hover:not(:disabled),
 #top-recipe-folder-btn:hover, #top-recipe-select:hover,
 .top-recipe-btn-sub:hover:not(:disabled) {
@@ -443,8 +449,8 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .tab-pane.active { display: flex; }
 
 /* ── 공통 헤더바 ── */
-.hdr-bar { background: var(--gray-l); color: var(--text); padding: 6px 14px;
-           font-size: 10.5px; font-weight: 600; display: flex;
+.hdr-bar { background: #FFFFFF; color: var(--text); padding: 9px 24px;
+           font-size: 11px; font-weight: 600; display: flex;
            align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
            border-bottom: 1px solid var(--border); color: var(--sub); }
 .hdr-bar .hdr-btns { margin-left: auto; display: flex; gap: 5px; }
@@ -459,7 +465,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
    이름만 바꿔 중복 정의했다. 지금은 .hdr-title/.hdr-desc 하나로 통합하고, 각 탭 hdr-bar에는
    좌측 정렬용 .hdr-bar-left만 붙인다(가운데 정렬이 필요한 곳은 기존 .hdr-bar 기본값 그대로 유지 가능). */
 .hdr-bar.hdr-bar-left { justify-content: flex-start; }
-.hdr-title { font-size: 12.5px; font-weight: 800; color: var(--hdr); }
+.hdr-title { font-size: 12.5px; font-weight: 600; color: var(--hdr); }
 .hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
 .hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
 /* 배합 설계 액션 버튼 hierarchy — 원료DB 툴바(.ing-toolbar button/.ing-btn-primary)와
@@ -471,23 +477,23 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 #tab-mix .hdr-btns button { display: inline-flex; align-items: center; gap: 5px;
                              background: var(--side2); color: var(--text); border: 1px solid var(--border);
                              padding: 0 12px; height: 32px; box-sizing: border-box;
-                             font-size: 11px; font-weight: 600; border-radius: 6px; }
+                             font-size: 11px; font-weight: 600; border-radius: var(--radius-md); }
 #tab-mix .hdr-btns button svg { flex-shrink: 0; }
 #tab-mix .hdr-btns button:hover { filter: none; border-color: var(--acc); background: var(--hover-tint); }
-#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); font-weight: 700; padding: 0 14px; }
+#tab-mix .hdr-btns button.mix-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); font-weight: 500; padding: 0 14px; }
 #tab-mix .hdr-btns button.mix-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
 #tab-mix .hdr-btns button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
 #tab-mix .hdr-btns button.mix-btn-danger:hover { filter: none; background: #B03A2E; color: #fff; }
 
 
 /* ── 카드 ── */
-.cards { display: flex; gap: 6px; padding: 8px 12px; flex-shrink: 0;
+.cards { display: flex; gap: 8px; padding: 10px 14px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
-.card { padding: 10px 12px; border-radius: var(--radius-md); min-width: 80px;
+.card { padding: 11px 14px; border-radius: var(--radius-md); min-width: 80px;
         background: var(--gray-grad); box-shadow: var(--sh);
         border: 1px solid var(--border); position: relative; overflow: hidden; }
 .card .card-title { font-size: var(--fs-meta); color: var(--sub); line-height: 1.4; min-height: 25px; }
-.card .card-val { font-size: 15px; font-weight: 700; margin-top: 3px;
+.card .card-val { font-size: 15px; font-weight: 600; margin-top: 3px;
                   color: var(--hdr); }
 .card .card-sub { font-size: 10px; color: var(--sub); margin-top: 2px; }
 
@@ -532,7 +538,7 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
 .ing-empty-icon { width: 44px; height: 44px; border-radius: 12px; display: flex;
                   align-items: center; justify-content: center; margin-bottom: 4px;
                   border: 1px solid var(--border); color: var(--sub); }
-.ing-empty-title { font-size: 14px; font-weight: 700; color: var(--hdr); }
+.ing-empty-title { font-size: 14px; font-weight: 500; color: var(--hdr); }
 .ing-empty-desc { font-size: 12px; color: var(--sub); line-height: 1.55; max-width: 380px; }
 .ing-empty-eg { font-size: 11px; color: var(--sub); opacity: .8; }
 #ana-table tbody tr:not(.cat-row):hover td,
@@ -547,33 +553,33 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
 #ana-table tbody tr.ana-row-over  > td:nth-child(2) { font-weight: 700; color: var(--fail-t); }
 /* 정보 계층: 영양소명(식별자) → 실측값(현재값)을 기준값(옅은 회색)보다 또렷하게 */
 #ana-table tbody td:nth-child(2) { font-weight: 600; color: var(--hdr); }
-#ana-table tbody td:nth-child(4) { font-weight: 700; }
+#ana-table tbody td:nth-child(4) { font-weight: 600; }
 /* 숫자 열 자릿수 정렬 통일 — 위아래 값 비교가 빠르도록 */
 #ana-table td { font-variant-numeric: tabular-nums; }
-th { background: var(--th-bg); color: var(--hdr); padding: 6px 6px;
+th { background: var(--th-bg); color: var(--hdr); padding: 7px 8px;
      text-align: center; position: sticky; top: 0; z-index: 10;
      white-space: nowrap; font-size: 10px; border: 1px solid var(--border);
-     font-weight: bold; }
-td { padding: 4px 6px; border-bottom: 1px solid var(--border);
+     font-weight: 600; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--border);
      border-right: 1px solid var(--border); white-space: nowrap;
      transition: background-color .3s ease; }
-tr.cat-row td { background: var(--th-bg); color: var(--hdr); font-weight: bold; font-size: 10px;
+tr.cat-row td { background: var(--th-bg); color: var(--hdr); font-weight: 600; font-size: 10px;
                 border-bottom: 2px solid var(--border); }
-tr.sec-row td { background: var(--sec); color: var(--hdr); font-weight: bold; }
+tr.sec-row td { background: var(--sec); color: var(--hdr); font-weight: 600; }
 tr:nth-child(even):not(.cat-row):not(.sec-row) td { background: var(--even); }
 tr:nth-child(odd):not(.cat-row):not(.sec-row) td { background: var(--odd); }
 tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !important; }
 /* 관리자 페이지 "사용자 목록" 표 — 아이디/이메일 길이에 따라 표·열 너비가 늘었다 줄었다 하는
    문제 방지: table-layout:fixed로 열 너비를 고정하고, 넘치는 텍스트는 말줄임표로 자른다.
    표는 항상 부모(콘텐츠 영역, max-width:640px) 폭 100%를 넘지 않는다 — 고정 폭(650px)을
-   주면 부모보다 넓어져 가로 스크롤이 생기므로 폭을 직접 지정하지 않는다. 아이디 열만 너비를
-   지정하지 않아 나머지 4개 고정 열을 뺀 남은 공간을 자동으로 차지한다(반응형). */
+   주면 부모보다 넓어져 가로 스크롤이 생기므로 폭을 직접 지정하지 않는다. 아이디/이름 열만
+   너비를 지정하지 않아 나머지 4개 고정 열을 뺀 남은 공간을 절반씩 자동으로 차지한다(반응형). */
 #admin-user-table-wrap { width: 100%; max-width: 100%; overflow-x: hidden; }
 #admin-user-table { table-layout: fixed; width: 100%; max-width: 100%; }
-#admin-user-table th:nth-child(2), #admin-user-table td:nth-child(2) { width: 85px; }
-#admin-user-table th:nth-child(3), #admin-user-table td:nth-child(3) { width: 145px; }
-#admin-user-table th:nth-child(4), #admin-user-table td:nth-child(4) { width: 60px; }
-#admin-user-table th:nth-child(5), #admin-user-table td:nth-child(5) { width: 135px; }
+#admin-user-table th:nth-child(3), #admin-user-table td:nth-child(3) { width: 85px; }
+#admin-user-table th:nth-child(4), #admin-user-table td:nth-child(4) { width: 145px; }
+#admin-user-table th:nth-child(5), #admin-user-table td:nth-child(5) { width: 60px; }
+#admin-user-table th:nth-child(6), #admin-user-table td:nth-child(6) { width: 135px; }
 #admin-user-table td, #admin-user-table th { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 /* 상태 셀 색상 — "초과"는 최소/최대 기준을 실제로 벗어난 상태이므로 --fail(빨강)을 쓴다.
    "주의"(근접이지만 아직 벗어나지 않음, 경고 패널 전용)만 별도 .warn 클래스로 --warn(노랑)을 쓴다
@@ -598,7 +604,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                       background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                       box-shadow: var(--sh-md);
                       transition: background .25s ease; align-self: stretch; }
-.ana-contrib-hdr h3 { font-size: var(--fs-title); font-weight: 700; color: var(--hdr); margin-bottom: 12px; }
+.ana-contrib-hdr h3 { font-size: var(--fs-title); font-weight: 600; color: var(--hdr); margin-bottom: 12px; }
 .ana-contrib-sub { font-size: 10px; color: var(--sub); margin-bottom: 12px; letter-spacing: .3px; }
 .ana-contrib-nutsel { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
 .ana-contrib-nutbtn { padding: 5px 10px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
@@ -615,12 +621,12 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .ana-contrib-bar-row:hover .ana-contrib-bar-name { color: var(--acc); }
 .ana-contrib-bar-toprow { display: flex; justify-content: space-between; align-items: baseline;
                            font-size: 11px; margin-bottom: 3px; gap: 8px; }
-.ana-contrib-bar-name { font-weight: 700; color: var(--text); transition: color .2s; white-space: nowrap;
+.ana-contrib-bar-name { font-weight: 500; color: var(--text); transition: color .2s; white-space: nowrap;
                          overflow: hidden; text-overflow: ellipsis; }
 .ana-contrib-bar-meta { color: var(--sub); font-size: 9.5px; white-space: nowrap; flex-shrink: 0; }
 .ana-contrib-bar-track { flex: 1; height: 14px; background: var(--gray-l); border-radius: 7px; overflow: hidden; }
 .ana-contrib-bar-fill { height: 100%; background: var(--acc); border-radius: 7px; transition: width .4s ease; }
-.ana-contrib-bar-pct { font-size: 10.5px; font-weight: 700; color: var(--acc); margin-left: 8px; width: 42px; text-align: right; flex-shrink: 0; }
+.ana-contrib-bar-pct { font-size: 10.5px; font-weight: 600; color: var(--acc); margin-left: 8px; width: 42px; text-align: right; flex-shrink: 0; }
 .ana-contrib-empty { font-size: 11px; color: var(--sub); text-align: center; padding: 30px 10px; line-height: 1.6; }
 
 .ana-contrib-detail { margin-top: 4px; margin-bottom: 16px; padding: 12px; background: var(--gray-l);
@@ -633,15 +639,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                                 overflow: hidden; text-overflow: ellipsis; }
 .ana-contrib-detail-row .track { flex: 1; height: 9px; background: var(--side); border-radius: 5px; overflow: hidden; }
 .ana-contrib-detail-row .fill { height: 100%; background: var(--acc2); }
-.ana-contrib-detail-row .val { width: 42px; text-align: right; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
+.ana-contrib-detail-row .val { width: 42px; text-align: right; font-weight: 600; color: var(--hdr); flex-shrink: 0; }
 .ana-contrib-detail-row.top .lbl, .ana-contrib-detail-row.top .val { color: var(--acc); }
 .ana-contrib-detail-row.top .fill { background: var(--acc); }
 
 .ana-contrib-heatmap-wrap { margin-top: 6px; }
-.ana-contrib-heatmap-wrap h4 { font-size: 11px; color: var(--hdr); margin-bottom: 8px; font-weight: 700; }
+.ana-contrib-heatmap-wrap h4 { font-size: 11px; color: var(--hdr); margin-bottom: 8px; font-weight: 600; }
 #ana-contrib-heatmap table, #amino-contrib-heatmap table { width: auto; font-size: 9.5px; }
 #ana-contrib-heatmap th, #amino-contrib-heatmap th { font-size: 9px; padding: 4px 7px; white-space: nowrap; }
-#ana-contrib-heatmap td, #amino-contrib-heatmap td { padding: 4px 7px; text-align: center; font-weight: 700; white-space: nowrap; }
+#ana-contrib-heatmap td, #amino-contrib-heatmap td { padding: 4px 7px; text-align: center; font-weight: 600; white-space: nowrap; }
 #ana-contrib-heatmap td.left, #amino-contrib-heatmap td.left { text-align: left; background: var(--side2) !important;
                                 color: var(--hdr); position: sticky; left: 0; }
 #ana-contrib-heatmap td.left { cursor: pointer; }
@@ -654,7 +660,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                  background: var(--side); border-bottom: 1px solid var(--border); flex-shrink: 0;
                  box-shadow: 0 1px 0 var(--border); position: relative; z-index: 1; }
 .mix-unit-item { display: flex; flex-direction: column; gap: 4px; }
-.mix-unit-item label { font-size: 9.5px; color: var(--sub); font-weight: 700;
+.mix-unit-item label { font-size: 9.5px; color: var(--sub); font-weight: 600;
                         text-transform: uppercase; letter-spacing: .4px; }
 .mix-unit-item select, .mix-unit-item input { font-size: 12px; padding: 6px 10px;
                  border: 1px solid var(--border); border-radius: 6px;
@@ -688,7 +694,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    보이는 부작용이 있었다. 대문자·자간 톤은 letter-spacing만으로 유지한다. */
 #mix-hdr > * { display: flex; align-items: center; justify-content: center;
                 padding: 7px 4px; color: var(--hdr); font-size: 9.5px;
-                font-weight: 700; text-align: center; flex-shrink: 0;
+                font-weight: 600; text-align: center; flex-shrink: 0;
                 letter-spacing: .3px;
                 border-right: 1px solid var(--mix-line); box-sizing: border-box; }
 /* 원료명(선택 영역) 칼럼과 배합비(입력 영역) 칼럼 사이, 그리고 배합비와 그 뒤 스크롤 영역
@@ -710,7 +716,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    .mix-table-wrap이 맡는다. 그러면 본문 행 sticky가 헤더와 동일하게 .mix-table-wrap 기준으로
    고정된다. flex도 0 0 auto로 바꿔 본문은 항상 내용 높이만큼만 차지한다. */
 #mix-body { flex: 0 0 auto; min-width: max-content; }
-.mix-row { display: flex; align-items: center; min-height: 34px; border-bottom: 1px solid var(--mix-line);
+.mix-row { display: flex; align-items: center; min-height: 36px; border-bottom: 1px solid var(--mix-line);
            transition: background-color .15s ease; padding-right: 20px; }
 .mix-row:nth-child(even) { background: var(--even); }
 .mix-row:nth-child(odd)  { background: var(--odd); }
@@ -738,7 +744,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                   cursor: pointer; text-align: left; }
 /* 원료명·배합비는 이 행에서 사용자가 "무엇을·얼마나" 결정하는 핵심 두 축이라 헤더도
    나머지 분석값 헤더보다 또렷하게(색 --hdr, weight 800). 값·색상 로직은 미변경. */
-#mix-hdr-name, #mix-hdr-ratio { color: var(--hdr); font-weight: 800; }
+#mix-hdr-name, #mix-hdr-ratio { color: var(--hdr); font-weight: 600; }
 /* 긴 KFOOD 원본 품목명(육류에 채소·부재료가 붙은 이름 등)이 원료명 칸을 벗어나 가로로
    튀어나오지 않도록, 한 줄 말줄임 대신 2줄까지 자연스럽게 줄바꿈해 보여준다.
    word-break:keep-all 로 한글 어절은 지키고, 아주 긴 토큰만 overflow-wrap 으로 강제 절단한다. */
@@ -786,7 +792,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 배합비(%) 입력은 이 행에서 실제로 "입력"하는 유일한 값이라 실제중량(자동 계산, 보조 정보)보다
    또렷하게 — font-weight/크기만 올리고 색은 그대로(계산 로직·값 자체는 미변경). */
 .mix-row input[type=number] { width: 100px; border: none; background: var(--inp);
-                               font-size: 12px; font-weight: 700; height: 34px; padding: 0 6px;
+                               font-size: 12px; font-weight: 600; height: 34px; padding: 0 6px;
                                font-family: inherit; text-align: right; color: var(--hdr);
                                outline: none; box-sizing: border-box;
                                box-shadow: inset 0 0 0 1px transparent;
@@ -820,7 +826,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
            font-size: 11px; display: flex; gap: 0; flex-shrink: 0;
            border-top: 2px solid var(--border);
            align-items: center; transition: border-color .35s ease, background-color .35s ease; }
-#tot-ratio { font-weight: 800; font-size: 13px; color: var(--text);
+#tot-ratio { font-weight: 600; font-size: 13px; color: var(--text);
              padding-right: 16px; margin-right: 16px;
              border-right: 1px solid var(--border); }
 #tot-me { font-size: 10.5px; color: var(--sub); font-weight: 400; }
@@ -833,7 +839,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    ══════════════════════════════════════════════════════════════════════════════ */
 
 /* ① 제품 컨텍스트를 헤더에서 또렷하게 (무엇을 만드는지) */
-#tab-mix .hdr-bar { padding: 12px 20px; }
+#tab-mix .hdr-bar { padding: 14px 24px; }
 #tab-mix #mix-product-context { color: var(--text); font-weight: 600; }
 
 /* ④ 헤더 버튼 우선순위: 행 추가(주요=청록) / 선택 삭제(위험) / 내보내기 3종(보조=중립 GitHub) */
@@ -846,10 +852,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #tab-mix .hdr-btns button.mix-btn-danger:hover { border-color: #B03A2E; background: #B03A2E; color: #fff; }
 #tab-mix .hdr-btns button[onclick^="loadRecipe"] { margin-left: 10px; }
 
-/* 제품/배합 설정 스트립 — 정렬(20px 거터)·라벨 타이포 정돈, 입력 테이블과 뚜렷이 구분 */
-#tab-mix .mix-unit-bar { padding: 12px 20px; gap: 20px; box-shadow: none; }
+/* 제품/배합 설정 스트립 — 정렬(24px 거터)·라벨 타이포 정돈, 입력 테이블과 뚜렷이 구분 */
+#tab-mix .mix-unit-bar { padding: 14px 24px; gap: 22px; box-shadow: none; }
 #tab-mix .mix-unit-item label { font-size: 10px; letter-spacing: .3px; }
-#tab-mix #mix-total-g { width: 84px; font-weight: 700; color: var(--hdr); }
+#tab-mix #mix-total-g { width: 84px; font-weight: 600; color: var(--hdr); }
 #tab-mix .mix-unit-hint { font-size: 10.5px; }
 
 /* ② 배합 원료 입력 테이블 = 화면의 핵심. 헤더/입력 행 구분을 또렷하게, 열 정렬을 셀 내용과 일치 */
@@ -900,7 +906,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .amino-lim-bar-row { margin-bottom: 12px; }
 .amino-lim-bar-toprow { display: flex; justify-content: space-between; align-items: baseline;
                          font-size: 11px; margin-bottom: 3px; gap: 8px; }
-.amino-lim-bar-name { font-weight: 700; color: var(--text); }
+.amino-lim-bar-name { font-weight: 500; color: var(--text); }
 .amino-lim-bar-meta { color: var(--sub); font-size: 9.5px; white-space: nowrap; flex-shrink: 0; }
 .amino-lim-bar-detail { font-size: 9.5px; color: var(--sub); margin: -1px 0 4px; }
 .amino-lim-bar-track { position: relative; flex: 1; height: 14px; background: var(--gray-l);
@@ -908,15 +914,15 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .amino-lim-bar-fill { height: 100%; border-radius: 7px; transition: width .4s ease; }
 .amino-lim-bar-fill.pass { background: var(--pass-t); }
 .amino-lim-bar-fill.fail { background: var(--fail-t); }
-.amino-lim-bar-pct { font-size: 10.5px; font-weight: 700; width: 46px; text-align: right; flex-shrink: 0; }
+.amino-lim-bar-pct { font-size: 10.5px; font-weight: 600; width: 46px; text-align: right; flex-shrink: 0; }
 .amino-lim-badge { font-size: 9px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: 6px; }
 .amino-lim-badge.fail { background: var(--fail-bg); color: var(--fail-t); }
 .amino-lim-100line { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--sub);
                       opacity: .55; z-index: 1; cursor: help; }
 .amino-lim-100caption { font-size: 9px; color: var(--sub); text-align: right; margin: 2px 0 4px; cursor: help; }
 .amino-lim-card { border-top: 1px solid var(--border); margin-top: 4px; padding-top: 14px; }
-.amino-lim-card .lbl { font-size: 10px; font-weight: 700; color: var(--sub); letter-spacing: .4px; margin-bottom: 6px; }
-.amino-lim-card .name { font-size: 14px; font-weight: 700; }
+.amino-lim-card .lbl { font-size: 10px; font-weight: 600; color: var(--sub); letter-spacing: .4px; margin-bottom: 6px; }
+.amino-lim-card .name { font-size: 14px; font-weight: 600; }
 .amino-lim-card .meta { font-size: 12px; color: var(--sub); margin-top: 2px; }
 .amino-lim-card .note { font-size: 10.5px; color: var(--sub); margin-top: 8px; line-height: 1.5; }
 .vitk-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px;
@@ -981,7 +987,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                           --table-hdr-bg: color-mix(in srgb, var(--th-bg), var(--sub) 6%);
                           border-color: var(--table-line); }
 #ing-table th, #std-table th { border-color: var(--table-line); background: var(--table-hdr-bg);
-                                 font-weight: 700; padding: 5px 6px; }
+                                 font-weight: 600; padding: 5px 6px; }
 #ing-table td, #std-table td { border-color: var(--table-line); padding: 3px 6px; }
 #ing-table tr.cat-row td, #std-table tr.cat-row td { border-bottom: 1px solid var(--table-line); }
 #ing-table tbody tr:not(.cat-row):hover td, #std-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
@@ -1089,7 +1095,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .modal { background: var(--panel-grad); border: 1px solid var(--panel-border); border-radius: var(--radius-lg); width: 560px; max-height: 80vh;
          overflow-y: auto; box-shadow: var(--sh-md), 0 0 0 1px rgba(255,255,255,0.06); }
 .modal-hdr { background: var(--gray-l); color: var(--hdr); padding: 18px 24px;
-             font-size: 14px; font-weight: 800; display: flex;
+             font-size: 14px; font-weight: 600; display: flex;
              justify-content: space-between; align-items: center; gap: 12px;
              border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom: 1px solid var(--border);
              position: sticky; top: 0; z-index: 2; }
@@ -1114,7 +1120,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 확인/저장(.btn-save)=주요 동작(포인트 컬러 채움), 취소/닫기(.btn-cancel)=보조 동작(아웃라인) —
    나머지 화면(헤더 툴바·원료DB 툴바 등)과 같은 사각형 소형 radius로 통일(기존 999px 알약형 제거) */
 .modal-footer button { padding: 0 20px; height: 32px; border: none; border-radius: 6px;
-                        font-size: 11px; font-weight: 700; cursor: pointer;
+                        font-size: 11px; font-weight: 500; cursor: pointer;
                         font-family: inherit; transition: filter .2s ease, background-color .15s ease, transform .18s ease; }
 .modal-footer button:hover { filter: brightness(1.05); }
 .modal-footer button:active { transform: scale(0.97); }
@@ -1124,7 +1130,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* 상단 툴바 버튼(#top-recipe-save-btn / .top-recipe-btn-sub)과 톤을 맞춘 크기·폰트·여백 —
    색상 구분(편집=중립/삭제=경고/등록=강조)은 .btn-cancel·.btn-save와 개별 경고색으로 유지한다. */
-#stdverify-custom-bar button { font-size: 11px; font-weight: 700; border-radius: 6px;
+#stdverify-custom-bar button { font-size: 11px; font-weight: 500; border-radius: 6px;
                                  padding: 6px 12px; font-family: inherit; white-space: nowrap;
                                  cursor: pointer; transition: filter .2s ease; }
 #stdverify-custom-bar button:hover { filter: brightness(1.08); }
@@ -1150,21 +1156,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    분석·원료 DB·영양기준 DB처럼 가로로 긴 표가 필요한 화면은 이 클래스를 쓰지 않으므로
    영향받지 않는다. */
 .dash-panel { background: var(--panel-bg);
-              padding: 24px; transition: background .25s ease;
+              padding: 26px; transition: background .25s ease;
               word-break: keep-all; overflow-wrap: break-word;
               max-width: 1400px; margin: 0 auto; }
 /* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
    창이 좁아져 카드 폭이 최소치보다 줄어들면 다음 줄로 자연스럽게 내려간다. */
-.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; align-items: stretch; }
 
 /* ── 분석 현황: 카드를 4개 그룹으로 묶는 래퍼 — 그룹 내부는 .dash-grid와 동일한
    auto-fit 2열 규칙을 쓰되(좁아지면 1열로 자연 전환), 그룹 간에는 카드 간격(16px)보다
    넉넉한 "섹션 간" 여백(24px)을 둬 그룹 경계를 시각적으로 구분한다. display:contents 없이
    일반 래퍼로 구성해 각 그룹이 독립적인 레이아웃 박스를 갖는다. */
 .ana-group-list { display: flex; flex-direction: column; gap: 24px; }
-.ana-group-title { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+.ana-group-title { font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase;
                     letter-spacing: .5px; margin-bottom: 10px; }
-.ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; align-items: stretch; }
+.ana-group-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; align-items: stretch; }
 /* 단독으로 두면 한 줄에 하나씩 떨어져 가로로 길어지는 요약 카드들(주요 영양소 빠른 확인 /
    아미노산 스코어 / 경고 요약)을 데스크톱에서 2열 균등 배치. 900px 이하는 기존처럼 1열. */
 .ana-group-grid.ana-grid-2col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1182,7 +1188,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    height:100%로 한 행 안에서 높이가 동일하게 맞춰진다(내용이 짧은 원료 상위 구성도
    옆 카드 높이에 맞춰 늘어남). 좁은 화면(≤900px)에서는 1열로 떨어진다.
    .ana-group-grid의 stretch와 무관하게 두도록 독립된 grid 행으로 유지. */
-.ana-trio-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
+.ana-trio-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
 .ana-trio-row > .dash-section { min-width: 0; height: 100%; }
 @media (max-width: 900px) {
   .ana-trio-row { grid-template-columns: 1fr; }
@@ -1190,7 +1196,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-section { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  box-shadow: var(--sh); padding: 16px; display: flex; flex-direction: column;
                  box-sizing: border-box; }
-.dash-section h3 { font-size: var(--fs-title); font-weight: 700; color: var(--hdr);
+.dash-section h3 { font-size: var(--fs-title); font-weight: 500; color: var(--hdr);
                     margin-bottom: 12px; border-bottom: 1px solid var(--border);
                     padding-bottom: 4px; }
 .dash-section h3 .linkable { cursor: pointer; transition: color .35s ease; }
@@ -1199,13 +1205,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .product-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .product-info-box { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
              padding: 12px 14px; box-shadow: var(--sh); }
-.product-info-box .pi-label { font-size: 10px; color: var(--sub); margin-bottom: 5px; font-weight: 700; }
-.product-info-box .pi-val { font-size: 13px; font-weight: 700; color: var(--hdr); line-height: 1.3;
+.product-info-box .pi-label { font-size: 10px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
+.product-info-box .pi-val { font-size: 13px; font-weight: 600; color: var(--hdr); line-height: 1.3;
              word-break: keep-all; overflow-wrap: break-word; }
 .dash-kpi { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
              padding: 12px 14px; box-shadow: var(--sh); position: relative; overflow: hidden; }
 .dash-kpi .kpi-label { font-size: var(--fs-meta); color: var(--sub); margin-bottom: 4px; }
-.dash-kpi .kpi-val { font-size: 18px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
+.dash-kpi .kpi-val { font-size: 18px; font-weight: 600; color: var(--hdr); line-height: 1.2; }
 .dash-kpi .kpi-unit { font-size: var(--fs-meta); color: var(--sub); margin-top: 2px; }
 /* 분석 현황 탭("핵심 지표"/"일일 급여량")의 .dash-kpi만 미니 카드 chrome(배경/테두리/
    shadow)을 걷어낸다 — .dash-kpi는 제품/에너지분석/기준검증 탭에서도 쓰는 공용
@@ -1222,13 +1228,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    두어 각 컬럼이 자기 카드들의 실제 높이만큼만 차지하게 한다.
    왼쪽: 기본 정보 → 영양 계산 설정 / 오른쪽: 생활 및 건강 정보 → 최근 레시피.
    flex-wrap으로 좁은 화면에서는 컬럼이 아래로 떨어져 자연스럽게 1열이 된다. */
-.dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 16px; }
-.dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.dash-bottom-grid { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 18px; }
+.dash-bottom-col { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
 #tab-dash .dash-bottom-grid .dash-section { min-width: 0; }
 /* 대시보드 하단(탭-대시보드)과 분석 현황 탭의 카드는 상단 KPI/Hero Card와 같은 톤으로 —
    padding 22px, 제목은 eyebrow(작은 uppercase + 청록 accent dot)로 통일한다. .dash-section
    자체는 다른 탭(제품/배합 등)에서도 쓰는 공용 클래스라 여기 두 탭에만 스코프를 좁힌다. */
-#tab-dash .dash-section, #tab-analysis .dash-section { padding: 22px; }
+#tab-dash .dash-section, #tab-analysis .dash-section { padding: 24px; }
 #tab-dash .dash-section h3, #tab-analysis .dash-section h3 {
   font-size: 10.5px; font-weight: 600; color: var(--sub);
   text-transform: uppercase; letter-spacing: .4px; }
@@ -1273,7 +1279,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-recent-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
                      flex: 1; min-width: 0; text-align: left; background: none;
                      border: none; border-radius: 0; padding: 0; cursor: pointer; font-family: inherit; box-shadow: none; }
-.dash-recent-name { max-width: 100%; font-size: 12.5px; font-weight: 700; color: var(--hdr);
+.dash-recent-name { max-width: 100%; font-size: 12.5px; font-weight: 500; color: var(--hdr);
                      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dash-recent-meta { font-size: 10px; font-weight: 500; color: var(--sub); }
 /* 레시피 이름 검색 — 카드 안에서만 쓰는 로컬 필터(저장/불러오기 로직과 무관, 표시만 걸러냄).
@@ -1294,7 +1300,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    — .ing-toolbar button.active와 같은 절제된 패턴(포커스 링에 쓰는 --calc 재사용). */
 .dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 10px; }
 .dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
-.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); font-weight: 700; }
+.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); font-weight: 500; }
 /* 항목별 즐겨찾기 별 버튼(☆/★) — 더 이상 자기 박스를 갖지 않는 절제된 아이콘 버튼 */
 .dash-fav-toggle-btn { width: 26px; height: 26px; flex-shrink: 0; padding: 0;
                         display: flex; align-items: center; justify-content: center;
@@ -1309,10 +1315,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
              border-radius: 8px; margin-bottom: 6px; font-size: 11px; }
 .stdverify-deficit-item.fail { background: var(--fail-bg); }
 .stdverify-deficit-item.over { background: var(--warn-bg); }
-.stdverify-deficit-name { font-weight: 700; color: var(--hdr); flex-shrink: 0; min-width: 130px; }
+.stdverify-deficit-name { font-weight: 500; color: var(--hdr); flex-shrink: 0; min-width: 130px; }
 .stdverify-deficit-detail { color: var(--text); font-size: 10.5px; }
-.stdverify-deficit-group-label { font-size: 10.5px; font-weight: 700; margin: 6px 0 4px; }
-.stdverify-cust-cat { font-size: 10px; font-weight: 700; color: var(--sub); margin: 10px 0 4px; }
+.stdverify-deficit-group-label { font-size: 10.5px; font-weight: 600; margin: 6px 0 4px; }
+.stdverify-cust-cat { font-size: 10px; font-weight: 600; color: var(--sub); margin: 10px 0 4px; }
 .stdverify-cust-row { display: grid; grid-template-columns: 1fr 90px 90px; gap: 6px; align-items: center; margin-bottom: 5px; }
 .stdverify-cust-row input { padding: 6px 8px; border: 1px solid var(--border); font-size: 11px;
              font-family: inherit; color: var(--text); background: var(--side2); outline: none; border-radius: 6px;
@@ -1327,10 +1333,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-section > .accent-card > .settings-actions { margin-top: auto; }
 .dash-comp-card { background: none; border: none; box-shadow: none; padding: 8px 0; }
 .dash-comp-card + .dash-comp-card { border-top: 1px solid var(--border); }
-.comp-title { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+.comp-title { font-size: 10px; font-weight: 600; margin-bottom: 3px; }
 .dash-comp-stat { display: flex; justify-content: space-between; align-items: center;
                    padding: 1px 0; font-size: 10px; }
-.dash-comp-stat .cs-val { font-weight: 700; font-size: 11px; }
+.dash-comp-stat .cs-val { font-weight: 600; font-size: 11px; }
 .cs-pass { color: var(--pass-t); }
 .cs-fail { color: var(--fail-t); }
 .cs-over { color: var(--fail-t); }
@@ -1343,7 +1349,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                     display: flex; flex-direction: column; gap: 3px;
                     justify-content: center; align-items: center; text-align: center; }
 .qi-name { font-size: var(--fs-meta); color: var(--hdr); line-height: 1.2; }
-.qi-value { font-size: 10px; font-weight: 700; color: var(--hdr); line-height: 1.2; }
+.qi-value { font-size: 10px; font-weight: 600; color: var(--hdr); line-height: 1.2; }
 /* ── 상태 배지 표준 컴포넌트 — 정상/부족/초과/주의/참고/미함유(평가 제외 포함)를
    앱 전체에서 이 하나의 모양(아이콘+문구, radius 3px)으로 통일한다. 색은 기존
    --pass/--fail/--warn 토큰 그대로: 부족·초과 모두 --fail(실제 기준 위반), 주의만
@@ -1361,13 +1367,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cap-bar { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
                  padding: 10px 14px; box-shadow: var(--sh);
                  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.dash-cap-label { font-size: 11px; font-weight: 700; color: var(--hdr); }
+.dash-cap-label { font-size: 11px; font-weight: 600; color: var(--hdr); }
 .dash-cap-badge { font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 4px; }
 
 /* ── 대시보드: 제품 유형 카드 + 요약 통계 타일을 한 줄로(좌: 카드, 우: 2x2) ──
    이 둘과 아래 프로필 카드(.dash-section)를 같은 radius/그림자(--radius-md/--sh)로
    통일해, 카드마다 무게감이 달라 보이던 것을 하나의 톤으로 정리한다. */
-.dash-top-row { display: flex; align-items: stretch; gap: 16px; margin-bottom: 16px; }
+.dash-top-row { display: flex; align-items: stretch; gap: 18px; margin-bottom: 18px; }
 .dash-top-row .ptype-card { flex: 1.3; min-width: 0; margin-bottom: 0; }
 .dash-top-row .dash-stat-row { flex: 1; min-width: 0; margin-bottom: 0; }
 
@@ -1382,22 +1388,27 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    유무 등) 4개 카드의 링크가 같은 높이에 맞춰진다. 상태(pass/warn/fail)에 따른
    카드 배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
 .dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; margin-bottom: 10px; }
+/* 카드 자체는 기존 색 토큰(--side2/--border/--radius-md) 그대로 쓰되, 전역 --sh(그림자 없음)
+   대신 이 카드에만 아주 옅은 elevation을 얹어 border만으로 밋밋하게 보이던 것을 보완한다
+   (색상 토큰이 아닌 하드코딩 shadow라 다른 카드/패널에는 영향 없음). */
 .dash-stat-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
-                   border-radius: var(--radius-md); box-shadow: var(--sh); padding: 22px; position: relative; overflow: hidden; }
+                   border-radius: var(--radius-md); box-shadow: 0 1px 2px rgba(17,27,40,0.05);
+                   padding: 20px 22px; position: relative; overflow: hidden; }
 /* EYEBROW — ptype-card-label과 같은 톤(10px/500/대문자) + 같은 청록 accent 점 하나만 */
 .dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500;
-                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
 .dash-stat-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
-/* PRIMARY VALUE — 카드의 핵심 정보. ptype-card-type(31px)보다 확실히 낮은 27px로,
-   두 히어로급 텍스트가 화면에서 서로 경쟁하지 않도록 위계 한 단계 아래에 둔다. */
-.dash-stat-val { font-size: 27px; font-weight: 700; color: var(--hdr); line-height: 1.2; letter-spacing: -.4px; }
-.dash-stat-unit { font-size: 12px; color: var(--sub); margin-left: 4px; font-weight: 500; letter-spacing: 0; }
-.dash-stat-sub { font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 6px; line-height: 1.5; }
-.dash-stat-link { font-size: 10.5px; font-weight: 700; color: var(--acc); cursor: pointer; margin-top: auto;
-                   padding-top: 12px; display: inline-block; transition: color .2s ease; }
+/* PRIMARY VALUE — 카드의 핵심 정보. ptype-card-type(31px)보다 낮은 위계는 유지하되,
+   tabular-nums로 자릿수를 맞춰 숫자가 먼저 눈에 들어오는 데이터 대시보드 톤을 준다. */
+.dash-stat-val { font-size: 28px; font-weight: 600; color: var(--hdr); line-height: 1.15; letter-spacing: -.5px;
+                  font-variant-numeric: tabular-nums; }
+.dash-stat-unit { font-size: 12px; color: var(--sub); margin-left: 5px; font-weight: 500; letter-spacing: 0; }
+.dash-stat-sub { font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 8px; line-height: 1.5; }
+.dash-stat-link { font-size: 10.5px; font-weight: 500; color: var(--acc); cursor: pointer; margin-top: auto;
+                   padding-top: 14px; display: inline-block; transition: color .2s ease; }
 .dash-stat-link:hover { color: var(--acc2); }
 .dash-stat-track { width: 100%; height: 6px; background: var(--gray-l); border-radius: 999px;
-                    margin-top: 10px; overflow: hidden; }
+                    margin-top: 12px; overflow: hidden; }
 .dash-stat-fill { height: 100%; border-radius: 999px; background: var(--pass-t); transition: width .4s ease; }
 /* #ds-overall-card/#ds-warn-card는 진행바 톤 계산을 위해 JS가 pass/warn/fail 클래스를
    계속 토글한다(판정 로직·집계는 그대로) — 다만 이 클래스명이 표 셀 상태색 유틸리티
@@ -1419,7 +1430,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* ── 대시보드 개편: 빠른 작업 · 설정 아코디언 · 상태 강조 ──
    HTML 구조상의 ID·이벤트·JS 렌더 대상은 모두 그대로. 배치와 시각 위계만 조정한다. */
 .dash-quick-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 18px; }
-.dash-qa-label { font-size: 10px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+.dash-qa-label { font-size: 10px; font-weight: 600; color: var(--sub); text-transform: uppercase;
                  letter-spacing: .5px; margin-right: 4px; }
 .dash-qa-btn { font-size: 11px; font-weight: 600; color: var(--text); background: var(--side2);
                border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; cursor: pointer;
@@ -1431,7 +1442,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-settings-acc { border: 1px solid var(--border); border-radius: var(--radius-md);
                      background: var(--side2); box-shadow: var(--sh); overflow: hidden; margin-top: 18px; }
 .dash-settings-acc > summary { list-style: none; cursor: pointer; padding: 14px 18px; user-select: none;
-                               font-size: var(--fs-title); font-weight: 700; color: var(--hdr);
+                               font-size: var(--fs-title); font-weight: 500; color: var(--hdr);
                                display: flex; align-items: center; gap: 8px; }
 .dash-settings-acc > summary::-webkit-details-marker { display: none; }
 .dash-settings-acc > summary::before { content: '\25B8'; color: var(--sub); font-size: 11px;
@@ -1448,8 +1459,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* GitHub 스타일 화이트 UI는 이제 라이트 테마 토큰(css/variables.css :root)에서 전역으로 처리한다.
    여기서는 대시보드 고유의 타이포 강조와 보조 영역 배경만 유지한다(색 아닌 굵기로 위계). */
 #tab-dash .dash-settings-body { background: var(--gray-l); }
-#tab-dash .dash-stat-val { font-weight: 800; }
-#tab-dash .ptype-card-type { font-weight: 800; }
+#tab-dash .dash-stat-val { font-weight: 600; }
+#tab-dash .ptype-card-type { font-weight: 600; }
 
 /* ── 대시보드: 막대 차트(영양소/아미노산 충족률) ── */
 .dash-bar-list { display: flex; flex-direction: column; justify-content: center; gap: 7px; flex: 1; }
@@ -1457,7 +1468,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-bar-label { font-size: 10px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dash-bar-track { position: relative; height: 8px; background: var(--gray-l); border-radius: 999px; overflow: hidden; }
 .dash-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; transition: width .4s ease; }
-.dash-bar-pct { font-size: 10px; font-weight: 700; color: var(--hdr); text-align: right; }
+.dash-bar-pct { font-size: 10px; font-weight: 600; color: var(--hdr); text-align: right; }
 .dash-bar-axis { display: flex; justify-content: space-between; font-size: 9px; color: var(--sub);
                   margin-top: 6px; padding-left: 74px; }
 
@@ -1468,8 +1479,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                    min-width: 76px; box-shadow: var(--sh); }
 .ae-fc-label { font-size: 9px; color: var(--sub); white-space: nowrap; }
 .ae-fc-name  { font-size: 10px; font-weight: 600; color: var(--text); margin-top: 2px; white-space: nowrap; }
-.ae-fc-val   { font-size: 14px; font-weight: 700; color: var(--hdr); margin-top: 2px; }
-.ae-fc-op    { font-size: 14px; font-weight: 700; color: var(--sub); }
+.ae-fc-val   { font-size: 14px; font-weight: 600; color: var(--hdr); margin-top: 2px; }
+.ae-fc-op    { font-size: 14px; font-weight: 600; color: var(--sub); }
 .ae-fc-final { background: var(--calc); border-color: var(--acc); }
 #ae-calorie-bars.dash-bar-list .dash-bar-row { grid-template-columns: 66px 1fr 148px; }
 #ae-calorie-bars .dash-bar-pct { white-space: nowrap; }
@@ -1488,10 +1499,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cb-badge-desc { color: var(--sub); margin-right: 10px; }
 .cb-subgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 4px; }
 .cb-subcard { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; box-shadow: var(--sh); }
-.cb-subtitle { font-size: 10.5px; font-weight: 700; color: var(--hdr); margin-bottom: 6px; }
+.cb-subtitle { font-size: 10.5px; font-weight: 600; color: var(--hdr); margin-bottom: 6px; }
 .cb-mini-table { width: 100%; font-size: 10.5px; border-collapse: collapse; }
 .cb-mini-table td { padding: 3px 4px; border-bottom: 1px solid var(--border); white-space: normal; }
-.cb-mini-table td:last-child { text-align: right; font-weight: 700; color: var(--hdr); }
+.cb-mini-table td:last-child { text-align: right; font-weight: 600; color: var(--hdr); }
 .cb-table { margin-bottom: 4px; }
 .cb-table th, .cb-table td { font-size: 10.5px; white-space: normal; }
 
@@ -1509,13 +1520,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .gl-chip:hover { border-color: var(--acc); color: var(--acc); }
 .gl-chip.active { background: var(--acc); color: #fff; border-color: var(--acc); }
 .gl-groups { display: flex; flex-direction: column; gap: 16px; }
-.gl-cat-hdr { font-size: 11px; font-weight: 700; color: var(--sub); text-transform: uppercase;
+.gl-cat-hdr { font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase;
               letter-spacing: .6px; margin: 2px 2px 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
 .gl-group-items { display: flex; flex-direction: column; gap: 8px; }
 .gl-entry { background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
             padding: 13px 16px; box-shadow: var(--sh); }
 .gl-entry-hdr { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
-.gl-term { font-size: 14.5px; font-weight: 800; color: var(--hdr); }
+.gl-term { font-size: 14.5px; font-weight: 600; color: var(--hdr); }
 .gl-abbr { font-size: 11px; font-weight: 500; color: var(--sub); font-style: italic; }
 .gl-def { font-size: 12px; color: var(--text); line-height: 1.65; }
 .gl-def b { color: var(--hdr); }
@@ -1527,7 +1538,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    외부링크만 최소로 추가. 모든 요소가 카드 폭 안에서 줄바꿈되어 좁은 화면에서도 가로 스크롤이
    생기지 않는다(고정 폭·nowrap 없음). */
 .law-acc { border: 1px solid var(--border); border-radius: 8px; background: var(--side2); margin-bottom: 8px; overflow: hidden; }
-.law-acc > summary { list-style: none; cursor: pointer; padding: 9px 12px; font-size: 11.5px; font-weight: 700;
+.law-acc > summary { list-style: none; cursor: pointer; padding: 9px 12px; font-size: 11.5px; font-weight: 500;
                      color: var(--hdr); display: flex; align-items: center; gap: 8px; user-select: none; }
 .law-acc > summary::-webkit-details-marker { display: none; }
 .law-acc > summary::before { content: '▸'; color: var(--sub); font-size: 10px; flex-shrink: 0; transition: transform .15s ease; }
@@ -1592,7 +1603,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .lbl-table { display: flex; flex-direction: column; gap: 4px; }
 .lbl-row { display: grid; grid-template-columns: minmax(0,1.4fr) 64px minmax(0,1.6fr); gap: 8px; align-items: center;
   padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--side2); font-size: 11px; }
-.lbl-row-hd { background: var(--gray-l); font-weight: 700; color: var(--sub); font-size: 9.5px;
+.lbl-row-hd { background: var(--gray-l); font-weight: 600; color: var(--sub); font-size: 9.5px;
   text-transform: uppercase; letter-spacing: .3px; }
 .lbl-row .lbl-num { text-align: right; font-variant-numeric: tabular-nums; color: var(--hdr); font-weight: 600; }
 .lbl-dbn { min-width: 0; overflow-wrap: anywhere; color: var(--text); }
@@ -1604,7 +1615,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .lbl-unit { font-size: 10px; color: var(--sub); white-space: nowrap; flex-shrink: 0; }
 .lbl-preview { border: 1px solid var(--border); border-radius: 8px; background: var(--side2);
   padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; }
-.lbl-pv-name { font-size: 15px; font-weight: 800; color: var(--hdr); padding-bottom: 8px;
+.lbl-pv-name { font-size: 15px; font-weight: 600; color: var(--hdr); padding-bottom: 8px;
   border-bottom: 1px solid var(--border); margin-bottom: 4px; overflow-wrap: anywhere; }
 .lbl-pv-line { display: grid; grid-template-columns: 112px 1fr; gap: 8px; font-size: 11px; line-height: 1.55; }
 .lbl-pv-k { color: var(--sub); font-weight: 600; }
@@ -1646,7 +1657,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
    충분한 line-height로 숨 쉴 공간을 두고, 아래 여백(margin-bottom)으로 한 번 더
    "이게 이 카드의 결론"이라는 단락감을 만든다. 영문명은 대문자+letter-spacing의
    작은 캡션 톤으로 확실히 낮춰 PRIMARY와 경쟁하지 않게 한다. */
-.ptype-card-type { font-size: 31px; font-weight: 700; color: var(--hdr); letter-spacing: -.6px;
+.ptype-card-type { font-size: 31px; font-weight: 600; color: var(--hdr); letter-spacing: -.6px;
                     line-height: 1.25; margin-bottom: 6px; }
 .ptype-card-type-en { font-size: 10px; color: var(--sub); font-weight: 600; letter-spacing: .4px;
                        text-transform: uppercase; margin-bottom: 12px; }
@@ -1660,18 +1671,18 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .ptype-card-stat { font-size: 10px; color: var(--sub); padding-right: 20px; margin-right: 20px;
                     border-right: 1px solid var(--border); }
 .ptype-card-stat:last-child { padding-right: 0; margin-right: 0; border-right: none; }
-.ptype-card-stat b { display: block; color: var(--hdr); font-size: 15px; font-weight: 700; letter-spacing: -.2px; margin-top: 3px; }
+.ptype-card-stat b { display: block; color: var(--hdr); font-size: 15px; font-weight: 600; letter-spacing: -.2px; margin-top: 3px; }
 .ptype-confidence { font-size: 10px; font-weight: 700; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
 .ptype-confidence.conf-high   { background: var(--pass-bg); color: var(--pass-t); }
 .ptype-confidence.conf-medium { background: var(--warn-bg); color: var(--warn-t); }
 .ptype-confidence.conf-low    { background: var(--fail-bg); color: var(--fail-t); }
-.ptype-evidence-btn { padding: 6px 14px; font-size: 10.5px; font-weight: 700; border-radius: 999px; cursor: pointer;
+.ptype-evidence-btn { padding: 6px 14px; font-size: 10.5px; font-weight: 500; border-radius: 999px; cursor: pointer;
                        border: 1px solid var(--border); background: var(--side); color: var(--text); white-space: nowrap;
                        font-family: inherit; transition: background .2s ease, color .2s ease; }
 .ptype-evidence-btn:hover { background: var(--acc); color: #fff; border-color: var(--acc); }
 
 .ptype-evidence-section { margin-bottom: 14px; }
-.ptype-evidence-section h4 { font-size: 11px; color: var(--hdr); margin-bottom: 6px; font-weight: 800; }
+.ptype-evidence-section h4 { font-size: 11px; color: var(--hdr); margin-bottom: 6px; font-weight: 600; }
 .ptype-evidence-list { font-size: 11px; color: var(--text); line-height: 1.7; padding-left: 16px; margin: 0; }
 .ptype-evidence-kv { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px dashed var(--border); }
 .ptype-evidence-kv b { color: var(--hdr); }
@@ -1701,7 +1712,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .dash-donut::before { content: ''; position: absolute; inset: 14px; border-radius: 50%; background: var(--side2); }
 .dash-donut-center { position: absolute; inset: 0; display: flex; flex-direction: column;
                       align-items: center; justify-content: center; text-align: center; }
-.dash-donut-val { font-size: var(--fs-metric); font-weight: 700; color: var(--hdr); position: relative; z-index: 1; }
+.dash-donut-val { font-size: var(--fs-metric); font-weight: 600; color: var(--hdr); position: relative; z-index: 1; }
 .dash-donut-sub { font-size: var(--fs-meta); color: var(--sub); margin-top: 10px; text-align: center; }
 .dash-donut-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; padding: 3px 12px; border-radius: 3px; margin-top: 6px; }
 .dash-donut-badge svg { flex-shrink: 0; }
@@ -1709,7 +1720,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .dash-legend-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text); }
 .dash-legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .dash-legend-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dash-legend-pct { font-weight: 700; color: var(--hdr); }
+.dash-legend-pct { font-weight: 600; color: var(--hdr); }
 
 /* ── 대시보드: 경고 요약 리스트 ── */
 .dash-warn-list { display: flex; flex-direction: column; gap: 6px; }
@@ -1719,7 +1730,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .dash-warn-badge svg { flex-shrink: 0; }
 .dash-warn-badge.critical { background: var(--fail-bg); color: var(--fail-t); }
 .dash-warn-badge.warning { background: var(--warn-bg); color: var(--warn-t); }
-.dash-warn-name { font-size: 11px; font-weight: 700; color: var(--hdr); flex-shrink: 0; }
+.dash-warn-name { font-size: 11px; font-weight: 500; color: var(--hdr); flex-shrink: 0; }
 .dash-warn-desc { font-size: 9.5px; color: var(--sub); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dash-warn-empty { font-size: 11px; color: var(--sub); text-align: center; padding: 20px 0; }
 

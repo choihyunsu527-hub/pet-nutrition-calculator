@@ -70,18 +70,23 @@ Deno.serve(async (req) => {
   let targetUserId = '';
   let role: string | undefined;
   let password: string | undefined;
+  let name: string | undefined;
   try {
     const body = await req.json();
     targetUserId = typeof body?.targetUserId === 'string' ? body.targetUserId : '';
     role = typeof body?.role === 'string' ? body.role : undefined;
     password = typeof body?.password === 'string' && body.password.length > 0 ? body.password : undefined;
+    name = typeof body?.name === 'string' ? body.name.trim() : undefined;
   } catch {
     return json({ error: '요청 본문이 올바르지 않습니다.' }, 400);
   }
   if (!targetUserId) return json({ error: '대상 사용자를 확인할 수 없습니다.' }, 400);
   if (role !== undefined && !ALLOWED_ROLES.includes(role)) return json({ error: '올바르지 않은 권한입니다.' }, 400);
   if (password !== undefined && password.length < 4) return json({ error: '비밀번호는 4자 이상이어야 합니다.' }, 400);
-  if (role === undefined && password === undefined) return json({ error: '변경할 내용이 없습니다.' }, 400);
+  if (name !== undefined && !name) return json({ error: '이름을 입력하세요.' }, 400);
+  if (role === undefined && password === undefined && name === undefined) {
+    return json({ error: '변경할 내용이 없습니다.' }, 400);
+  }
 
   // 4) 본인 권한 변경 차단 — 실수로 스스로를 강등/승급시키는 것을 막는다.
   if (role !== undefined && targetUserId === user.id) {
@@ -94,13 +99,18 @@ Deno.serve(async (req) => {
     if (pwErr) return json({ error: pwErr.message }, 400);
   }
 
-  // 6) 권한 변경
-  if (role !== undefined) {
-    const { error: roleErr } = await admin
+  // 6) 권한/이름 변경 — profiles에는 update 정책이 없어(001_profiles_role.sql) 일반
+  //    사용자는 스스로 이름을 바꿀 수 없고, 오직 이 Edge Function(service_role)을 통해
+  //    super_admin만 변경할 수 있다.
+  if (role !== undefined || name !== undefined) {
+    const patch: Record<string, string> = {};
+    if (role !== undefined) patch.role = role;
+    if (name !== undefined) patch.name = name;
+    const { error: profileErr } = await admin
       .from('profiles')
-      .update({ role })
+      .update(patch)
       .eq('id', targetUserId);
-    if (roleErr) return json({ error: roleErr.message }, 400);
+    if (profileErr) return json({ error: profileErr.message }, 400);
   }
 
   return json({ ok: true });
