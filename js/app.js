@@ -522,9 +522,9 @@ function updateWarnPanel(result, pc) {
   if (!policy.evalMaxExcess) {
     lastWarnItems = [];
     document.getElementById('warn-body').innerHTML =
-      `<tr><td colspan="8" class="table-empty-row">
+      `<tr><td colspan="8" class="table-empty-row"><span class="ter-inner">${svgIcon('info', 13)}<span>
         ${pc.short} 유형으로 판단되어 일반 식품 기준의 과다·안전성 평가를 적용하지 않습니다.
-      </td></tr>`;
+      </span></span></td></tr>`;
     renderDashWarnSummary('warn-summary-list');
     return;
   }

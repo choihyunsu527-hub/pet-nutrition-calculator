@@ -546,13 +546,13 @@ function renderStdVerify(result, pc) {
   const deficitEl = document.getElementById('stdverify-deficit-list');
 
   if (!result || !(result.totalRatio > 0)) {
-    tbody.innerHTML = `<tr><td colspan="7" class="table-empty-row">배합 설계 탭에서 원료를 먼저 입력하세요.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="table-empty-row"><span class="ter-inner">${svgIcon('info', 13)}<span>배합 설계 탭에서 원료를 먼저 입력하세요.</span></span></td></tr>`;
     summaryEl.innerHTML = '';
     deficitEl.innerHTML = '';
     return;
   }
   if (stdVerifySource === 'custom' && !stdVerifyCustomId) {
-    tbody.innerHTML = `<tr><td colspan="7" class="table-empty-row">등록된 사용자 기준이 없습니다. "＋ 새 기준 등록"으로 먼저 기준을 만드세요.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="table-empty-row"><span class="ter-inner">${svgIcon('info', 13)}<span>등록된 사용자 기준이 없습니다. "＋ 새 기준 등록"으로 먼저 기준을 만드세요.</span></span></td></tr>`;
     summaryEl.innerHTML = '';
     deficitEl.innerHTML = '';
     return;

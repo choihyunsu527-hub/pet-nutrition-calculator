@@ -534,6 +534,24 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
 .ing-empty-title { font-size: 14px; font-weight: 500; color: var(--hdr); }
 .ing-empty-desc { font-size: 12px; color: var(--sub); line-height: 1.55; max-width: 380px; }
 .ing-empty-eg { font-size: 11px; color: var(--sub); opacity: .8; }
+/* ── 공통 빈 상태(empty state) — 위 #ing-empty-state(원료 DB 검색 전)의 시각 패턴을 일반화해
+   다른 화면(레시피 비교 선택 전 등)에서도 재사용한다. "아이콘 박스 → 제목 → 설명" 정보 계층은
+   같게 유지하되, 문구는 화면마다("데이터 없음"/"선택 필요"/"계산 필요" 등 의미가 다르면) 각자
+   그대로 둔다 — 이 클래스는 레이아웃/톤만 통일하고 문구를 강제하지 않는다.
+   #ing-empty-state는 탭 전체를 채우는 flex:1 컨텍스트라 그 속성은 여기 옮기지 않는다(카드 등
+   일반 블록 안에서 쓰는 경우가 더 많음). */
+.empty-state { display: flex; flex-direction: column; align-items: center;
+               justify-content: center; text-align: center; gap: 8px; padding: 32px 16px; }
+.empty-state-icon { width: 44px; height: 44px; border-radius: 8px; display: flex;
+                     align-items: center; justify-content: center; margin-bottom: 4px;
+                     border: 1px solid var(--border); color: var(--sub); }
+.empty-state-title { font-size: 14px; font-weight: 500; color: var(--hdr); }
+.empty-state-desc { font-size: 12px; color: var(--sub); line-height: 1.55; max-width: 380px; }
+/* 표(<table>) 안의 "데이터 없음/입력 안내" 한 줄짜리 placeholder 행은 구조상(colspan) 위
+   아이콘 박스형 레이아웃을 쓸 수 없으므로, 같은 시각 언어(아이콘 + 텍스트, --sub 톤)만
+   한 줄 안에서 재사용한다 — .table-empty-row 자체(중앙정렬·패딩)는 기존 그대로 유지. */
+.table-empty-row .ter-inner { display: inline-flex; align-items: center; gap: 6px; }
+.table-empty-row .ter-inner svg { flex-shrink: 0; opacity: .8; }
 #ana-table tbody tr:not(.cat-row):hover td,
 #warn-table tbody tr:not(.cat-row):hover td,
 #stdverify-table tbody tr:not(.cat-row):hover td { background: var(--hover-tint) !important; }
@@ -1324,9 +1342,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .compare-select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .compare-select-arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
                          color: var(--sub); pointer-events: none; }
-.compare-empty-note { background: var(--gray-grad); border: 1px dashed var(--border);
-                       border-radius: var(--radius-md); padding: 20px; margin-top: 18px;
-                       text-align: center; font-size: 12px; color: var(--sub); line-height: 1.6; }
+#compare-empty.empty-state { margin-top: 18px; }
 .compare-result-section { margin-top: 18px; }
 /* 비교 결과 표 — 변화량/변화율 두 열이 핵심 정보이므로 열 배경(--calc)·색(--acc)·굵기로
    A/B 원값 열과 대비를 준다(행 zebra보다 우선 적용되도록 #compare-table로 스코프). */

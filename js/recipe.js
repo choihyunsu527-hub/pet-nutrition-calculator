@@ -131,7 +131,7 @@ function renderChangeHistory() {
   if (!body) return;
   const list = getChangeHistory();
   if (!list.length) {
-    body.innerHTML = '<tr><td colspan="5" class="table-empty-row">기록된 변경 이력이 없습니다.</td></tr>';
+    body.innerHTML = `<tr><td colspan="5" class="table-empty-row"><span class="ter-inner">${svgIcon('file', 13)}<span>기록된 변경 이력이 없습니다.</span></span></td></tr>`;
     return;
   }
   body.innerHTML = list.map(e => `<tr>
