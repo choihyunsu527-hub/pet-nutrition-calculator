@@ -489,6 +489,13 @@ function addMixRow(name='', ratio=0) {
     <input type="number" value="${ratio}" min="0" step="0.5"
            oninput="debouncedMixChange()" onfocus="this.select()" style="width:100px">
     <span class="mix-actual-g" style="width:90px">─</span>
+    <input type="number" class="mix-min-pct" placeholder="최소" min="0" step="0.5"
+           oninput="onMixConstraintInput()" onfocus="this.select()" style="width:56px"
+           title="설계 제약조건: 최소 배합비(%) — 표시만 하며 배합을 자동으로 바꾸지 않습니다">
+    <input type="number" class="mix-max-pct" placeholder="최대" min="0" step="0.5"
+           oninput="onMixConstraintInput()" onfocus="this.select()" style="width:56px"
+           title="설계 제약조건: 최대 배합비(%) — 표시만 하며 배합을 자동으로 바꾸지 않습니다">
+    <span class="mix-constraint-status" style="width:76px;border-right:2px solid var(--border)"></span>
     ${MIX_HDR.map((h, i) => `<span class="mix-val" data-idx="${i}" style="width:${h.w}px${MIX_HDR_GROUP_END.has(i) ? ';border-right:2px solid var(--border)' : ''}">─</span>`).join('')}
   `;
   if (name) {
@@ -497,6 +504,98 @@ function addMixRow(name='', ratio=0) {
   initIngCombo(div.querySelector('.mix-ing-wrap'));
   document.getElementById('mix-body').appendChild(div);
   mixRows.push(div);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 배합 설계 제약조건(원료별 최소/최대 배합비 %) — 표시 전용 MVP.
+//   - calcNutrition()/영양 판정/배합 비교/영양소 기여도 로직과는 완전히 무관하다(어느 함수도
+//     여기서 읽거나 호출하지 않는다). 현재 배합비(getMixRows()가 읽는 값)와 이 제약조건을
+//     비교해 "정상/최소 미달/최대 초과"만 표시하고, 배합비를 자동으로 바꾸지 않는다.
+//   - 원료명으로 매칭한다(chSnapshotMixState() 등 기존 변경 이력 로직과 같은 방식) — 같은
+//     원료가 여러 행에 있으면 제약조건을 공유한다(현재 배합에서 중복 원료 자체를 막지 않는
+//     기존 동작과 동일한 한계).
+// ════════════════════════════════════════════════════════════════════════════
+
+// 현재 mix-body DOM에서 제약조건을 읽어 저장용 객체로 만든다 — 값이 하나도 없는 원료는
+// 저장 데이터를 불필요하게 늘리지 않도록 아예 키를 만들지 않는다.
+function getMixConstraints() {
+  const map = {};
+  mixRows.forEach(row => {
+    const nm = row.querySelector('.mix-ing-value')?.value || '';
+    if (!nm) return;
+    const minEl = row.querySelector('.mix-min-pct');
+    const maxEl = row.querySelector('.mix-max-pct');
+    const min = minEl && minEl.value !== '' ? parseFloat(minEl.value) : null;
+    const max = maxEl && maxEl.value !== '' ? parseFloat(maxEl.value) : null;
+    if (min == null && max == null) return;
+    map[nm] = { min, max };
+  });
+  return map;
+}
+
+// 저장된 레시피(map: {원료명: {min,max}})를 현재 mix-body 행에 되돌려 채운다.
+// map이 없으면(예전 레시피) 아무 것도 하지 않는다 — 기존 레시피가 그대로 정상 동작해야 하므로.
+function setMixConstraints(map) {
+  mixRows.forEach(row => {
+    const nm = row.querySelector('.mix-ing-value')?.value || '';
+    const c = map && nm ? map[nm] : null;
+    const minEl = row.querySelector('.mix-min-pct');
+    const maxEl = row.querySelector('.mix-max-pct');
+    if (minEl) minEl.value = (c && c.min != null) ? c.min : '';
+    if (maxEl) maxEl.value = (c && c.max != null) ? c.max : '';
+  });
+  updateMixConstraintStatus();
+}
+
+// 각 행의 현재 배합비 vs 제약조건을 비교해 상태 배지만 그린다(계산 결과·판정에는 관여하지
+// 않음 — 배합비 합계 100% 판정과도 완전히 별개). 기존 STATUS_TONE/qi-badge를 그대로 재사용해
+// 정상=pass(qi-pass)/최소 미달=fail(qi-fail)/최대 초과=over(qi-over)로만 매핑한다.
+// rows(선택)는 calculate()가 이미 계산해 둔 getMixRows() 결과(g/kg 모드도 %로 정규화됨) —
+// 넘기지 않으면 직접 계산한다. 배합비 입력칸 raw 값을 그대로 읽으면 g/kg 모드에서 단위가
+// 어긋나므로, 반드시 이 정규화된 값으로 비교한다.
+function updateMixConstraintStatus(rows) {
+  const r = rows || getMixRows();
+  mixRows.forEach((row, i) => {
+    const minEl = row.querySelector('.mix-min-pct');
+    const maxEl = row.querySelector('.mix-max-pct');
+    const statusEl = row.querySelector('.mix-constraint-status');
+    if (!minEl || !maxEl || !statusEl) return;
+
+    const minV = minEl.value !== '' ? parseFloat(minEl.value) : null;
+    const maxV = maxEl.value !== '' ? parseFloat(maxEl.value) : null;
+
+    // 입력 단계 검증: 음수, 또는 최소 > 최대 — 값은 사용자가 입력한 그대로 두고(자동 보정 없음)
+    // 시각적으로만 오류를 표시한다.
+    const invalid = (minV != null && minV < 0) || (maxV != null && maxV < 0)
+      || (minV != null && maxV != null && minV > maxV);
+    minEl.classList.toggle('mix-constraint-invalid', invalid);
+    maxEl.classList.toggle('mix-constraint-invalid', invalid);
+
+    if (invalid) {
+      statusEl.innerHTML = '<span class="qi-badge qi-fail">입력 오류</span>';
+      return;
+    }
+    if (minV == null && maxV == null) { statusEl.innerHTML = ''; return; }
+
+    const nm = row.querySelector('.mix-ing-value')?.value || '';
+    if (!nm) { statusEl.innerHTML = ''; return; } // 원료 미지정 행은 판정하지 않음
+    const ratio = r[i] ? r[i][1] : 0;
+
+    let tone;
+    if (minV != null && ratio < minV) tone = 'fail';       // 최소 미달
+    else if (maxV != null && ratio > maxV) tone = 'over';  // 최대 초과
+    else tone = 'pass';                                    // 정상
+    statusEl.innerHTML = statusBadge(tone, 11);
+  });
+}
+
+// 제약조건 입력칸(min/max %)의 oninput 핸들러 — 영양 계산(calculate())을 다시 돌리지 않고
+// (제약조건은 배합비 합계·영양 계산과 무관하므로) 상태 배지 갱신 + undo 스냅샷/변경 이력만
+// calculate() 마지막 단계와 같은 방식으로 남긴다.
+function onMixConstraintInput() {
+  updateMixConstraintStatus();
+  recordUndoSnapshot();
+  chDetectRecipeChanges();
 }
 
 function toggleAllMixChk(el) {

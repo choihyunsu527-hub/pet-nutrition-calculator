@@ -840,9 +840,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    원료명 칼럼과 같은 진한 구분선(var(--border))으로 표시한다(border:none으로 리셋된
    border-right만 다시 지정 — 다른 스타일은 위 규칙 그대로). */
 .mix-row input[type=number] { border-right: 1px solid var(--border); }
-.mix-row .mix-val, .mix-row .mix-actual-g { display: flex; align-items: center; justify-content: flex-end; align-self: stretch;
+.mix-row .mix-val, .mix-row .mix-actual-g, .mix-row .mix-constraint-status { display: flex; align-items: center; justify-content: flex-end; align-self: stretch;
                      font-size: 10px; color: var(--sub); padding: 0 4px; flex-shrink: 0; box-sizing: border-box;
                      white-space: nowrap; overflow: hidden; }
+/* 배합 설계 제약조건(최소/최대 배합비 %) — 계산/판정 로직과 무관한 표시 전용 입력이라
+   배합비 입력과 같은 톤(.mix-row input[type=number])을 그대로 쓰되 폭만 좁힌다.
+   최소>최대·음수처럼 입력 자체가 잘못된 경우만 --fail 톤으로 눈에 띄게 한다(값은 그대로 유지 —
+   자동 보정하지 않음). 제약 위반(최소 미달/최대 초과) 배지는 새 색 없이 기존 qi-badge 재사용. */
+.mix-row input.mix-constraint-invalid { box-shadow: inset 0 0 0 1px var(--fail-t) !important;
+                                          background: var(--fail-bg) !important; }
+.mix-row .mix-constraint-status .qi-badge { flex-shrink: 0; }
 /* 행 선택 상태(선택 삭제 대상) — "선택 삭제" 버튼과 같은 위험색으로 묶어 무엇이 지워질지
    한눈에 보이게 한다(JS 미변경, :has()로만 강조). */
 .mix-row .mix-chk { accent-color: var(--fail-t); cursor: pointer; }

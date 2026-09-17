@@ -32,6 +32,7 @@ function calculate() {
 
   updateMixRowVals(rows);
   updateMixAllergyWarnings();
+  updateMixConstraintStatus(rows);
   updateTotBar(result, rows);
   updateCards(result, productClass);
   updateAnaTable(result, productClass);

@@ -161,6 +161,9 @@ function collectRecipeData() {
     amino:   getAminoManual(),
     customIngs: customIngs,
     pet:     collectPetProfileData(),
+    // 배합 설계 제약조건(원료별 최소/최대 배합비 %) — {원료명: {min,max}}, 값 없으면 빈 객체.
+    // rows(계산에 쓰는 [name,ratio] 배열)와는 별개 키라 calcNutrition 등 기존 소비자는 영향 없음.
+    mixConstraints: getMixConstraints(),
   };
 }
 
@@ -376,6 +379,9 @@ function applyRecipeData(data, displayName, fileHandle=null) {
     const [nm,ratio] = savedRows[i]||['',0];
     addMixRow(nm, ratio);
   }
+  // 배합 설계 제약조건 복원 — 예전에 저장된 레시피는 data.mixConstraints가 없으므로(undefined)
+  // setMixConstraints()가 모든 입력칸을 그냥 비워 둔다(기존 레시피 정상 동작, 에러 없음).
+  setMixConstraints(data.mixConstraints);
 
   // 아미노산 복원
   if (data.amino) {
