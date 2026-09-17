@@ -452,6 +452,17 @@ const PTYPE_BANNER_ICON = { supplement: 'info', treat: 'alert-circle', unsuitabl
 function renderPtypeBanner(elId, pc, message) {
   const el = document.getElementById(elId);
   if (!el) return;
+  // 배합 오류(blendError: 배합비 합계 초과·음수 배합비·원료명 누락 등, calcNutrition의 F1~F3
+  // 유효성 검사)는 제품 유형 배너보다 먼저, 더 우선순위 높게 보여준다 — mix/ana/warn/amino/
+  // std-verify 5개 탭이 공유하는 이 배너 한 곳에서만 표시해 같은 오류가 화면마다 따로 반복
+  // 표시되지 않는다. 판정/계산 로직(gateJudge·result.blendError 자체)은 건드리지 않고, 이미
+  // 계산된 blendError 문자열을 그대로 보여주기만 한다.
+  if (lastResult && lastResult.blendError) {
+    el.className = 'ptype-banner show type-blend-error';
+    const iconHtml = `<span style="display:inline-flex;flex-shrink:0">${svgIcon('warning', 12)}</span>`;
+    el.innerHTML = `${iconHtml}<span style="flex:1;text-align:center"><b>배합 오류</b> — ${escHtml(lastResult.blendError)}</span>`;
+    return;
+  }
   if (isStapleClass(pc)) { el.className = 'ptype-banner'; el.innerHTML = ''; return; }
   const policy = getEvaluationPolicy(pc);
   const msg = message || policy.bannerNote || `아래 결핍·초과 판정은 "주식기준 외"로 표시됩니다.`;

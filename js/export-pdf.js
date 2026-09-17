@@ -11,7 +11,7 @@ function buildMixReportHtml() {
   const result  = lastResult;
   // 유효하지 않은 배합이면 정상 배합표 대신 오류 안내만 반환한다(openMixPreview에서 이미 막지만 방어적으로 유지).
   if (result && result.blendError) {
-    return `<div class="mr-notes" style="color:#c0392b">⚠ 유효하지 않은 배합입니다 — 배합표를 생성할 수 없습니다.<br>${escHtml(result.blendError)}</div>`;
+    return `<div class="mr-notes" style="color:var(--fail-t)">⚠ 유효하지 않은 배합입니다 — 배합표를 생성할 수 없습니다.<br>${escHtml(result.blendError)}</div>`;
   }
   const pc      = lastProductClass;
   const policy  = getEvaluationPolicy(pc);
@@ -133,7 +133,8 @@ function buildMixReportHtml() {
 function openMixPreview() {
   if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
   // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 배합표가 만들어지지 않도록 막는다.
-  if (lastResult.blendError) { alert('배합에 오류가 있어 배합표를 만들 수 없습니다.\n\n' + lastResult.blendError); return; }
+  // alert() 대신 mix 탭으로 이동해, 그곳에 이미 떠 있는 공통 배합 오류 배너(renderPtypeBanner)로 이유를 보여준다.
+  if (lastResult.blendError) { goTab('mix'); return; }
   document.getElementById('mixreport-page').innerHTML = buildMixReportHtml();
   document.getElementById('mixreport-overlay').classList.add('open');
 }

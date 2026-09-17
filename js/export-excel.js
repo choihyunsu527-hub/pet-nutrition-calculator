@@ -7,7 +7,9 @@ function exportExcel() {
   if (!lastResult) { alert('먼저 계산을 실행하세요.'); return; }
   if (typeof XLSX === 'undefined') { alert('Excel 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
   // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 수치가 파일로 나가지 않도록 내보내기를 막는다.
-  if (lastResult.blendError) { alert('배합에 오류가 있어 Excel로 내보낼 수 없습니다.\n\n' + lastResult.blendError); return; }
+  // alert() 대신 mix 탭으로 이동해, 그곳에 이미 떠 있는 공통 배합 오류 배너(renderPtypeBanner)로
+  // 이유를 보여준다 — export-pdf.js의 openMixPreview()와 동일한 처리.
+  if (lastResult.blendError) { goTab('mix'); return; }
 
   const result  = lastResult;
   const totalG  = getMixTotalG();
@@ -88,7 +90,8 @@ async function exportMixExcel() {
   if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
   if (typeof ExcelJS === 'undefined') { alert('Excel 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
   // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 수치가 파일로 나가지 않도록 막는다.
-  if (lastResult.blendError) { alert('배합에 오류가 있어 Excel로 내보낼 수 없습니다.\n\n' + lastResult.blendError); return; }
+  // alert() 대신 mix 탭으로 이동해, 그곳에 이미 떠 있는 공통 배합 오류 배너(renderPtypeBanner)로 이유를 보여준다.
+  if (lastResult.blendError) { goTab('mix'); return; }
 
   const result = lastResult;
   const policy = getEvaluationPolicy(lastProductClass);

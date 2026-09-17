@@ -84,8 +84,10 @@ function updateTotBar(result, rows) {
   meEl.textContent = `ME(as-is): ${result.meAsis.toFixed(0)} kcal/kg  |  ME(DMB): ${result.meDmb.toFixed(0)} kcal/kg  |  DM%: ${(result.dmPct*100).toFixed(1)}%`;
 
   // 입력 오류 상태(F2·F3): 기존 실패색(빨강) 막대를 그대로 재사용해 원인을 표시하고, 아래 정상 색상 분기는 건너뛴다.
+  // 오류 문구 전체는 상단의 공통 배합 오류 배너(mix-ptype-banner)에서 한 번만 보여주므로, 여기서는
+  // "지금 이 합계가 오류 상태"라는 사실만 짧게 알리고 중복 표시하지 않는다.
   if (result.blendError) {
-    ratioEl.textContent = '⚠ ' + result.blendError;
+    ratioEl.textContent = '⚠ 배합비 오류 — 위 배너를 확인하세요';
     bar.style.background = 'var(--fail-bg)';
     bar.style.borderTopColor = 'var(--fail-t)';
     ratioEl.style.color = 'var(--fail-t)';

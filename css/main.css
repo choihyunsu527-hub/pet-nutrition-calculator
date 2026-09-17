@@ -1812,6 +1812,9 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .ptype-banner.type-supplement { background: var(--fed-bg); color: var(--fed-t); }
 .ptype-banner.type-treat      { background: var(--warn-bg); color: var(--warn-t); }
 .ptype-banner.type-unsuitable { background: var(--fail-bg); color: var(--fail-t); }
+/* 배합 오류(blendError) 배너 — 제품 유형 배너와 같은 컴포넌트를 재사용하되, "계산이 막힌" 상태임을
+   구분할 수 있도록 기존 실패색(--fail) 그대로에 글자만 더 굵게(다른 type-*는 font-weight 상속). */
+.ptype-banner.type-blend-error { background: var(--fail-bg); color: var(--fail-t); font-weight: 700; }
 .ptype-banner b { white-space: nowrap; }
 .ptype-banner .linkable { text-decoration: underline; cursor: pointer; margin-left: auto; white-space: nowrap; }
 /* 배합설계 탭의 안내 바만 절제된 톤으로 — 배합비 입력/배합 테이블이 화면의 주인공이 되도록
@@ -1822,6 +1825,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 #mix-ptype-banner.type-supplement { background: var(--gray-l); color: var(--text); border-left-color: var(--fed-t); }
 #mix-ptype-banner.type-treat      { background: var(--gray-l); color: var(--text); border-left-color: var(--warn-t); }
 #mix-ptype-banner.type-unsuitable { background: var(--gray-l); color: var(--text); border-left-color: var(--fail-t); }
+#mix-ptype-banner.type-blend-error { background: var(--fail-bg); color: var(--fail-t); border-left-color: var(--fail-t); font-weight: 700; }
 
 /* ── 대시보드: 도넛/게이지 ── */
 .dash-donut-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: 1; }
