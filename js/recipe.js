@@ -665,6 +665,11 @@ async function refreshRecipeList() {
     .concat(names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n.replace(/\.json$/i,'')}</option>`))
     .concat(['<option value="__change__">폴더 변경…</option>']);
   setTopRecipeOptions(opts.join(''));
+  if (typeof setCompareRecipeOptions === 'function') {
+    const compareOpts = ['<option value="__none__">비교 레시피(B) 선택…</option>']
+      .concat(names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n.replace(/\.json$/i,'')}</option>`));
+    setCompareRecipeOptions(compareOpts.join(''));
+  }
 
   // 최근/즐겨찾기에는 있지만 실제 폴더에는 없는(삭제된) 파일을 정리한다 — names가 실제
   // 폴더 상태의 source of truth. 변경이 있을 때만 localStorage를 다시 쓰고 다시 그린다.
