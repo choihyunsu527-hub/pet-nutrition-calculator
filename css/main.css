@@ -591,6 +591,24 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .left { text-align: left; }
 .center { text-align: center; }
 
+/* ── 긴 이름 레이아웃 방어: 영양소명/원료명 열은 기본 td(white-space:nowrap, 위 559번줄)를
+   덮어써서 자르지 않고 줄바꿈한다 — 정보 손실 없는 표시가 우선이므로 ellipsis 대신 wrap을 쓴다.
+   wrap이 실제로 걸리려면 열 폭이 제한돼야 하므로, 각 표의 헤더에 이미 정의된 폭(th width)과
+   같은 값을 max-width로 맞춰 헤더/본문 폭이 어긋나지 않게 한다. 긴 이름이 없는 평소에는
+   기존과 동일하게 한 줄로 보여 다른 표의 레이아웃은 전혀 달라지지 않는다. */
+#ana-table td:nth-child(2),
+#stdverify-table td:nth-child(2),
+#std-table td:nth-child(2),
+#warn-table td:first-child,
+#ing-table td:nth-child(2) {
+  white-space: normal; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.35;
+}
+#ana-table td:nth-child(2) { max-width: 140px; }
+#stdverify-table td:nth-child(2) { max-width: 150px; }
+#std-table td:nth-child(2) { max-width: 145px; }
+#warn-table td:first-child { max-width: 130px; }
+#ing-table td:nth-child(2) { max-width: 170px; }
+
 /* ── 영양 분석 탭: 카드·표를 왼쪽으로, 원료별 영양소 기여도를 오른쪽 전체 높이로 ── */
 .ana-split { display: flex; flex: 1; overflow: hidden; align-items: stretch; }
 .ana-left { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }

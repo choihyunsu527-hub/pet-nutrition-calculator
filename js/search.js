@@ -72,7 +72,7 @@ function renderGlobalSearchResults(results) {
   box.innerHTML = !results.length
     ? '<div class="tsr-empty">검색 결과가 없습니다</div>'
     : results.map((r, i) => `
-        <div class="tsr-item" data-idx="${i}">
+        <div class="tsr-item" data-idx="${i}" title="${escHtml(r.name)}">
           <span class="tsr-name">${escHtml(r.name)}</span>
           <span class="tsr-src">${escHtml(r.src)}</span>
         </div>`).join('');

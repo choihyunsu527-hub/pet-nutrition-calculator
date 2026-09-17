@@ -58,8 +58,14 @@ async function onCompareRecipeSelect(name) {
   renderCompareTab();
 }
 
-function compareFmt(v) {
-  return (v == null || Number.isNaN(v)) ? '─' : v.toFixed(2);
+// 표시 자릿수는 공용 fmtByUnit()(js/utils.js)를 그대로 따른다 — % 계열은 소수 1자리,
+// 절대량(kcal/kg 등)은 소수 0자리, 비율(Ca:P)은 소수 2자리로 다른 탭(영양 분석·기준 검증)과
+// 동일하게 맞춘다. 값 자체(compareDeltaPct)는 건드리지 않고 표시 형식만 unit 기반으로 통일.
+function compareFmt(v, unit) {
+  return fmtByUnit(v, unit);
+}
+function compareSignedFmt(v, unit) {
+  return v == null ? '─' : (v > 0 ? '+' : '') + fmtByUnit(v, unit);
 }
 
 // 변화량(B-A)/변화율(%) 계산 — DOM에 의존하지 않는 순수 함수라 그대로 테스트할 수 있다.
@@ -101,10 +107,10 @@ function renderCompareTab() {
     const sign = n => (n > 0 ? '+' : '');
     return `<tr>
       <td class="left">${row.label}</td>
-      <td class="num">${compareFmt(a)}</td>
-      <td class="num">${compareFmt(b)}</td>
-      <td class="num">${delta == null ? '─' : sign(delta) + delta.toFixed(2)}</td>
-      <td class="num">${pct == null ? '─' : sign(pct) + pct.toFixed(1) + '%'}</td>
+      <td class="num">${compareFmt(a, row.unit)}</td>
+      <td class="num">${compareFmt(b, row.unit)}</td>
+      <td class="num">${compareSignedFmt(delta, row.unit)}</td>
+      <td class="num">${pct == null ? '─' : sign(pct) + fmtPctVal(pct) + '%'}</td>
       <td style="font-size:10px;color:var(--sub)">${row.unit}</td>
     </tr>`;
   }).join('');

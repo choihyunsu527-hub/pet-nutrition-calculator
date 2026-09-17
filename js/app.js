@@ -188,11 +188,10 @@ function updateAnaTable(result, pc) {
     if (tblWrap) tblWrap.style.display = 'none';
     if (legend)  legend.style.display  = 'none';
     basicPanel.style.display = '';
-    const fmt = n => (n == null ? '─' : n.toFixed(2));
     basicPanel.innerHTML = `
       <div style="padding:10px 8px;font-size:11.5px;color:var(--sub)">${pc.short} 유형은 AAFCO/NRC/FEDIAF 영양 기준 비교를 적용하지 않습니다. 아래 원료 구성 기반 기본 영양성분만 참고하세요.</div>
       <table class="ana-basic-table"><tbody>
-        ${(pc.topNutrients || []).map(n => `<tr><td class="left">${n.name}</td><td class="num">${fmt(n.value)}</td><td style="font-size:10px;color:var(--sub)">${n.unit}</td></tr>`).join('')}
+        ${(pc.topNutrients || []).map(n => `<tr><td class="left">${n.name}</td><td class="num">${fmtByUnit(n.value, n.unit)}</td><td style="font-size:10px;color:var(--sub)">${n.unit}</td></tr>`).join('')}
       </tbody></table>`;
     return;
   }
@@ -233,7 +232,7 @@ function updateAnaTable(result, pc) {
       html += `<tr class="cat-row"><td colspan="13">── ${s.cat} ──</td></tr>`;
     }
     const v   = s.value;
-    const vs  = v != null ? v.toFixed(4) : '─';
+    const vs  = fmtByUnit(v, s.unit);
     const nj  = gate(s.nrc_j);
     const aj  = gate(s.aafco_j);
     const gj  = gate(s.aafco_gr_j);
@@ -486,7 +485,7 @@ function renderContribHeatmapInto(containerId, analysis, defs, rowClickFn) {
         } else {
           const bg = `color-mix(in srgb, var(--acc) ${Math.min(pct, 100).toFixed(0)}%, var(--side2))`;
           const color = pct > 55 ? '#fff' : 'var(--text)';
-          html += `<td style="background:${bg};color:${color}">${pct.toFixed(0)}%</td>`;
+          html += `<td style="background:${bg};color:${color}">${fmtPctVal(pct)}%</td>`;
         }
       }
     });
@@ -563,7 +562,7 @@ function updateWarnPanel(result, pc) {
   lastWarnItems = [];
   items.forEach(([nm,val,unit,mx,risk,src]) => {
     const isMissing = WARN_COL[nm] != null && warnMissing.has(WARN_COL[nm]);
-    const vs = isMissing ? '─' : val.toFixed(5);
+    const vs = isMissing ? '─' : fmtByUnit(val, unit);
     const mxs = mx ? String(mx) : '─';
     let ratio='─', status='', cls='';
     let ratioPct = null;
@@ -577,14 +576,14 @@ function updateWarnPanel(result, pc) {
       } else {
         const r = val/mx;
         ratioPct = r*100;
-        ratio = ratioPct.toFixed(1)+'%';
+        ratio = fmtPctVal(ratioPct)+'%';
         // 판정 임계값(1.0/0.8)은 그대로 — "초과"(실제로 최대기준을 넘음)는 --fail, "주의"(아직
         // 넘진 않았지만 80% 이상 근접)는 --warn 클래스(.warn, 위 STATUS_TONE과 동일 색 규칙)로
         // 구분한다. 예전엔 이 "주의" 상태가 다른 탭의 "초과"와 같은 .over 클래스를 공유해
         // 색이 서로 반대로 보였다 — 클래스명만 분리, 조건식(r>1.0/r>0.8)은 미변경.
-        if (r > 1.0) { status=`${statusIconText('over')} (${(r*100).toFixed(0)}%)`; cls='fail'; }
-        else if (r > 0.8) { status=`${statusIconText('warn')} (${(r*100).toFixed(0)}%)`; cls='warn'; }
-        else { status=`${statusIconText('pass')} (${(r*100).toFixed(0)}%)`; cls='pass'; }
+        if (r > 1.0) { status=`${statusIconText('over')} (${fmtPctVal(r*100)}%)`; cls='fail'; }
+        else if (r > 0.8) { status=`${statusIconText('warn')} (${fmtPctVal(r*100)}%)`; cls='warn'; }
+        else { status=`${statusIconText('pass')} (${fmtPctVal(r*100)}%)`; cls='pass'; }
       }
     } else {
       status=`${statusIconText('info')}: ${vs} (Max 미설정)`; cls='info';
@@ -997,7 +996,7 @@ function buildNutrientQuickHtml(stds, policy, nameList) {
     const tone = j === 'gated' ? 'gated' : (j === 'pass' || j === 'fail' || j === 'over') ? j : 'none';
     const gaugeColor = tone === 'pass' ? 'var(--pass-t)' : (tone === 'fail' || tone === 'over') ? 'var(--fail-t)' : 'var(--sub)';
     const hasVal = typeof s.value === 'number' && !Number.isNaN(s.value);
-    const valueText = hasVal ? `${s.value.toFixed(2)} ${s.unit || ''}`.trim() : '─';
+    const valueText = hasVal ? `${fmtByUnit(s.value, s.unit)} ${s.unit || ''}`.trim() : '─';
     const hasMin = typeof s.aa_min === 'number' && !Number.isNaN(s.aa_min) && s.aa_min > 0;
     const gaugePct = (hasVal && hasMin) ? Math.max(0, Math.min(150, s.value / s.aa_min * 100)) : 0;
     quickHtml += `<div class="dash-quick-item">
@@ -1095,13 +1094,13 @@ function updateDashboard(result, pc) {
 
   // ── 요약 통계 타일(전체 충족률/경고/에너지/급여량) ──
   const aaJudged = stds.filter(s => s.aafco_j === 'pass' || s.aafco_j === 'fail' || s.aafco_j === 'over');
-  const overallPct = aaJudged.length ? Math.round(aaJudged.filter(s => s.aafco_j === 'pass').length / aaJudged.length * 100) : 0;
+  const overallPct = aaJudged.length ? (aaJudged.filter(s => s.aafco_j === 'pass').length / aaJudged.length * 100) : 0;
   const overallLabel = document.getElementById('ds-overall-label');
   const overallFill = document.getElementById('ds-overall-fill');
   const overallPctEl = document.getElementById('ds-overall-pct');
   const overallCard = document.getElementById('ds-overall-card');
   if (policy.showCompleteness) {
-    overallPctEl.innerHTML = overallPct + '<span class="dash-stat-unit">%</span>';
+    overallPctEl.innerHTML = fmtPctVal(overallPct) + '<span class="dash-stat-unit">%</span>';
     overallPctEl.title = '';
     if (overallLabel) overallLabel.textContent = '전체 충족률 (AAFCO)';
     overallFill.style.width = overallPct + '%';
@@ -1213,7 +1212,7 @@ function renderEnergyAnalysis(result, pc) {
     return `<div class="dash-bar-row">
       <div class="dash-bar-label">${m.label}</div>
       <div class="dash-bar-track"><div class="dash-bar-fill" style="width:${pct.toFixed(1)}%;background:${m.color}"></div></div>
-      <div class="dash-bar-pct">${pct.toFixed(0)}%<span style="font-weight:400;color:var(--sub);margin-left:4px">· ${gPer1000.toFixed(0)}g/1000kcal</span></div>
+      <div class="dash-bar-pct">${fmtPctVal(pct)}%<span style="font-weight:400;color:var(--sub);margin-left:4px">· ${gPer1000.toFixed(0)}g/1000kcal</span></div>
     </div>`;
   }).join('');
   document.getElementById('ae-calorie-note').textContent =
@@ -1291,7 +1290,7 @@ function renderDashBarChart(containerId, stds, nameList) {
         <div class="dash-bar-fill" style="width:${goodWidth}%;background:var(--pass-t);border-radius:${overPct > 0 ? '999px 0 0 999px' : '999px'}"></div>
         ${overPct > 0 ? `<div class="dash-bar-fill" style="left:${overLeft}%;width:${overWidth}%;background:var(--fail-t);border-radius:0 999px 999px 0"></div>` : ''}
       </div>
-      <div class="dash-bar-pct">${pct.toFixed(0)}%</div>
+      <div class="dash-bar-pct">${fmtPctVal(pct)}%</div>
     </div>`;
   });
   el.innerHTML = html || '<div class="dash-warn-empty">데이터 없음</div>';
@@ -1349,7 +1348,7 @@ function renderDashIngredientDonut() {
     <div class="dash-legend-row">
       <span class="dash-legend-dot" style="background:${colors[i % colors.length]}"></span>
       <span class="dash-legend-name">${escHtml(s.name)}</span>
-      <span class="dash-legend-pct">${s.pct.toFixed(0)}%</span>
+      <span class="dash-legend-pct">${fmtPctVal(s.pct)}%</span>
     </div>`).join('');
 }
 

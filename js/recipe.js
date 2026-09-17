@@ -661,13 +661,20 @@ async function refreshRecipeList() {
     }
   } catch(e) { /* ignore */ }
   names.sort((a,b) => a.localeCompare(b, 'ko'));
+  // 긴 레시피명이 드롭다운 폭을 넘길 때를 대비해 옵션에도 title(전체 이름 툴팁)을 붙인다
+  // — select 자체는 폭 제한(ellipsis)을 브라우저 기본 렌더링에 맡기고 표시 텍스트는 그대로 둔다.
+  const optHtml = n => {
+    const label = n.replace(/\.json$/i, '');
+    const esc = label.replace(/"/g, '&quot;');
+    return `<option value="${n.replace(/"/g,'&quot;')}" title="${esc}">${label}</option>`;
+  };
   const opts = ['<option value="__none__">' + recipeDirHandle.name + ' (' + names.length + '개)</option>']
-    .concat(names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n.replace(/\.json$/i,'')}</option>`))
+    .concat(names.map(optHtml))
     .concat(['<option value="__change__">폴더 변경…</option>']);
   setTopRecipeOptions(opts.join(''));
   if (typeof setCompareRecipeOptions === 'function') {
     const compareOpts = ['<option value="__none__">비교 레시피(B) 선택…</option>']
-      .concat(names.map(n => `<option value="${n.replace(/"/g,'&quot;')}">${n.replace(/\.json$/i,'')}</option>`));
+      .concat(names.map(optHtml));
     setCompareRecipeOptions(compareOpts.join(''));
   }
 

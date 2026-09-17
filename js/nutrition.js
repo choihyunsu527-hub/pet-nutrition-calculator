@@ -119,7 +119,7 @@ function updateAminoJudges(result, pc) {
 
     const autoEl = document.getElementById(`amino-auto-${nm}`);
     if (autoEl) {
-      autoEl.textContent = (autoVal != null && autoVal > 0) ? autoVal.toFixed(4) : '─';
+      autoEl.textContent = (autoVal != null && autoVal > 0) ? fmtPctVal(autoVal) : '─';
       autoEl.style.color = (autoVal != null && autoVal > 0) ? 'var(--pass-t)' : 'var(--sub)';
       autoEl.title = isMissing ? '배합 원료에 이 아미노산 데이터가 없어 자동계산 불가 — 판정 제외' : '';
     }
@@ -230,8 +230,8 @@ function renderAminoLimitingCard(result) {
   const linePos  = Math.min(100 / scaleMax * 100, 100);
 
   summaryEl.innerHTML = hasLimiting
-    ? `현재 배합의 제한 아미노산은 <b style="color:var(--fail-t)">${lowest.name}</b>이며, 기준 충족률은 <b>${lowest.pct.toFixed(0)}%</b>입니다.`
-    : `모든 분석 대상 필수 아미노산이 기준을 충족합니다.<br>상대적으로 가장 낮은 충족률은 <b>${lowest.name} ${lowest.pct.toFixed(0)}%</b>입니다.`;
+    ? `현재 배합의 제한 아미노산은 <b style="color:var(--fail-t)">${lowest.name}</b>이며, 기준 충족률은 <b>${fmtPctVal(lowest.pct)}%</b>입니다.`
+    : `모든 분석 대상 필수 아미노산이 기준을 충족합니다.<br>상대적으로 가장 낮은 충족률은 <b>${lowest.name} ${fmtPctVal(lowest.pct)}%</b>입니다.`;
 
   // LIMITING 뱃지는 실제로 기준 미달(100% 미만)인 아미노산이 있을 때만 표시 — 전부 충족 시에는 표시하지 않음
   chartEl.innerHTML = `
@@ -246,13 +246,13 @@ function renderAminoLimitingCard(result) {
             <span class="amino-lim-bar-name">${r.name}${isLimiting ? '<span class="amino-lim-badge fail">LIMITING</span>' : ''}</span>
             <span class="amino-lim-bar-meta">${r.src} 기준 대비</span>
           </div>
-          <div class="amino-lim-bar-detail">현재 ${fmtAminoAmt(r.value, r.unit)} / 최소 ${fmtAminoAmt(r.threshold, r.unit)} · 충족률 ${r.pct.toFixed(0)}%</div>
+          <div class="amino-lim-bar-detail">현재 ${fmtAminoAmt(r.value, r.unit)} / 최소 ${fmtAminoAmt(r.threshold, r.unit)} · 충족률 ${fmtPctVal(r.pct)}%</div>
           <div style="display:flex;align-items:center;gap:6px">
             <div class="amino-lim-bar-track">
               <div class="amino-lim-bar-fill ${cls}" style="width:${w}%"></div>
               <div class="amino-lim-100line" style="left:${linePos}%" title="${AMINO_100LINE_TIP}"></div>
             </div>
-            <span class="amino-lim-bar-pct" style="color:var(--${cls}-t)">${r.pct.toFixed(0)}%</span>
+            <span class="amino-lim-bar-pct" style="color:var(--${cls}-t)">${fmtPctVal(r.pct)}%</span>
           </div>
         </div>`;
       }).join('')}
@@ -264,7 +264,7 @@ function renderAminoLimitingCard(result) {
     <div class="amino-lim-card">
       <div class="lbl">LIMITING AMINO ACID</div>
       <div class="name" style="color:var(--fail-t)">🔴 ${lowest.name}</div>
-      <div class="meta">기준 충족률 <b style="color:var(--fail-t)">${lowest.pct.toFixed(0)}%</b> · ${lowest.src}(${lowest.label}) 대비</div>
+      <div class="meta">기준 충족률 <b style="color:var(--fail-t)">${fmtPctVal(lowest.pct)}%</b> · ${lowest.src}(${lowest.label}) 대비</div>
       <div class="note">현재 배합에서 기준 대비 상대적으로 가장 부족한 필수 아미노산입니다.</div>
     </div>
   ` : `
@@ -272,7 +272,7 @@ function renderAminoLimitingCard(result) {
       <div class="lbl">LIMITING AMINO ACID</div>
       <div class="name" style="color:var(--sub)">없음</div>
       <div class="meta">모든 분석 대상 필수 아미노산이 기준을 충족합니다.</div>
-      <div class="note">상대적으로 가장 낮은 충족률: <b>${lowest.name} ${lowest.pct.toFixed(0)}%</b></div>
+      <div class="note">상대적으로 가장 낮은 충족률: <b>${lowest.name} ${fmtPctVal(lowest.pct)}%</b></div>
     </div>
   `;
 }
@@ -414,7 +414,6 @@ function openPtypeEvidence() {
   if (!pc || !pc.type) {
     body.innerHTML = `<div class="ptype-evidence-section">배합 설계 탭에서 원료와 배합비를 입력하면 판정 근거가 표시됩니다.</div>`;
   } else {
-    const fmt = n => (n == null ? '─' : n.toFixed(2));
     body.innerHTML = `
       <div class="ptype-evidence-section">
         <h4>${svgIcon(pc.icon, 15)} ${pc.label} <span class="ptype-confidence conf-${pc.confidence}" style="margin-left:6px">${pc.confidenceLabel}</span></h4>
@@ -423,18 +422,18 @@ function openPtypeEvidence() {
       </div>
       <div class="ptype-evidence-section">
         <h4>주요 영양소 함량</h4>
-        ${pc.topNutrients.map(n => `<div class="ptype-evidence-kv"><span>${n.name}</span><b>${fmt(n.value)} ${n.unit}</b></div>`).join('')}
+        ${pc.topNutrients.map(n => `<div class="ptype-evidence-kv"><span>${n.name}</span><b>${fmtByUnit(n.value, n.unit)} ${n.unit}</b></div>`).join('')}
       </div>
       <div class="ptype-evidence-section">
         <h4>필수 영양소 충족 현황 / AAFCO 기준 대비</h4>
-        <div class="ptype-evidence-kv"><span>입력된 영양성분 데이터 완전성</span><b>${pc.withDataCount} / ${pc.essentialCount}개 (${Math.round(pc.completeness*100)}%)</b></div>
-        <div class="ptype-evidence-kv"><span>AAFCO 최소 기준 충족 (입력값 기준)</span><b>${pc.metMinCount} / ${pc.withDataCount}개 (${Math.round(pc.minPassRate*100)}%)</b></div>
+        <div class="ptype-evidence-kv"><span>입력된 영양성분 데이터 완전성</span><b>${pc.withDataCount} / ${pc.essentialCount}개 (${fmtPctVal(pc.completeness*100)}%)</b></div>
+        <div class="ptype-evidence-kv"><span>AAFCO 최소 기준 충족 (입력값 기준)</span><b>${pc.metMinCount} / ${pc.withDataCount}개 (${fmtPctVal(pc.minPassRate*100)}%)</b></div>
         <div class="ptype-evidence-kv"><span>AAFCO 최대 기준 초과</span><b>${pc.overMaxItems.length}개</b></div>
       </div>
       ${pc.failItems.length ? `<div class="ptype-evidence-section"><h4>AAFCO 최소 기준 미충족 영양소 (${pc.failItems.length}개)</h4>
-        <ul class="ptype-evidence-list">${pc.failItems.map(f => `<li>${f.name}: ${f.value.toFixed(3)} ${f.unit||''} (최소 ${f.min})</li>`).join('')}</ul></div>` : ''}
+        <ul class="ptype-evidence-list">${pc.failItems.map(f => `<li>${f.name}: ${fmtByUnit(f.value, f.unit)} ${f.unit||''} (최소 ${f.min})</li>`).join('')}</ul></div>` : ''}
       ${pc.overMaxItems.length ? `<div class="ptype-evidence-section"><h4>AAFCO 최대 기준 초과 영양소 (${pc.overMaxItems.length}개)</h4>
-        <ul class="ptype-evidence-list">${pc.overMaxItems.map(f => `<li>${f.name}: ${f.value.toFixed(3)} ${f.unit||''} (최대 ${f.max})</li>`).join('')}</ul></div>` : ''}
+        <ul class="ptype-evidence-list">${pc.overMaxItems.map(f => `<li>${f.name}: ${fmtByUnit(f.value, f.unit)} ${f.unit||''} (최대 ${f.max})</li>`).join('')}</ul></div>` : ''}
       <div class="ptype-evidence-section">
         <h4>판정에 영향을 준 주요 요인</h4>
         <ul class="ptype-evidence-list">${pc.reasons.map(r => `<li>${r}</li>`).join('')}</ul>
@@ -563,8 +562,8 @@ function renderStdVerify(result, pc) {
       : max != null ? `${min}~${max} ${s.unit}`
       : ref != null ? `${min} ${s.unit} 이상 (권장 ${ref})`
       : `${min} ${s.unit} 이상`;
-    const pct = (v != null && min) ? Math.round(v / min * 100) : null;
-    const pctText = pct == null ? '─' : `${pct}%`;
+    const pct = (v != null && min) ? (v / min * 100) : null;
+    const pctText = pct == null ? '─' : `${fmtPctVal(pct)}%`;
 
     if (j === 'pass') { passCount++; judgedCount++; }
     else if (j === 'fail') { failCount++; judgedCount++; deficits.push({ name: s.name, unit: s.unit, value: v, min, pct }); }
@@ -574,7 +573,7 @@ function renderStdVerify(result, pc) {
       <td class="left" style="font-size:10px;color:var(--sub)">${s.cat}</td>
       <td class="left">${s.name}</td>
       <td style="font-size:10px;color:var(--sub)">${s.unit}</td>
-      <td class="num">${v != null ? v.toFixed(4) : '─'}</td>
+      <td class="num">${fmtByUnit(v, s.unit)}</td>
       <td class="num" style="font-size:10px">${stdText}</td>
       <td class="num">${pctText}</td>
       <td class="center ${stdvJClass(j)}">${STDV_LABEL[j] || '─'}</td>
@@ -586,7 +585,7 @@ function renderStdVerify(result, pc) {
   tbody.innerHTML = incompleteNote + html;
 
   const stapleOk = judgedCount > 0 && failCount === 0 && overCount === 0;
-  const overallPct = judgedCount ? Math.round(passCount / judgedCount * 100) : 0;
+  const overallPct = judgedCount ? (passCount / judgedCount * 100) : 0;
   const srcLabelRaw = stdVerifySource === 'nrc' ? 'NRC'
     : stdVerifySource === 'custom' ? ((customStandards.find(c => c.id === stdVerifyCustomId) || {}).name || '사용자 기준')
     : 'AAFCO';
@@ -597,7 +596,7 @@ function renderStdVerify(result, pc) {
       <div class="kpi-label">주식 판정 (${srcLabel} 기준)</div>
       <div class="kpi-val" style="color:${stapleOk ? 'var(--pass-t)' : 'var(--fail-t)'}">${stapleOk ? '주식 기준 충족' : '주식 기준 미충족'}</div>
     </div>
-    <div class="dash-kpi"><div class="kpi-label">전체 충족률</div><div class="kpi-val">${overallPct}%</div></div>
+    <div class="dash-kpi"><div class="kpi-label">전체 충족률</div><div class="kpi-val">${fmtPctVal(overallPct)}%</div></div>
     <div class="dash-kpi"><div class="kpi-label">충족</div><div class="kpi-val" style="color:var(--pass-t)">${passCount}</div></div>
     <div class="dash-kpi"><div class="kpi-label">부족</div><div class="kpi-val" style="color:var(--fail-t)">${failCount}</div></div>
     <div class="dash-kpi"><div class="kpi-label">초과</div><div class="kpi-val" style="color:var(--fail-t)">${overCount}</div></div>
@@ -612,7 +611,7 @@ function renderStdVerify(result, pc) {
       dHtml += deficits.map(d => `
         <div class="stdverify-deficit-item fail">
           <span class="stdverify-deficit-name">${d.name}</span>
-          <span class="stdverify-deficit-detail">현재 ${d.value != null ? d.value.toFixed(4) : '─'} ${d.unit} · 기준 ${d.min} ${d.unit} · 부족률 ${d.pct != null ? (100 - d.pct) : '─'}%</span>
+          <span class="stdverify-deficit-detail">현재 ${fmtByUnit(d.value, d.unit)} ${d.unit} · 기준 ${d.min} ${d.unit} · 부족률 ${d.pct != null ? fmtPctVal(100 - d.pct) : '─'}%</span>
         </div>`).join('');
     }
     if (excesses.length) {
@@ -620,7 +619,7 @@ function renderStdVerify(result, pc) {
       dHtml += excesses.map(d => `
         <div class="stdverify-deficit-item over">
           <span class="stdverify-deficit-name">${d.name}</span>
-          <span class="stdverify-deficit-detail">현재 ${d.value != null ? d.value.toFixed(4) : '─'} ${d.unit} · 기준 최대 ${d.max} ${d.unit}</span>
+          <span class="stdverify-deficit-detail">현재 ${fmtByUnit(d.value, d.unit)} ${d.unit} · 기준 최대 ${d.max} ${d.unit}</span>
         </div>`).join('');
     }
     deficitEl.innerHTML = dHtml;
@@ -794,19 +793,19 @@ function renderCalcBasisPage() {
   const mini = rows => `<table class="cb-mini-table"><tbody>${rows.map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}</tbody></table>`;
 
   const lifeEl = document.getElementById('cb-tbl-life');
-  if (lifeEl) lifeEl.innerHTML = mini(Object.entries(FEEDING_FACTOR).map(([k,v]) => [k, `× ${v.toFixed(1)}`]));
+  if (lifeEl) lifeEl.innerHTML = mini(Object.entries(FEEDING_FACTOR).map(([k,v]) => [k, `× ${fmtRatioVal(v)}`]));
 
   const actEl = document.getElementById('cb-tbl-activity');
-  if (actEl) actEl.innerHTML = mini(Object.entries(ACTIVITY_MULT).map(([k,v]) => [k, `× ${v.toFixed(2)}`]));
+  if (actEl) actEl.innerHTML = mini(Object.entries(ACTIVITY_MULT).map(([k,v]) => [k, `× ${fmtRatioVal(v)}`]));
 
   const bcsEl = document.getElementById('cb-tbl-bcs');
-  if (bcsEl) bcsEl.innerHTML = mini(Object.entries(BCS_MULT).map(([k,v]) => [`${k}단계${k==='5'?' (이상적)':''}`, `× ${v.toFixed(2)}`]));
+  if (bcsEl) bcsEl.innerHTML = mini(Object.entries(BCS_MULT).map(([k,v]) => [`${k}단계${k==='5'?' (이상적)':''}`, `× ${fmtRatioVal(v)}`]));
 
   const neuterEl = document.getElementById('cb-tbl-neuter');
   if (neuterEl) {
     const rows = [];
     Object.entries(NEUTER_ADULT_MULT).forEach(([species, opts]) => {
-      Object.entries(opts).forEach(([k,v]) => rows.push([`${species} · ${k}`, `× ${v.toFixed(2)}`]));
+      Object.entries(opts).forEach(([k,v]) => rows.push([`${species} · ${k}`, `× ${fmtRatioVal(v)}`]));
     });
     neuterEl.innerHTML = mini(rows);
   }
