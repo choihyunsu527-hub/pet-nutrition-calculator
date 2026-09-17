@@ -3157,38 +3157,100 @@
               <span class="hdr-desc"
                 >현재 레시피(A)와 저장된 레시피(B)의 주요 영양성분을 비교합니다</span
               >
-              <div class="hdr-btns">
-                <select
-                  id="compare-recipe-select"
-                  onchange="onCompareRecipeSelect(this.value)"
-                  title="비교할 저장 레시피(B) 선택"
-                >
-                  <option value="__none__">비교 레시피(B) 선택…</option>
-                </select>
-              </div>
             </div>
-            <div class="tab-panel">
-              <div
-                id="compare-empty"
-                style="padding: 24px; font-size: 11.5px; color: var(--sub)"
-              >
-                비교할 저장 레시피(B)를 선택하세요. 현재 레시피(A)는 배합
-                설계 탭에서 계산된 값을 그대로 사용합니다.
-              </div>
-              <div class="tbl-wrap" id="compare-table-wrap" style="display: none">
-                <table id="compare-table">
-                  <thead>
-                    <tr>
-                      <th style="width: 160px">영양소</th>
-                      <th class="num" id="compare-th-a">A</th>
-                      <th class="num" id="compare-th-b">B</th>
-                      <th class="num">변화량(B-A)</th>
-                      <th class="num">변화율(%)</th>
-                      <th style="width: 70px">단위</th>
-                    </tr>
-                  </thead>
-                  <tbody id="compare-body"></tbody>
-                </table>
+            <div
+              style="
+                flex: 1;
+                overflow-y: auto;
+                padding: 0 0 12px;
+                background: var(--bg);
+              "
+            >
+              <div class="dash-panel">
+                <div class="dash-section compare-target-section">
+                  <h3>비교 대상</h3>
+                  <div class="compare-target-row">
+                    <div class="compare-target-box">
+                      <span class="compare-target-badge">A · 현재 레시피</span>
+                      <span class="compare-target-name" id="compare-th-a"
+                        >A</span
+                      >
+                    </div>
+                    <div class="compare-target-vs" aria-hidden="true">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                      </svg>
+                    </div>
+                    <div class="compare-target-box">
+                      <span class="compare-target-badge">B · 비교 레시피</span>
+                      <div class="compare-select-wrap">
+                        <select
+                          id="compare-recipe-select"
+                          class="compare-select"
+                          onchange="onCompareRecipeSelect(this.value)"
+                          title="비교할 저장 레시피(B) 선택"
+                        >
+                          <option value="__none__">비교 레시피(B) 선택…</option>
+                        </select>
+                        <svg
+                          class="compare-select-arrow"
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="m6 9 6 6 6-6" />
+                        </svg>
+                      </div>
+                      <span class="compare-target-name" id="compare-th-b"
+                        >B</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div id="compare-empty" class="compare-empty-note">
+                  비교할 저장 레시피(B)를 선택하세요. 현재 레시피(A)는 배합
+                  설계 탭에서 계산된 값을 그대로 사용합니다.
+                </div>
+
+                <div
+                  class="dash-section compare-result-section"
+                  id="compare-table-wrap"
+                  style="display: none"
+                >
+                  <h3>비교 결과</h3>
+                  <div class="tbl-wrap">
+                    <table id="compare-table">
+                      <thead>
+                        <tr>
+                          <th style="width: 160px">영양소</th>
+                          <th class="num">A값</th>
+                          <th class="num">B값</th>
+                          <th class="num">변화량(B-A)</th>
+                          <th class="num">변화율(%)</th>
+                          <th style="width: 70px">단위</th>
+                        </tr>
+                      </thead>
+                      <tbody id="compare-body"></tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

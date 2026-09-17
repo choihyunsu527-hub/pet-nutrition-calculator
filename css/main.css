@@ -1273,6 +1273,52 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #tab-analysis .dash-kpi { background: none; border: none; box-shadow: none; padding: 4px 6px; }
 #tab-analysis .dash-kpi .kpi-val { font-size: 19px; }
 
+/* ── 배합 비교 탭 — "비교 대상"(A/B) 카드와 "비교 결과" 카드를 .dash-panel/.dash-section
+   위에 얹는다(새 컴포넌트 없이 기존 카드 시스템 재사용). A/B 박스는 .product-info-box와
+   같은 톤(--gray-grad 배경 + --border + --radius-md + --sh)으로 대칭 배치하고, 가운데
+   화살표로 "비교 관계"를 한눈에 보이게 한다. */
+.compare-target-row { display: flex; align-items: stretch; gap: 14px; flex-wrap: wrap; }
+.compare-target-box { flex: 1 1 240px; min-width: 220px; display: flex; flex-direction: column;
+                       gap: 8px; justify-content: center; background: var(--gray-grad);
+                       border: 1px solid var(--border); border-radius: var(--radius-md);
+                       padding: 14px 16px; box-shadow: var(--sh); box-sizing: border-box; }
+.compare-target-badge { font-size: 10px; font-weight: 700; color: var(--acc);
+                         text-transform: uppercase; letter-spacing: .5px; }
+.compare-target-name { font-size: 15px; font-weight: 700; color: var(--hdr); line-height: 1.35;
+                        word-break: keep-all; overflow-wrap: break-word; }
+.compare-target-vs { flex: 0 0 auto; align-self: center; width: 34px; height: 34px;
+                      border-radius: 50%; background: var(--calc); color: var(--acc);
+                      display: flex; align-items: center; justify-content: center; }
+@media (max-width: 640px) {
+  .compare-target-vs { transform: rotate(90deg); align-self: center; }
+}
+/* 저장 레시피(B) 선택 select — 브라우저 기본 select 외형을 지우고(appearance:none)
+   입력창/버튼과 같은 토큰(--inp 배경, --border, --radius-md, 높이 36px)으로 통일,
+   커스텀 화살표는 별도 아이콘(currentColor)으로 얹어 테마(라이트/다크) 전환에도 맞는다. */
+.compare-select-wrap { position: relative; display: flex; }
+.compare-select { appearance: none; -webkit-appearance: none; -moz-appearance: none;
+                   width: 100%; height: 36px; padding: 0 32px 0 12px;
+                   font-size: 13px; font-weight: 600; font-family: inherit; color: var(--text);
+                   background: var(--inp); border: 1px solid var(--border);
+                   border-radius: var(--radius-md); cursor: pointer; outline: none;
+                   transition: border-color .2s ease, background .2s ease; }
+.compare-select:hover { border-color: var(--acc); }
+.compare-select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.compare-select-arrow { position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+                         color: var(--sub); pointer-events: none; }
+.compare-empty-note { background: var(--gray-grad); border: 1px dashed var(--border);
+                       border-radius: var(--radius-md); padding: 20px; margin-top: 18px;
+                       text-align: center; font-size: 12px; color: var(--sub); line-height: 1.6; }
+.compare-result-section { margin-top: 18px; }
+/* 비교 결과 표 — 변화량/변화율 두 열이 핵심 정보이므로 열 배경(--calc)·색(--acc)·굵기로
+   A/B 원값 열과 대비를 준다(행 zebra보다 우선 적용되도록 #compare-table로 스코프). */
+#compare-table td { font-variant-numeric: tabular-nums; }
+#compare-table th:nth-child(4), #compare-table th:nth-child(5) { color: var(--acc); }
+#compare-table td:nth-child(4), #compare-table td:nth-child(5) {
+  background: var(--calc); color: var(--acc); font-weight: 700; font-size: 13.5px;
+}
+#compare-table td:nth-child(2), #compare-table td:nth-child(3) { font-weight: 600; color: var(--hdr); }
+
 /* ── 대시보드: 핵심 지표(위 dash-top-row) 아래의 프로필/설정 카드 — "기타 정보" 계층 ──
    기존 .dash-grid/.dash-section은 다른 탭에서도 공유하는 카드 시스템이라 그대로 두고,
    대시보드 하단 영역에만 붙는 보조 클래스로 배치만 조정한다.
