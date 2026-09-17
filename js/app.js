@@ -44,6 +44,7 @@ function calculate() {
   updateDashboard(result, productClass);
   renderEnergyAnalysis(result, productClass);
   renderAnaContribPanel(result, rows);
+  renderNutrientImpact(result, productClass);
   saveToStorage();
   syncPanelWidths();
   recordUndoSnapshot();
@@ -339,6 +340,69 @@ function fmtContribAmount(v, unit) {
   return v.toFixed(2) + unit;
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// 영양소 영향 분석 — "원료별 영양소 기여도"(위) 패널이 이미 계산해 둔 computeContribAnalysis()
+// 결과와, ana-table/기준 검증이 이미 계산해 둔 기준 판정(result.standards + gateJudge)을
+// 그대로 이어붙이기만 한다. 새 계산식/새 판정 로직은 전혀 만들지 않는다.
+//   - 선택한 영양소가 기준 대비 부족/충족/초과인지: gateJudge(s.aafco_j, policy) 그대로 재사용
+//   - 부족(fail)일 때만 "주요 공급 원료"(기여율 상위, 데이터 없는/기여 0인 원료는 제외)를 보여줌
+//   - 배합 변경 제안·자동 최적화는 하지 않음(표시 전용 MVP)
+// ════════════════════════════════════════════════════════════════════════════
+// CONTRIB_NUTRIENTS(원료 기여도용 17개 키)와 STANDARDS(기준 판정용 30개 항목)는 이름 체계가
+// 달라(예: protein↔조단백) 겹치는 것만 명시적으로 매핑한다. 개념이 1:1로 안 맞는 항목
+// (탄수화물=NFE는 AAFCO 기준 자체가 없음, omega3=ALA+EPA+DHA 합산이라 단일 STANDARDS 행과
+// 안 맞음)은 매핑하지 않고, 그런 영양소를 선택하면 이 패널은 조용히 비워진다(판정 불가이므로).
+const CONTRIB_STD_NAME = {
+  protein: '조단백', fat: '조지방',
+  ca: '칼슘(Ca)', p: '인(P)', na: '나트륨(Na)', k: '칼륨(K)', mg: '마그네슘(Mg)',
+  fe: '철(Fe)', zn: '아연(Zn)', cu: '구리(Cu)', mn: '망간(Mn)',
+  vitA: '비타민A', vitD: '비타민D', vitE: '비타민E(α-TE)',
+  omega6: '리놀레산(LA,n-6)',
+};
+const NUTRIENT_IMPACT_TOP_N = 5;
+
+function renderNutrientImpact(result, pc) {
+  const el = document.getElementById('ana-impact-panel');
+  if (!el) return;
+  // .ana-contrib-detail 박스(기존 #ana-contrib-detail과 같은 클래스)를 그대로 재사용하므로,
+  // 보여줄 내용이 없을 때는 빈 박스가 남지 않도록 직접 display를 꺼 둔다(기존 #ana-contrib-detail도
+  // 같은 방식으로 JS가 토글).
+  if (!lastContribAnalysis) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  const def = CONTRIB_NUTRIENTS.find(d => d.key === contribActiveNutrient);
+  const stdName = CONTRIB_STD_NAME[contribActiveNutrient];
+  const s = stdName ? result.standards.find(st => st.name === stdName) : null;
+  if (!def || !s) { el.style.display = 'none'; el.innerHTML = ''; return; } // 기준 자체가 없는 영양소는 판정할 수 없어 표시하지 않음
+  el.style.display = '';
+
+  const policy = getEvaluationPolicy(pc);
+  const j = gateJudge(s.aafco_j, policy); // 기존 판정(ana-table과 동일한 함수·같은 입력) 그대로 재사용
+
+  let html = `<h4>영양소 영향 분석 — ${escHtml(def.label)} ${statusBadge(j, 11)}</h4>`;
+
+  if (j === 'fail') {
+    const nut = lastContribAnalysis.nutrients[contribActiveNutrient];
+    const allItems = nut ? nut.items : [];
+    // 데이터가 없거나(missing) 실제 기여량이 0 이하인 원료는 "주요 공급 원료"에서 제외
+    const supplying = allItems.filter(it => !it.missing && it.amount > 0);
+    const top = supplying.slice(0, NUTRIENT_IMPACT_TOP_N);
+    // 검증: 제외 규칙을 적용하지 않은 전체 기여량 합이 calcNutrition이 이미 계산해 둔 총량
+    // (nut.total)과 실제로 일치하는지 확인만 한다 — 여기서 총량을 다시 계산하지 않는다.
+    const allSum = allItems.reduce((sum, it) => sum + it.amount, 0);
+    const sumMismatch = nut && Math.abs(allSum - nut.total) > Math.max(1e-6, Math.abs(nut.total) * 1e-6);
+
+    html += `<div class="ana-contrib-detail-note">기준 대비 부족한 영양소입니다 — 배합 변경 제안은 아니며, 현재 배합에서 이 영양소를 공급하는 주요 원료만 보여줍니다.</div>`;
+    html += top.length
+      ? top.map(it => `<div class="ptype-evidence-kv"><span>${escHtml(it.name)}</span><b>${it.pct.toFixed(1)}%</b></div>`).join('')
+      : `<div class="ana-contrib-detail-note">이 영양소를 공급하는 원료 데이터가 없습니다.</div>`;
+    if (sumMismatch) {
+      html += `<div class="ana-contrib-detail-note" style="color:var(--fail-t)">⚠ 기여량 합계 검증에 실패했습니다 — 계산 결과를 다시 확인하세요.</div>`;
+    }
+  }
+
+  el.innerHTML = html;
+}
+
 function renderAnaContribPanel(result, rows) {
   const panel = document.getElementById('ana-contrib-panel');
   if (!panel) return;
@@ -379,6 +443,7 @@ function setContribNutrient(key) {
   if (!lastContribAnalysis) return;
   renderContribNutSel();
   renderContribChart();
+  renderNutrientImpact(lastResult, lastProductClass);
 }
 
 function renderContribChart() {
