@@ -130,6 +130,85 @@ function buildMixReportHtml() {
   `;
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// 레시피만 인쇄 (배합비/투입량만 담은 축약 출력) — buildMixReportHtml()과 마찬가지로
+// getMixRows()/getMixTotalG()의 실제 값만 재배치할 뿐 새 계산식은 만들지 않는다.
+// 영양성분 분석·판정·원료 구성 비율·참고사항은 이 출력에 포함하지 않는다.
+// 전체 보고서(.mr-*, #mixreport-page)와 완전히 분리된 .mrx-*/#mixrecipe-page 클래스만 써서
+// 전체 보고서 인쇄 CSS/HTML에 영향이 가지 않게 한다.
+// ════════════════════════════════════════════════════════════════════════════
+function buildMixRecipeHtml() {
+  const totalG = getMixTotalG();
+  const rows   = getMixRows().filter(([nm]) => nm);
+
+  const name   = escHtml(document.getElementById('sb-name').value || '');
+  const recipeName = escHtml(document.getElementById('mix-recipe-name')?.value || '');
+  const today  = new Date().toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+
+  let rowsHtml = '';
+  let sumPct = 0;
+  rows.forEach(([nm, pct], i) => {
+    const g  = pct / 100 * totalG;
+    const kg = g / 1000;
+    sumPct += pct;
+    rowsHtml += `<tr>
+      <td>${i+1}</td>
+      <td class="mrx-left">${escHtml(nm)}</td>
+      <td class="mrx-pct">${pct.toFixed(2)}</td>
+      <td class="mrx-amt">${g.toFixed(1)}</td>
+      <td class="mrx-amt">${kg.toFixed(3)}</td>
+    </tr>`;
+  });
+  rowsHtml += `<tr class="mrx-sum-row">
+    <td colspan="2" class="mrx-left">합계</td>
+    <td class="mrx-pct">${sumPct.toFixed(1)}%</td>
+    <td class="mrx-amt">${totalG.toLocaleString('ko')} g</td>
+    <td class="mrx-amt">${(totalG/1000).toFixed(3)} kg</td>
+  </tr>`;
+
+  return `
+    <div class="mrx-header">
+      <div class="mrx-title">배합 레시피</div>
+      <div class="mrx-subtitle">Nutri Circulator</div>
+    </div>
+
+    <div class="mrx-info-grid">
+      <div class="mrx-info-row"><span class="mrx-info-label">제품명</span><span class="mrx-info-val">${name || '─'}</span></div>
+      <div class="mrx-info-row"><span class="mrx-info-label">레시피명</span><span class="mrx-info-val">${recipeName || '─'}</span></div>
+      <div class="mrx-info-row"><span class="mrx-info-label">작성일</span><span class="mrx-info-val">${today}</span></div>
+      <div class="mrx-info-row"><span class="mrx-info-label">작성자</span><span class="mrx-info-val" contenteditable="true" data-ph="직접 입력"></span></div>
+    </div>
+
+    <table class="mrx-table">
+      <thead><tr><th style="width:8%">No.</th><th style="width:34%">원료명</th><th style="width:22%">배합비 (%)</th><th style="width:18%">투입량 (g)</th><th style="width:18%">투입량 (kg)</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+
+    <div class="mrx-foot"><span>Nutri Circulator</span><span>생성 시각: ${new Date().toLocaleString('ko-KR')}</span></div>
+  `;
+}
+
+// printMixReport()과 동일한 파일명 규칙("{제품명} - 레시피.pdf")만 다르게 적용하고, 나머지
+// title 저장/복원·afterprint 정리 로직은 그대로 따른다. body 클래스도 mixreport-printing과
+// 겹치지 않는 mixrecipe-printing을 별도로 써서 전체 보고서 인쇄 CSS를 건드리지 않는다.
+function printMixRecipe() {
+  const rawName  = (document.getElementById('sb-name').value || '').trim();
+  const safeName = rawName.replace(/[\\/:*?"<>|]/g, '_').trim();
+  const prevTitle = document.title;
+  document.title = safeName ? `${safeName} - 레시피` : '레시피';
+
+  document.getElementById('mixrecipe-page').innerHTML = buildMixRecipeHtml();
+  document.body.classList.add('mixrecipe-printing');
+  const cleanup = () => {
+    document.body.classList.remove('mixrecipe-printing');
+    document.title = prevTitle;
+  };
+  window.addEventListener('afterprint', cleanup, { once: true });
+  window.print();
+  // afterprint가 지원되지 않는 환경 대비 안전장치
+  setTimeout(cleanup, 3000);
+}
+
 function openMixPreview() {
   if (!lastResult) { alert('먼저 배합 설계를 입력해 계산을 실행하세요.'); return; }
   // 유효하지 않은 배합(음수 배합비·이름 없는 행·합계 100% 초과 등)은 잘못된 배합표가 만들어지지 않도록 막는다.

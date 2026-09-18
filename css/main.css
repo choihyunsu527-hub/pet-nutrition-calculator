@@ -2067,6 +2067,33 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .mr-notes div { margin-bottom: 2px; }
 .mr-foot { display: flex; justify-content: space-between; font-size: 7.5px; color: #8892a0; margin-top: 6px; }
 
+/* ── 레시피만 인쇄 — 위 .mr-*/#mixreport-page(전체 보고서)와 완전히 분리된 전용 클래스.
+   같은 modal-body 안에 나란히 두되 화면에서는 항상 숨기고(#mixrecipe-page{display:none}),
+   printMixRecipe()가 body에 mixrecipe-printing을 붙였을 때만 @media print 블록에서 드러낸다.
+   배합비(%)·투입량은 전체 보고서(.mr-comp-pct 등)보다 눈에 띄게 폰트를 크게 잡는다. */
+#mixrecipe-page { display: none; }
+.mrx-page { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; color: #1e2733;
+             padding: 14mm 12mm; box-sizing: border-box; font-size: 11px; line-height: 1.5; }
+.mrx-header { display: flex; justify-content: space-between; align-items: baseline;
+              border-bottom: 2px solid #1e2733; padding-bottom: 8px; margin-bottom: 14px; }
+.mrx-title { font-size: 20px; font-weight: 800; color: #1e2733; letter-spacing: .5px; }
+.mrx-subtitle { font-size: 11px; color: #5c6773; font-weight: 600; }
+.mrx-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; margin-bottom: 16px; }
+.mrx-info-row { display: flex; border-bottom: 1px solid #e1e5e9; padding: 5px 0; gap: 8px; }
+.mrx-info-label { flex: 0 0 72px; color: #5c6773; font-weight: 700; }
+.mrx-info-val { flex: 1; color: #1e2733; word-break: break-all; }
+.mrx-info-val[contenteditable="true"] { outline: none; min-height: 14px; }
+.mrx-info-val[contenteditable="true"]:empty::before { content: ""; }
+.mrx-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mrx-table th { background: #1e2733; color: #fff; font-weight: 700; padding: 8px 6px; text-align: center; border: 1px solid #1e2733; }
+.mrx-table td { padding: 7px 6px; border: 1px solid #d6dbe0; text-align: center; }
+.mrx-table td.mrx-left { text-align: left; }
+.mrx-pct { font-size: 18px; font-weight: 800; color: #1565C0; }
+.mrx-amt { font-size: 15px; font-weight: 700; color: #1e2733; }
+.mrx-sum-row td { background: #dbe6f5; color: #1e2733; font-weight: 800; }
+.mrx-sum-row .mrx-pct, .mrx-sum-row .mrx-amt { font-size: 19px; }
+.mrx-foot { display: flex; justify-content: space-between; font-size: 9px; color: #8892a0; margin-top: 10px; }
+
 @media print {
   /* 브라우저 기본 인쇄 머릿글/바닥글(제목·URL·날짜)은 @page 여백 공간에 그려지므로 그 공간을
      0으로 없애 표시되지 않게 하고, 보고서가 보여주던 여백은 #mixreport-page 자체 padding에
@@ -2161,5 +2188,34 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
   }
   body.mixreport-printing .mr-table tr.mr-cat-row {
     break-after: avoid; page-break-after: avoid; /* 카테고리 구분행이 페이지 끝에 혼자 남지 않게 */
+  }
+
+  /* ── 레시피만 인쇄 — 위 body.mixreport-printing 블록과 완전히 분리된 별도 body 클래스.
+     같은 #mixreport-overlay를 재사용하되 그 안에서 #mixreport-page 대신 #mixrecipe-page만
+     보이도록 전환한다. 전체 보고서 인쇄 규칙(.mr-*)은 여기서 전혀 참조하지 않으므로 서로
+     영향을 주지 않는다. ── */
+  body.mixrecipe-printing > *:not(#mixreport-overlay) { display: none !important; }
+  body.mixrecipe-printing #mixreport-overlay { position: static !important; inset: auto !important;
+    background: #fff !important; display: block !important; }
+  body.mixrecipe-printing #mixreport-overlay .mixreport-modal { width: auto !important; max-width: none !important;
+    max-height: none !important; overflow: visible !important; box-shadow: none !important; border-radius: 0; }
+  body.mixrecipe-printing .mixreport-modal .modal-body { background: #fff !important; padding: 0 !important; }
+  body.mixrecipe-printing .mixreport-nochrome { display: none !important; }
+  body.mixrecipe-printing #mixreport-page { display: none !important; }
+  body.mixrecipe-printing #mixrecipe-page {
+    display: block !important; box-shadow: none !important; margin: 0 !important; width: auto !important;
+    min-height: 0 !important; padding: 14mm 12mm !important;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
+  body.mixrecipe-printing #mixrecipe-page,
+  body.mixrecipe-printing #mixrecipe-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body.mixrecipe-printing .mrx-table tr {
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  body.mixrecipe-printing .mrx-table thead {
+    display: table-header-group; /* 표가 페이지를 넘기면 헤더 행이 다음 페이지 상단에 자동으로 반복됨 */
   }
 }
