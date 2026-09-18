@@ -2114,12 +2114,23 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
   }
   body.mixreport-printing .mr-table tr.mr-sum-row td { background: #dbe6f5 !important; }
   body.mixreport-printing #mixreport-page { box-shadow: none !important; margin: 0 !important; width: auto !important;
-    min-height: 0 !important; padding: 24mm 22mm !important;
-    /* 표가 페이지 경계에서 갈릴 때도 이 padding이 매 페이지 조각의 위/아래에 반복되도록 한다
-       (기본값 slice는 padding을 박스 전체 시작/끝에만 한 번 준다) — 새 여백값을 만드는 대신
-       이미 페이지 가장자리에 쓰던 24mm/22mm를 그대로 재사용해 "잘린 표" 위·아래에도 같은
-       호흡을 준다. 값은 그대로 두고 이 표시 방식만 바꾸는 것이므로 기존 여백 설정과 동일하다. */
+    min-height: 0 !important; padding: 6mm 12mm !important;
+    /* 3페이지→2페이지 축소를 위해 세로 여백을 24mm→6mm로 줄인다(원래 14mm+10mm 보정값이었던
+       것을 압축). 배합비 숫자 폰트는 그대로 두고 여백만 줄여 세로 공간을 확보한다.
+       표가 페이지 경계에서 갈릴 때도 이 padding이 매 페이지 조각의 위/아래에 반복되도록 한다
+       (기본값 slice는 padding을 박스 전체 시작/끝에만 한 번 준다). */
     -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  body.mixreport-printing .mr-header {
+    padding-bottom: 4px !important; margin-bottom: 5px !important;
+  }
+  body.mixreport-printing .mr-info-row { padding: 1.5px 0 !important; }
+  body.mixreport-printing .mr-section-title { margin: 6px 0 4px !important; padding: 3px 8px !important; }
+  body.mixreport-printing .mr-table { font-size: 8px !important; }
+  body.mixreport-printing .mr-table th { padding: 2px 5px !important; }
+  body.mixreport-printing .mr-table td { padding: 1.5px 5px !important; }
+  body.mixreport-printing .mr-comp-chip { padding: 2px 6px !important; }
+  body.mixreport-printing .mr-comp-row { gap: 3px !important; }
+  body.mixreport-printing .mr-notes { margin-top: 3px !important; padding-top: 2px !important; }
 
   /* ── 페이지 나눔 규칙 — 글자 크기·여백·줄간격·표 크기는 화면 디자인 그대로 두고, 표가 페이지
      경계를 넘어갈 때 "행이 반으로 잘리는 것"과 "제목/헤더만 페이지 끝에 홀로 남는 것"만 막는다.
