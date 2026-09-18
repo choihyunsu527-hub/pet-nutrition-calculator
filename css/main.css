@@ -2067,8 +2067,8 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .mr-notes div { margin-bottom: 2px; }
 .mr-foot { display: flex; justify-content: space-between; font-size: 7.5px; color: #8892a0; margin-top: 6px; }
 
-/* ── 레시피만 인쇄 — 위 .mr-*/#mixreport-page(전체 보고서)와 완전히 분리된 전용 클래스.
-   같은 modal-body 안에 나란히 두되 화면에서는 항상 숨기고(#mixrecipe-page{display:none}),
+/* ── 레시피만 인쇄 — 위 .mr- 클래스들 / #mixreport-page(전체 보고서)와 완전히 분리된 전용 클래스.
+   같은 modal-body 안에 나란히 두되 화면에서는 항상 숨기고(#mixrecipe-page 를 display:none),
    printMixRecipe()가 body에 mixrecipe-printing을 붙였을 때만 @media print 블록에서 드러낸다.
    배합비(%)·투입량은 전체 보고서(.mr-comp-pct 등)보다 눈에 띄게 폰트를 크게 잡는다. */
 #mixrecipe-page { display: none; }
@@ -2189,6 +2189,10 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
   body.mixreport-printing .mr-table tr.mr-cat-row {
     break-after: avoid; page-break-after: avoid; /* 카테고리 구분행이 페이지 끝에 혼자 남지 않게 */
   }
+  /* 레시피만 인쇄용 #mixrecipe-page는 전체 보고서 인쇄에서 항상 숨긴다 — 이전에 "레시피만 인쇄"를
+     실행해 #mixrecipe-page에 내용이 남아 있어도(innerHTML은 지워지지 않음) 전체 보고서 인쇄에
+     함께 출력되지 않게 한다(mixrecipe-printing 블록이 #mixreport-page를 명시적으로 숨기는 것과 대칭). */
+  body.mixreport-printing #mixrecipe-page { display: none !important; }
 
   /* ── 레시피만 인쇄 — 위 body.mixreport-printing 블록과 완전히 분리된 별도 body 클래스.
      같은 #mixreport-overlay를 재사용하되 그 안에서 #mixreport-page 대신 #mixrecipe-page만
