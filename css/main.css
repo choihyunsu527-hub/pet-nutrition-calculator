@@ -106,18 +106,16 @@ body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", Arial, sans-
 #top-recipe-folder-btn { margin-right: 6px; }
 #top-recipe-folder-btn::after { content: ''; position: absolute; right: -9px; top: 50%; transform: translateY(-50%);
                                  width: 1px; height: 18px; background: var(--border); }
-#top-recipe-save-btn { font-size: 11px; font-weight: 500; color: #fff; background: var(--hdr);
+#top-recipe-save-btn { font-size: 11px; font-weight: 500; color: #fff; background: var(--topbar-bg);
                         border: none; border-radius: 6px; padding: 0 14px; height: 32px; box-sizing: border-box;
                         cursor: pointer; font-family: inherit; white-space: nowrap; transition: filter .2s ease; }
-#top-recipe-save-btn:hover { filter: brightness(1.08); }
-#top-recipe-save-btn:active { transform: scale(0.97); }
+#top-recipe-save-btn:hover { opacity: .9; }
 .top-recipe-btn-sub { font-size: 11px; font-weight: 600; color: var(--text); background: transparent;
                        border: 1px solid var(--border); border-radius: 6px; padding: 0 12px;
                        height: 32px; box-sizing: border-box;
                        cursor: pointer; font-family: inherit; white-space: nowrap;
                        transition: border-color .15s ease, background-color .15s ease; }
 .top-recipe-btn-sub:hover { border-color: var(--acc); background: var(--hover-tint); }
-.top-recipe-btn-sub:active { transform: scale(0.97); }
 .top-recipe-btn-sub:disabled { opacity: .4; cursor: not-allowed; }
 .top-recipe-btn-sub:disabled:hover { border-color: var(--border); background: transparent; }
 /* "새 레시피" 뒤에만 구분선을 둬 "레시피 저장 계열"과 "폴더 위치" 그룹을 시각적으로 나눈다 */
@@ -131,7 +129,7 @@ button.top-recipe-btn-sub[onclick="newRecipe()"]::after { content: ''; position:
                color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; display: flex;
                align-items: center; justify-content: center; font-family: inherit; padding: 0;
                transition: filter .2s ease; }
-#profile-btn:hover { filter: brightness(1.1); }
+#profile-btn:hover { opacity: .9; }
 /* position:fixed — #top-bar가 overflow-y:hidden이라 position:absolute로는 버튼 아래로
    펼쳐지는 부분이 잘렸다. top/right는 JS(positionProfileDropdown)가 #profile-btn의
    getBoundingClientRect() 기준으로 매번 계산해 인라인 스타일로 채운다. z-index는
@@ -445,7 +443,6 @@ html.sidebar-collapsed .nav-group-body { display: none; }
                             border: 1px solid var(--border); background: var(--side2); color: var(--text);
                             transition: background-color .15s ease, border-color .15s ease, transform .18s ease; }
 .settings-actions button:hover { background: var(--hover-tint); border-color: var(--acc); }
-.settings-actions button:active { transform: scale(0.97); }
 .settings-actions .btn-blue { background: var(--side2); color: var(--text); }
 .settings-actions .btn-green { background: var(--side2); color: var(--text); }
 .settings-actions .btn-red { background: var(--side2); color: #C0392B; }
@@ -458,7 +455,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .tab-pane.active { display: flex; }
 
 /* ── 공통 헤더바 ── */
-.hdr-bar { background: #FFFFFF; color: var(--text); padding: 9px 24px;
+.hdr-bar { background: var(--side2); color: var(--text); padding: 9px 24px;
            font-size: 11px; font-weight: 600; display: flex;
            align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
            border-bottom: 1px solid var(--border); color: var(--sub); }
@@ -467,8 +464,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
                   color: white; font-size: 10px; font-weight: 600;
                   cursor: pointer; font-family: inherit;
                   transition: filter .35s ease, transform .18s ease; }
-.hdr-bar button:hover { filter: brightness(1.1); }
-.hdr-bar button:active { transform: scale(0.97); }
+.hdr-bar button:hover { opacity: .9; }
 /* ── 페이지 헤더 제목/설명 2단 타이포 — 모든 탭이 공유하는 한 벌의 패턴 ──
    이전에는 탭마다 dash-hdr-title/mix-hdr-title/ing-hdr-title/std-hdr-title처럼 같은 규칙을
    이름만 바꿔 중복 정의했다. 지금은 .hdr-title/.hdr-desc 하나로 통합하고, 각 탭 hdr-bar에는
@@ -940,8 +936,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                transition: border-color .15s ease, background-color .15s ease, color .15s ease; }
 #tab-mix .mix-toolbar-group button svg { flex-shrink: 0; }
 #tab-mix .mix-toolbar-group button:hover { border-color: var(--sub); background: var(--gray-l); color: var(--text); }
-#tab-mix .mix-toolbar-group button.mix-btn-primary { background: var(--hdr); color: #fff; border-color: var(--hdr); font-weight: 600; }
-#tab-mix .mix-toolbar-group button.mix-btn-primary:hover { filter: brightness(1.15); background: var(--hdr); }
+#tab-mix .mix-toolbar-group button.mix-btn-primary { background: var(--topbar-bg); color: #fff; border-color: var(--topbar-bg); font-weight: 600; }
+#tab-mix .mix-toolbar-group button.mix-btn-primary:hover { opacity: .9; background: var(--topbar-bg); }
 #tab-mix .mix-toolbar-group button.mix-btn-danger { background: transparent; color: #B03A2E; border-color: #B03A2E; }
 #tab-mix .mix-toolbar-group button.mix-btn-danger:hover { background: #B03A2E; color: #fff; }
 
@@ -1045,17 +1041,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                        cursor: pointer; font-family: inherit; border-radius: 6px;
                        transition: border-color .15s ease, background-color .15s ease, transform .18s ease; }
 .ing-toolbar button:hover { border-color: var(--acc); background: var(--hover-tint); }
-.ing-toolbar button:active { transform: scale(0.97); }
 .ing-toolbar button.ing-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
-.ing-toolbar button.ing-btn-primary:hover { filter: brightness(1.08); background: var(--acc); }
+.ing-toolbar button.ing-btn-primary:hover { opacity: .9; background: var(--acc); }
 /* 선택 삭제 — 기존 위험색(#B03A2E, 인라인 style로 이미 지정됨)은 그대로 두고 테두리만 맞춰준다 */
 .ing-toolbar button[onclick="deleteSelectedIng()"] { border-color: #B03A2E; color: #fff; }
-.ing-toolbar button[onclick="deleteSelectedIng()"]:hover { filter: brightness(1.08); background: #B03A2E; }
+.ing-toolbar button[onclick="deleteSelectedIng()"]:hover { opacity: .9; background: #B03A2E; }
 /* 정렬 토글("원래 순서"/"가나다순 정렬")은 주요 동작이 아니라 "현재 어떤 정렬 모드인지" 보여주는
    상태 표시라, "원료 추가"의 꽉 찬 포인트 컬러(.ing-btn-primary)와는 구분되게 옅은 틴트 칩으로
    표시한다 — 새 색상이 아니라 포커스 링에 쓰는 기존 --calc(accent 16% 톤)를 재사용. */
 .ing-toolbar button.active { background: var(--calc); color: var(--acc); border-color: var(--acc); }
-.ing-toolbar button.active:hover { filter: brightness(1.05); background: var(--calc); }
+.ing-toolbar button.active:hover { background: var(--calc); }
 /* 검색+정렬(필터 영역)과 추가/삭제(액션 영역) 사이만 얇은 구분선으로 그룹을 나눈다 */
 #sort-btn { position: relative; margin-right: 12px; }
 #sort-btn::after { content: ''; position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
@@ -1216,11 +1211,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .modal-footer button { padding: 0 20px; height: 32px; border: none; border-radius: 6px;
                         font-size: 11px; font-weight: 500; cursor: pointer;
                         font-family: inherit; transition: filter .2s ease, background-color .15s ease, transform .18s ease; }
-.modal-footer button:hover { filter: brightness(1.05); }
-.modal-footer button:active { transform: scale(0.97); }
+.modal-footer button:hover { opacity: .92; }
 /* primary 버튼 = 다크 네이비/차콜(--hdr) 채움 — 포인트색(--acc)은 링크/활성 상태/포커스
    전용으로 남기고, 실제 "주요 동작" 버튼만 이 톤으로 분리한다(다른 --acc 용도는 미변경). */
-.btn-save { background: var(--hdr); color: #fff; }
+.btn-save { background: var(--topbar-bg); color: #fff; }
 .btn-cancel { background: transparent; color: var(--text); border: 1px solid var(--border) !important; }
 .btn-cancel:hover { background: var(--hover-tint); filter: none; }
 
@@ -1228,9 +1222,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    색상 구분(편집=중립/삭제=경고/등록=강조)은 .btn-cancel·.btn-save와 개별 경고색으로 유지한다. */
 #stdverify-custom-bar button { font-size: 11px; font-weight: 500; border-radius: 6px;
                                  padding: 6px 12px; font-family: inherit; white-space: nowrap;
-                                 cursor: pointer; transition: filter .2s ease; }
-#stdverify-custom-bar button:hover { filter: brightness(1.08); }
-#stdverify-custom-bar button:active { transform: scale(0.97); }
+                                 cursor: pointer; }
+#stdverify-custom-bar button:hover { filter: none; }
+#stdverify-custom-bar button:active { transform: none; }
 #stdverify-custom-bar button:disabled { opacity: .5; cursor: not-allowed; }
 #stdverify-custom-edit-btn { font-weight: 600; }
 #stdverify-custom-del-btn { font-weight: 600; color: #B03A2E; border-color: #B03A2E !important; }
@@ -1251,7 +1245,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    제한해, 넓은 모니터에서 카드가 양옆으로 과도하게 늘어지지 않게 한다. 배합 설계·영양
    분석·원료 DB·영양기준 DB처럼 가로로 긴 표가 필요한 화면은 이 클래스를 쓰지 않으므로
    영향받지 않는다. */
-.dash-panel { background: var(--panel-bg);
+.dash-panel { background: var(--body-bg);
               padding: 26px; transition: background .25s ease;
               word-break: keep-all; overflow-wrap: break-word;
               max-width: 1400px; margin: 0 auto; }
@@ -1576,7 +1570,6 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                border: 1px solid var(--border); border-radius: 6px; padding: 6px 14px; cursor: pointer;
                font-family: inherit; transition: border-color .15s ease, color .15s ease, transform .12s ease; }
 .dash-qa-btn:hover { border-color: var(--acc); color: var(--acc); }
-.dash-qa-btn:active { transform: scale(0.97); }
 
 /* 긴 입력폼(반려동물 정보·계산 설정)은 접어 두어 첫 화면을 비운다 — 값 자체는 그대로 유지. */
 .dash-settings-acc { border: 1px solid var(--border); border-radius: var(--radius-md);
@@ -1894,7 +1887,6 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
             display: flex; align-items: center; justify-content: center;
             transition: background-color .2s ease; z-index: 2; }
 .fab-main:hover { background: #333333; }
-.fab-main:active { transform: scale(0.94); }
 .fab-icon { position: relative; width: 16px; height: 16px; transition: transform .3s ease-out; }
 .fab-icon::before, .fab-icon::after { content: ''; position: absolute; background: #fff; border-radius: 2px; }
 .fab-icon::before { left: 0; top: 7px; width: 16px; height: 2px; }
@@ -1917,7 +1909,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
                      background: var(--side2); color: var(--text); font-size: 11px; font-weight: 600;
                      cursor: pointer; font-family: inherit;
                      transition: background-color .25s ease, color .25s ease; }
-.settings-opt-btn.active { background: var(--hdr); color: #fff; border-color: var(--hdr); }
+.settings-opt-btn.active { background: var(--topbar-bg); color: #fff; border-color: var(--topbar-bg); }
 .fab.open .fab-item { opacity: 1; pointer-events: auto; }
 .fab.open .fab-item[data-idx="1"] { transition-delay: 0s;   transform: rotate(-15deg) translateY(-90px) rotate(15deg)  scale(1); }
 .fab.open .fab-item[data-idx="2"] { transition-delay: .03s; transform: rotate(-45deg) translateY(-90px) rotate(45deg)  scale(1); }
@@ -2001,8 +1993,7 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 .auth-btn { width: 100%; height: 46px; border: none; border-radius: 8px; background: var(--acc);
              color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
              margin-top: 4px; transition: filter .2s ease, transform .18s ease; }
-.auth-btn:hover { filter: brightness(1.1); }
-.auth-btn:active { transform: scale(0.97); }
+.auth-btn:hover { opacity: .9; }
 .auth-btn:disabled { opacity: .6; cursor: default; }
 .auth-err { font-size: 10px; color: #B03A2E; margin-top: 10px; min-height: 14px; }
 .auth-err.auth-msg-ok { color: var(--pass-t); }
