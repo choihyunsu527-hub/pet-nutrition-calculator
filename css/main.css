@@ -475,6 +475,12 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 }
 .hdr-title { font-size: 17px; font-weight: 700; color: var(--hdr); letter-spacing: -.2px; }
 .hdr-desc { flex: 0 0 100%; font-size: 12px; color: var(--sub); font-weight: 500; }
+/* 페이지 헤더의 primary action — 제목과 같은 행 우측에 정렬(margin-left:auto), 설명은
+   여전히 flex-basis:100%로 다음 행에 떨어진다. 대시보드처럼 이 화면에서 실제로 쓸 수
+   있는 기존 동작(newRecipe() 등)이 있을 때만 쓰는 선택적 슬롯 — teal 채움 primary 톤. */
+.hdr-bar button.dash-header-action { margin-left: auto; height: 32px; padding: 0 16px;
+  font-size: 12px; font-weight: 600; color: #fff; background: var(--acc); border-radius: 6px; }
+.hdr-bar button.dash-header-action:hover { opacity: .9; }
 /* ── 카드 ── */
 .cards { display: flex; gap: 8px; padding: 10px 14px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
@@ -1511,34 +1517,42 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cap-label { font-size: 11px; font-weight: 600; color: var(--hdr); }
 .dash-cap-badge { font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 4px; }
 
-/* ── 대시보드: 제품 유형 카드 + 요약 통계 타일을 한 줄로(좌: 카드, 우: 2x2) ──
-   이 둘과 아래 프로필 카드(.dash-section)를 같은 radius/그림자(--radius-md/--sh)로
-   통일해, 카드마다 무게감이 달라 보이던 것을 하나의 톤으로 정리한다. */
-.dash-top-row { display: flex; align-items: stretch; gap: 18px; margin-bottom: 18px; }
-.dash-top-row .ptype-card { flex: 1.3; min-width: 0; margin-bottom: 0; }
-.dash-top-row .dash-stat-row { flex: 1; min-width: 0; margin-bottom: 0; }
+/* ── 대시보드 3차 리디자인: KPI 요약 바 → 빠른 작업 → 2-column 메인(좌: 최근 작업,
+   우: 기준 상태) → 계산 설정 아코디언, 순서로 시선이 흐르도록 재구성.
+   .dash-summary는 KPI 한 줄(.dash-stat-row)만 감싸는 얇은 래퍼 — 화면 폭 전체를
+   차지해 "핵심 지표"가 대시보드 진입 즉시 눈에 들어오게 한다(예전엔 ptype-card와
+   나란히 좁은 1fr 컬럼에 눌려 있었다). */
+.dash-summary { margin-bottom: 22px; }
 
-/* ── 대시보드: 요약 통계 타일(KPI 카드) — .ptype-card Hero Card와 같은 디자인 언어 ──
-   EYEBROW(accent dot+작은 라벨) → PRIMARY VALUE(카드의 핵심 숫자) → UNIT(작게) →
-   SECONDARY(진행바/보조 설명, 카드별로 유무만 다름) → ACTION(맨 아래 고정) 위계를
-   ptype-card와 동일한 padding(22px)·eyebrow 톤·색상 규칙으로 맞춘다. PRIMARY VALUE는
-   27px로, ptype-card-type(31px, 제품 유형명)보다 한 단계 낮춰 두 컴포넌트가 서로
-   위계를 침범하지 않게 한다. radius/shadow/border/배경은 새 값 없이 다른 대시보드
-   카드와 같은 --radius-md/--sh/--border/--side2 재사용. 카드를 flex-column으로 두고
-   액션 링크에 margin-top:auto를 줘서, 카드마다 중간 콘텐츠 줄 수가 달라도(진행바
-   유무 등) 4개 카드의 링크가 같은 높이에 맞춰진다. 상태(pass/warn/fail)에 따른
-   카드 배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
-/* Stripe식 "단일 metric bar" — 카드 4개를 따로 두지 않고, 하나의 흰색 카드 안을 얇은
-   구분선(border-right/bottom)으로 4분할한다. "카드 안에 카드"를 없애 hierarchy를
-   한 단계 단순화(외곽 카드 1개만 border/radius를 갖고, 내부 셀은 구분선만 사용). */
-.dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);
+/* ── 대시보드: 요약 통계 타일(KPI 카드) — Stripe식 "단일 metric bar" ──
+   카드 4개를 따로 두지 않고, 하나의 흰색 카드 안을 얇은 구분선(border-right)으로
+   4등분한 한 줄짜리 바로 만든다("카드 안에 카드" 제거, hierarchy 단순화). 각 셀은
+   EYEBROW(accent dot+작은 라벨) → PRIMARY VALUE(--fs-metric) → SECONDARY(진행바/보조
+   설명) → ACTION(하단 고정 링크) 순서를 유지. 상태(pass/warn/fail)에 따른 카드
+   배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
+.dash-stat-row { display: grid; grid-template-columns: repeat(4, 1fr);
                   background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
-                  overflow: hidden; margin-bottom: 10px; }
+                  overflow: hidden; }
 .dash-stat-card { display: flex; flex-direction: column; background: transparent;
-                   padding: 16px 18px; position: relative;
-                   border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.dash-stat-card:nth-child(2n) { border-right: none; }
-.dash-stat-card:nth-child(n+3) { border-bottom: none; }
+                   padding: 18px 20px; position: relative;
+                   border-right: 1px solid var(--border); }
+.dash-stat-card:last-child { border-right: none; }
+
+/* ── 대시보드: MAIN CONTENT 2-column — 좌(최근 작업, 넓게) : 우(기준/상태, 좁게) ──
+   실제 데이터가 있는 두 기존 컴포넌트(레시피 관리 목록 / 제품 유형·기준검증 상태
+   hero)를 나란히 배치. 1100px 이하(사이드바 접힌 상태 기준 대략 1280px 창 폭)에서는
+   세로로 자연스럽게 쌓인다. */
+.dash-main-grid { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+                    align-items: start; gap: 18px; }
+.dash-main-primary, .dash-main-secondary { min-width: 0; }
+.dash-main-primary .dash-recent-card, .dash-main-secondary .ptype-card { height: 100%; margin-bottom: 0; }
+@media (max-width: 1100px) {
+  .dash-main-grid { grid-template-columns: 1fr; }
+}
+/* 좁은 우측 컬럼에 들어간 ptype-card — 원래(31px) 큰 hero 제목은 넓은 화면 전제라,
+   여기서만 한 단계 낮춰 좁은 폭에서도 줄바꿈 없이 잘 읽히게 한다. */
+.dash-main-secondary .ptype-card-type { font-size: 22px; }
+.dash-main-secondary .ptype-card-desc { max-width: none; }
 /* EYEBROW — ptype-card-label과 같은 톤(10px/500/대문자) + 같은 청록 accent 점 하나만 */
 .dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500;
                     color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }

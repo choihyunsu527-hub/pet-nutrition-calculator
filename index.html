@@ -990,6 +990,14 @@
           <div class="tab-pane" id="tab-dash">
             <div class="hdr-bar hdr-bar-left" data-eyebrow="홈">
               <span class="hdr-title">대시보드</span>
+              <button
+                type="button"
+                class="dash-header-action"
+                onclick="newRecipe()"
+                title="새 레시피를 시작합니다"
+              >
+                + 새 레시피 시작
+              </button>
               <span class="hdr-desc">영양 설계 현황 요약</span>
             </div>
             <div
@@ -1001,23 +1009,7 @@
               "
             >
               <div class="dash-panel">
-                <div class="dash-top-row">
-                  <div class="ptype-card" id="ptype-card">
-                    <div class="ptype-card-header">
-                      <div class="ptype-card-label">제품 유형 분석</div>
-                    </div>
-                    <div class="ptype-card-type" style="color: var(--sub)">
-                      배합비를 입력하면 자동으로 분석됩니다
-                    </div>
-                    <div class="ptype-card-desc">
-                      배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을
-                      분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가 중
-                      가장 적합한 제품 유형을 자동으로 추천합니다.
-                    </div>
-                    <span class="dash-stat-link" onclick="goTab('std-verify')"
-                      >기준 검증 상세 보기 →</span
-                    >
-                  </div>
+                <div class="dash-summary" aria-label="핵심 지표">
                   <div class="dash-stat-row">
                     <div class="dash-stat-card" id="ds-overall-card">
                       <div class="dash-stat-label" id="ds-overall-label">
@@ -1115,51 +1107,80 @@
                   </button>
                 </div>
 
-                <div class="dash-section dash-recent-card">
-                  <h3>레시피 관리</h3>
-                  <div class="seg-control dash-recent-tabs">
-                    <button
-                      type="button"
-                      class="seg-btn active"
-                      data-view="recent"
-                      onclick="setDashRecipeView('recent')"
-                    >
-                      최근
-                    </button>
-                    <button
-                      type="button"
-                      class="seg-btn"
-                      data-view="favorite"
-                      onclick="setDashRecipeView('favorite')"
-                    >
-                      즐겨찾기
-                    </button>
+                <!-- MAIN CONTENT — 좌: 최근 작업(레시피 관리, primary/wide) ·
+                     우: 기준 검증 상태(제품 유형 분석 hero, secondary/narrow) -->
+                <div class="dash-main-grid">
+                  <div class="dash-main-primary">
+                    <div class="dash-section dash-recent-card">
+                      <h3>레시피 관리</h3>
+                      <div class="seg-control dash-recent-tabs">
+                        <button
+                          type="button"
+                          class="seg-btn active"
+                          data-view="recent"
+                          onclick="setDashRecipeView('recent')"
+                        >
+                          최근
+                        </button>
+                        <button
+                          type="button"
+                          class="seg-btn"
+                          data-view="favorite"
+                          onclick="setDashRecipeView('favorite')"
+                        >
+                          즐겨찾기
+                        </button>
+                      </div>
+                      <div class="dash-recent-search">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          aria-hidden="true"
+                        >
+                          <circle cx="11" cy="11" r="8" />
+                          <path d="m21 21-4.34-4.34" />
+                        </svg>
+                        <input
+                          type="text"
+                          id="dash-recipe-search"
+                          placeholder="레시피 이름 검색…"
+                          autocomplete="off"
+                          oninput="applyDashRecipeFilter()"
+                          aria-label="레시피 이름 검색"
+                        />
+                      </div>
+                      <div
+                        class="dash-recent-list"
+                        id="dash-recent-recipe-list"
+                      >
+                        <div class="dash-recent-empty">
+                          저장된 레시피가 없습니다.
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="dash-recent-search">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      aria-hidden="true"
-                    >
-                      <circle cx="11" cy="11" r="8" />
-                      <path d="m21 21-4.34-4.34" />
-                    </svg>
-                    <input
-                      type="text"
-                      id="dash-recipe-search"
-                      placeholder="레시피 이름 검색…"
-                      autocomplete="off"
-                      oninput="applyDashRecipeFilter()"
-                      aria-label="레시피 이름 검색"
-                    />
-                  </div>
-                  <div class="dash-recent-list" id="dash-recent-recipe-list">
-                    <div class="dash-recent-empty">
-                      저장된 레시피가 없습니다.
+                  <div class="dash-main-secondary">
+                    <div class="ptype-card" id="ptype-card">
+                      <div class="ptype-card-header">
+                        <div class="ptype-card-label">제품 유형 분석</div>
+                      </div>
+                      <div class="ptype-card-type" style="color: var(--sub)">
+                        배합비를 입력하면 자동으로 분석됩니다
+                      </div>
+                      <div class="ptype-card-desc">
+                        배합 설계 탭에서 원료와 배합비를 입력하면, 영양성분을
+                        분석해 주식 / 보조식·보충식 / 간식 / 직접 급여 불가
+                        중 가장 적합한 제품 유형을 자동으로 추천합니다.
+                      </div>
+                      <span
+                        class="dash-stat-link"
+                        onclick="goTab('std-verify')"
+                        >기준 검증 상세 보기 →</span
+                      >
                     </div>
                   </div>
                 </div>
