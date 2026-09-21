@@ -923,16 +923,32 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 #tab-mix .mix-ctx-desc::before { content: '·'; margin: 0 8px; color: var(--sub); }
 
 /* 섹션 eyebrow 라벨 — 대시보드 KPI 카드 라벨(.dash-stat-label)과 같은 톤(10px/600/대문자+점)
-   으로 "레시피 설정"/"작업 도구" 두 섹션이 시작되는 지점을 명확히 표시한다. */
+   으로 "레시피 설정" 섹션이 시작되는 지점을 명확히 표시한다. */
 .mix-section-hdr { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 600;
                     color: var(--sub); text-transform: uppercase; letter-spacing: .5px;
                     padding: 10px 20px 0; background: var(--side2); }
 .mix-section-hdr::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
                             background: var(--acc); flex-shrink: 0; }
-/* "배합 원료" — 이 화면의 핵심 작업 영역(표) 시작을 알리는 라벨이라 다른 섹션 라벨보다
-   한 단계 크고 진하게 둬, 위 toolbar/설정 섹션과 구분되는 "메인 작업 영역"임을 알린다. */
-.mix-section-hdr-table { font-size: 12px; font-weight: 700; color: var(--hdr); letter-spacing: 0;
-                          text-transform: none; padding-top: 16px; padding-bottom: 8px; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   배합 설계 탭 3차 리디자인 — 대시보드와 같은 디자인 언어(Stripe 정보 구조 +
+   Linear 밀도)로 화면 폭/카드 hierarchy를 재구성. 기존 요소(class/id/onclick/이벤트)는
+   그대로 두고 새 wrapper 3개(.mix-page/.mix-context/.mix-workspace)만 추가했다.
+   흐름: 페이지 헤더 → RECIPE CONTEXT(레시피 설정, 컴팩트 스트립) →
+   MIX WORKSPACE(배합 원료 — 툴바+표+합계를 하나의 흰 카드로 묶음). */
+/* 대시보드(.dash-panel)와 같은 밀도 기준 — 1600px 같은 넓은 화면에서 좌우로 과도하게
+   퍼지지 않도록 1320px로 제한하고 중앙 정렬한다. 배합표 자체는 이 폭 안에서도 필요하면
+   .mix-table-wrap이 자기 폭만큼 가로 스크롤을 내보내므로 좁아 보이지 않는다. */
+.mix-page { width: 100%; max-width: 1320px; margin: 0 auto; }
+.mix-context { margin-bottom: 14px; }
+/* MIX WORKSPACE — 툴바/표/합계를 카드 하나로 묶어 "표 하나가 화면에 떠 있는" 느낌을
+   없애고 "이 화면의 실제 작업 영역"이라는 경계를 준다. 안쪽 요소(툴바/표/합계바)의
+   기존 border-bottom/top은 카드 내부 구분선으로 그대로 재사용(추가 색상 없음). */
+.mix-workspace { background: var(--side2); border: 1px solid var(--border);
+                  border-radius: var(--radius-md); overflow: hidden; }
+.mix-workspace-hdr { padding: 16px 20px 2px; }
+.mix-workspace-hdr h3 { font-size: 14px; font-weight: 700; color: var(--hdr); margin-bottom: 2px; }
+.mix-workspace-hdr p { font-size: 11.5px; color: var(--sub); font-weight: 500; }
 
 /* 작업 도구 — 행 추가/선택 삭제/100% 맞추기(핵심 편집 동작)는 왼쪽에, 파일 작업 3종(보조 동작)은
    오른쪽에 둬 우선순위를 분리한다. 버튼 요소 자체(class/onclick)는 기존과 완전히 같고 위치만
