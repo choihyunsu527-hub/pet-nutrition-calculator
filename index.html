@@ -988,7 +988,7 @@
                (URL 해시 > sessionStorage > dash) — 여기에 active를 두면 새로고침 첫 1회에
                대시보드가 잠깐 노출된다. -->
           <div class="tab-pane" id="tab-dash">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="홈">
               <span class="hdr-title">대시보드</span>
               <span class="hdr-desc">영양 설계 현황 요약</span>
             </div>
@@ -1570,7 +1570,7 @@
 
           <!-- ── TAB: 제품 ── -->
           <div class="tab-pane" id="tab-product">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="작업 · 제품 관리">
               <span class="hdr-title">제품 / 정보</span>
               <span class="hdr-desc">제품 정보 및 설정</span>
             </div>
@@ -1738,7 +1738,7 @@
 
           <!-- ── TAB 1: 배합 설계 ── -->
           <div class="tab-pane" id="tab-mix">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="작업 · 개발">
               <span class="hdr-title">배합 설계</span>
               <span class="hdr-desc"
                 >레시피를 구성하고 배합비와 영양성분을 확인합니다.</span
@@ -1872,6 +1872,7 @@
                 </button>
               </div>
             </div>
+            <div class="mix-section-hdr mix-section-hdr-table">배합 원료</div>
             <div
               id="mix-nutrient-note"
               style="
@@ -1933,7 +1934,7 @@
 
           <!-- ── TAB: 분석 현황 ── -->
           <div class="tab-pane" id="tab-analysis">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석">
               <span class="hdr-title">분석 현황</span>
               <span class="hdr-desc">영양 설계 상세 지표</span>
             </div>
@@ -2325,7 +2326,7 @@
 
           <!-- ── TAB 2: 영양 분석 ── -->
           <div class="tab-pane" id="tab-ana">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석 · 영양 분석">
               <span class="hdr-title">영양성분 분석</span>
               <span class="hdr-desc"
                 >DMB 환산 + NRC / AAFCO / FEDIAF 기준 비교</span
@@ -2643,7 +2644,7 @@
 
           <!-- ── TAB: 에너지 분석 ── -->
           <div class="tab-pane" id="tab-ana-energy">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석 · 영양 분석">
               <span class="hdr-title">에너지 분석</span>
               <span class="hdr-desc"
                 >ME(대사에너지) · RER/MER 급여량 · 칼로리 조성 · AAFCO 열량 밀도
@@ -2748,7 +2749,7 @@
 
           <!-- ── TAB: 기준 검증 ── -->
           <div class="tab-pane" id="tab-std-verify">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석 · 영양 분석">
               <span class="hdr-title">기준 검증</span>
               <span class="hdr-desc"
                 >배합이 선택한 영양 기준(AAFCO/NRC/사용자 등록 기준)을
@@ -2985,7 +2986,7 @@
 
           <!-- ── TAB 3: 아미노산·VitK ── -->
           <div class="tab-pane" id="tab-amino">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석">
               <span class="hdr-title">필수아미노산 11종</span>
               <span class="hdr-desc">원료DB 자동계산 + 직접 보정 가능</span>
             </div>
@@ -3045,7 +3046,7 @@
 
           <!-- ── TAB 4: 경고 패널 ── -->
           <div class="tab-pane" id="tab-warn">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석">
               <svg
                 width="15"
                 height="15"
@@ -3111,7 +3112,7 @@
 
           <!-- ── 변경 이력 ── -->
           <div class="tab-pane" id="tab-history">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석">
               <svg
                 width="15"
                 height="15"
@@ -3152,7 +3153,7 @@
 
           <!-- ── TAB: 배합 비교 ── -->
           <div class="tab-pane" id="tab-compare">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="분석 · 영양 분석">
               <svg
                 width="15"
                 height="15"
@@ -3294,7 +3295,7 @@
 
           <!-- ── TAB 5: 기준 DB ── -->
           <div class="tab-pane" id="tab-std">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="데이터">
               <span class="hdr-title">NRC · AAFCO · FEDIAF 영양소 기준 DB</span>
               <span class="hdr-desc"
                 >출처: NRC 2006 / AAFCO 2023 / FEDIAF 2025</span
@@ -3332,7 +3333,7 @@
 
           <!-- ── TAB: 전문 용어 ── -->
           <div class="tab-pane" id="tab-glossary">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="데이터">
               <span class="hdr-title">전문 용어 사전</span>
               <span class="hdr-desc"
                 >이 계산기가 쓰는 수의영양학 · AAFCO 용어 모음</span
@@ -3371,7 +3372,7 @@
 
           <!-- ── TAB: 계산 기준 ── -->
           <div class="tab-pane" id="tab-calcbasis">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="데이터">
               <span class="hdr-title">계산 기준</span>
               <span class="hdr-desc"
                 >이 계산기가 사용하는 공식·기준·판정 로직 레퍼런스</span
@@ -3817,7 +3818,7 @@
 
           <!-- ── TAB: 법령·광고기준 ── -->
           <div class="tab-pane" id="tab-law">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="데이터">
               <span class="hdr-title">법령·광고기준</span>
               <span class="hdr-desc"
                 >반려동물사료 관련 법령·표시사항·허위/과장광고 기준 한눈에
@@ -4167,7 +4168,7 @@
 
           <!-- ── TAB: 표시사항 작성 ── -->
           <div class="tab-pane" id="tab-label">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="데이터">
               <span class="hdr-title">표시사항 작성</span>
               <span class="hdr-desc"
                 >배합 결과를 반려동물사료 표시사항 초안으로 정리 (참고용)</span
@@ -4375,7 +4376,7 @@
 
           <!-- ── TAB 6: 원료 DB ── -->
           <div class="tab-pane" id="tab-ing">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="데이터">
               <span class="hdr-title">원료 DB</span>
               <span class="hdr-desc"
                 >USDA FoodData Central 기반, per 100g as-is</span
@@ -4507,7 +4508,7 @@
 
           <!-- ── TAB: 설정 ── -->
           <div class="tab-pane" id="tab-settings">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="시스템">
               <span class="hdr-title">설정</span>
             </div>
             <div
@@ -4658,7 +4659,7 @@
 
           <!-- ── TAB: 관리자 (super_admin 전용 — data-requires-role로 showTab()이 접근을 차단) ── -->
           <div class="tab-pane" id="tab-admin" data-requires-role="super_admin">
-            <div class="hdr-bar hdr-bar-left">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="시스템">
               <span class="hdr-title">관리자</span>
             </div>
             <div

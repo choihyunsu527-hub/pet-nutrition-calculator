@@ -454,25 +454,27 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 .tab-pane { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .tab-pane.active { display: flex; }
 
-/* ── 공통 헤더바 ── */
-.hdr-bar { background: var(--side2); color: var(--text); padding: 9px 24px;
-           font-size: 11px; font-weight: 600; display: flex;
-           align-items: center; justify-content: center; gap: 8px; flex-shrink: 0;
-           border-bottom: 1px solid var(--border); color: var(--sub); }
+/* ── 공통 헤더바 ── Stripe식 "eyebrow / title / description" 2행 구조로 재설계.
+   .hdr-bar는 flex-wrap 컨테이너 — eyebrow(::before, data-eyebrow 속성)와 .hdr-desc는
+   flex-basis:100%로 강제 줄바꿈시켜, DOM/onclick/id 변경 없이 CSS만으로 세로 계층을 만든다.
+   아이콘이 있는 탭(경고/이력 등)은 아이콘+제목이 1행, eyebrow/description은 각각 별도 행. */
+.hdr-bar { background: var(--side2); color: var(--text); padding: 14px 24px 15px;
+           display: flex; flex-wrap: wrap; align-items: center;
+           row-gap: 2px; column-gap: 9px; flex-shrink: 0;
+           border-bottom: 1px solid var(--border); }
 .hdr-bar .hdr-btns { margin-left: auto; display: flex; gap: 5px; }
 .hdr-bar button { padding: 4px 12px; border: none; border-radius: 4px;
                   color: white; font-size: 10px; font-weight: 600;
-                  cursor: pointer; font-family: inherit;
-                  transition: filter .35s ease, transform .18s ease; }
+                  cursor: pointer; font-family: inherit; }
 .hdr-bar button:hover { opacity: .9; }
-/* ── 페이지 헤더 제목/설명 2단 타이포 — 모든 탭이 공유하는 한 벌의 패턴 ──
-   이전에는 탭마다 dash-hdr-title/mix-hdr-title/ing-hdr-title/std-hdr-title처럼 같은 규칙을
-   이름만 바꿔 중복 정의했다. 지금은 .hdr-title/.hdr-desc 하나로 통합하고, 각 탭 hdr-bar에는
-   좌측 정렬용 .hdr-bar-left만 붙인다(가운데 정렬이 필요한 곳은 기존 .hdr-bar 기본값 그대로 유지 가능). */
 .hdr-bar.hdr-bar-left { justify-content: flex-start; }
-.hdr-title { font-size: 14px; font-weight: 700; color: var(--hdr); letter-spacing: -.1px; }
-.hdr-desc { font-size: 11px; color: var(--sub); font-weight: 500; }
-.hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
+.hdr-bar[data-eyebrow]::before {
+  content: attr(data-eyebrow); flex: 0 0 100%; order: -1;
+  font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--acc);
+}
+.hdr-title { font-size: 17px; font-weight: 700; color: var(--hdr); letter-spacing: -.2px; }
+.hdr-desc { flex: 0 0 100%; font-size: 12px; color: var(--sub); font-weight: 500; }
 /* ── 카드 ── */
 .cards { display: flex; gap: 8px; padding: 10px 14px; flex-shrink: 0;
          flex-wrap: wrap; justify-content: center; }
@@ -921,6 +923,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                     padding: 10px 20px 0; background: var(--side2); }
 .mix-section-hdr::before { content: ''; width: 5px; height: 5px; border-radius: 50%;
                             background: var(--acc); flex-shrink: 0; }
+/* "배합 원료" — 이 화면의 핵심 작업 영역(표) 시작을 알리는 라벨이라 다른 섹션 라벨보다
+   한 단계 크고 진하게 둬, 위 toolbar/설정 섹션과 구분되는 "메인 작업 영역"임을 알린다. */
+.mix-section-hdr-table { font-size: 12px; font-weight: 700; color: var(--hdr); letter-spacing: 0;
+                          text-transform: none; padding-top: 16px; padding-bottom: 8px; }
 
 /* 작업 도구 — 행 추가/선택 삭제/100% 맞추기(핵심 편집 동작)는 왼쪽에, 파일 작업 3종(보조 동작)은
    오른쪽에 둬 우선순위를 분리한다. 버튼 요소 자체(class/onclick)는 기존과 완전히 같고 위치만
@@ -930,7 +936,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                border-bottom: 1px solid var(--border); }
 .mix-toolbar-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 #tab-mix .mix-toolbar-group button { display: inline-flex; align-items: center; gap: 5px;
-               height: 30px; padding: 0 12px; font-size: 11px; font-weight: 500;
+               height: 32px; padding: 0 12px; font-size: 11px; font-weight: 500;
                border: 1px solid var(--border); border-radius: var(--radius-md);
                background: var(--side2); color: var(--text); cursor: pointer;
                font-family: inherit; white-space: nowrap;
@@ -1026,21 +1032,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 원료DB ── */
 .ing-toolbar { display: flex; align-items: center; gap: 8px;
-               padding: 6px 12px; flex-shrink: 0; background: var(--side);
+               padding: 10px 20px; flex-shrink: 0; background: var(--side);
                border-bottom: 1px solid var(--border); }
-.ing-toolbar input { padding: 5px 10px; border: 1px solid var(--border);
+.ing-toolbar input { height: 32px; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--border);
                      font-size: 11px; font-family: inherit; color: var(--text); background: var(--inp);
-                     width: 200px; outline: none; border-radius: 4px;
+                     width: 220px; outline: none; border-radius: 6px;
                      box-shadow: 0 0 0 0 transparent;
                      transition: border-color .15s ease, box-shadow .15s ease; }
 .ing-toolbar input:hover { border-color: var(--sub); }
 .ing-toolbar input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 /* 기본(세컨더리) 버튼 — 편집/원래 순서 같은 중립 동작. "원료 추가"만 .ing-btn-primary로
    포인트 컬러를 얹고, "선택 삭제"는 기존 위험색(#B03A2E) 인라인 스타일을 그대로 유지한다. */
-.ing-toolbar button { padding: 5px 12px; background: var(--side2); color: var(--text);
+.ing-toolbar button { height: 32px; box-sizing: border-box; padding: 0 14px; background: var(--side2); color: var(--text);
                        border: 1px solid var(--border); font-size: 11px; font-weight: 600;
                        cursor: pointer; font-family: inherit; border-radius: 6px;
-                       transition: border-color .15s ease, background-color .15s ease, transform .18s ease; }
+                       transition: border-color .15s ease, background-color .15s ease; }
 .ing-toolbar button:hover { border-color: var(--acc); background: var(--hover-tint); }
 .ing-toolbar button.ing-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
 .ing-toolbar button.ing-btn-primary:hover { opacity: .9; background: var(--acc); }
@@ -1522,13 +1528,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    액션 링크에 margin-top:auto를 줘서, 카드마다 중간 콘텐츠 줄 수가 달라도(진행바
    유무 등) 4개 카드의 링크가 같은 높이에 맞춰진다. 상태(pass/warn/fail)에 따른
    카드 배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
-.dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 12px; margin-bottom: 10px; }
-/* 카드 자체는 기존 색 토큰(--side2/--border/--radius-md) 그대로 border만으로 구분한다
-   (장식용 shadow 제거 — 전역 --sh:none 원칙을 이 카드도 그대로 따름). 패딩도 "큰 KPI 카드"
-   느낌을 줄이도록 한 단계 줄였다(20/22px → 16/18px). */
-.dash-stat-card { display: flex; flex-direction: column; background: var(--side2); border: 1px solid var(--border);
-                   border-radius: var(--radius-md);
-                   padding: 16px 18px; position: relative; overflow: hidden; }
+/* Stripe식 "단일 metric bar" — 카드 4개를 따로 두지 않고, 하나의 흰색 카드 안을 얇은
+   구분선(border-right/bottom)으로 4분할한다. "카드 안에 카드"를 없애 hierarchy를
+   한 단계 단순화(외곽 카드 1개만 border/radius를 갖고, 내부 셀은 구분선만 사용). */
+.dash-stat-row { display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr);
+                  background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                  overflow: hidden; margin-bottom: 10px; }
+.dash-stat-card { display: flex; flex-direction: column; background: transparent;
+                   padding: 16px 18px; position: relative;
+                   border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.dash-stat-card:nth-child(2n) { border-right: none; }
+.dash-stat-card:nth-child(n+3) { border-bottom: none; }
 /* EYEBROW — ptype-card-label과 같은 톤(10px/500/대문자) + 같은 청록 accent 점 하나만 */
 .dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500;
                     color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
