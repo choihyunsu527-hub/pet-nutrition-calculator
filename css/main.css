@@ -470,8 +470,8 @@ html.sidebar-collapsed .nav-group-body { display: none; }
    이름만 바꿔 중복 정의했다. 지금은 .hdr-title/.hdr-desc 하나로 통합하고, 각 탭 hdr-bar에는
    좌측 정렬용 .hdr-bar-left만 붙인다(가운데 정렬이 필요한 곳은 기존 .hdr-bar 기본값 그대로 유지 가능). */
 .hdr-bar.hdr-bar-left { justify-content: flex-start; }
-.hdr-title { font-size: 12.5px; font-weight: 600; color: var(--hdr); }
-.hdr-desc { font-size: 10.5px; color: var(--sub); font-weight: 500; }
+.hdr-title { font-size: 14px; font-weight: 700; color: var(--hdr); letter-spacing: -.1px; }
+.hdr-desc { font-size: 11px; color: var(--sub); font-weight: 500; }
 .hdr-desc::before { content: '—'; margin: 0 8px; color: var(--sub); }
 /* ── 카드 ── */
 .cards { display: flex; gap: 8px; padding: 10px 14px; flex-shrink: 0;
@@ -516,6 +516,7 @@ table { width: 100%; border-collapse: collapse; font-size: 11px;
 }
 #ana-table td, #warn-table td, #stdverify-table td { border-color: var(--table-line); }
 #ana-table td, #warn-table td { padding: 7px 10px; }
+#ana-table tbody tr:hover td, #warn-table tbody tr:hover td, #stdverify-table tbody tr:hover td { background: var(--hover-tint); }
 /* 표 안에 "데이터 없음/입력 안내" 한 줄만 넣는 placeholder 행 — panel-type 빈 상태와
    같은 톤(11px는 table 기본값 상속, var(--sub), 중앙정렬, 20-30px 패딩대)으로 통일 */
 .table-empty-row { text-align: center; color: var(--sub); padding: 24px; }
@@ -1246,7 +1247,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    분석·원료 DB·영양기준 DB처럼 가로로 긴 표가 필요한 화면은 이 클래스를 쓰지 않으므로
    영향받지 않는다. */
 .dash-panel { background: var(--body-bg);
-              padding: 26px; transition: background .25s ease;
+              padding: 20px 24px; transition: background .25s ease;
               word-break: keep-all; overflow-wrap: break-word;
               max-width: 1400px; margin: 0 auto; }
 /* 자동 정렬 그리드 — 한 줄에 다 들어갈 만큼 넓을 때는 동일한 폭의 3열로 보이고,
@@ -1291,11 +1292,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                     padding-bottom: 4px; }
 .dash-section h3 .linkable { cursor: pointer; transition: color .35s ease; }
 .dash-section h3 .linkable:hover { color: var(--acc); }
-.dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 8px; }
+.dash-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; }
 .product-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .product-info-box { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
              padding: 12px 14px; box-shadow: var(--sh); }
-.product-info-box .pi-label { font-size: 10px; color: var(--sub); margin-bottom: 5px; font-weight: 600; }
+.product-info-box .pi-label { font-size: var(--fs-meta); color: var(--sub); margin-bottom: 5px; font-weight: 600; }
 .product-info-box .pi-val { font-size: 13px; font-weight: 600; color: var(--hdr); line-height: 1.3;
              word-break: keep-all; overflow-wrap: break-word; }
 .dash-kpi { background: var(--gray-grad); border: 1px solid var(--border); border-radius: var(--radius-md);
@@ -1368,7 +1369,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 대시보드 하단(탭-대시보드)과 분석 현황 탭의 카드는 상단 KPI/Hero Card와 같은 톤으로 —
    padding 22px, 제목은 eyebrow(작은 uppercase + 청록 accent dot)로 통일한다. .dash-section
    자체는 다른 탭(제품/배합 등)에서도 쓰는 공용 클래스라 여기 두 탭에만 스코프를 좁힌다. */
-#tab-dash .dash-section, #tab-analysis .dash-section { padding: 24px; }
+#tab-dash .dash-section, #tab-analysis .dash-section { padding: 20px; }
 #tab-dash .dash-section h3, #tab-analysis .dash-section h3 {
   font-size: 10.5px; font-weight: 600; color: var(--sub);
   text-transform: uppercase; letter-spacing: .4px; }

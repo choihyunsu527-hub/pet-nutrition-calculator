@@ -54,7 +54,7 @@
   --radius-lg: 8px;
   /* Typography 토큰 — 카드 제목/메타 텍스트/핵심 지표 숫자 3가지 역할 기준값(기존 유지). */
   --fs-title:  13px;
-  --fs-meta:   10px;
+  --fs-meta:   10.5px;
   --fs-metric: 22px;
 }
 html[data-theme="dark"] {
