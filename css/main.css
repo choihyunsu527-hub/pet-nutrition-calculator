@@ -1634,25 +1634,28 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-recent-body .dash-recent-list { max-height: 260px; overflow-y: auto; }
 
 /* ── 대시보드: 월간 캘린더 — 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조만 우선 구현.
-   일정 저장/DB 연동은 하지 않는 순수 표시용 위젯(js/ui.js의 renderDashCalendar). */
-.dash-calendar-card { flex: 1; }
-.dash-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+   일정 저장/DB 연동은 하지 않는 순수 표시용 위젯(js/ui.js의 renderDashCalendar).
+   행 높이는 aspect-ratio(정사각형, 컬럼 폭에 종속) 대신 고정 height로 직접 제어해
+   1440px 기준 대시보드가 한 화면에 최대한 들어오도록 기존 대비 약 20% 낮춘다
+   (글자 크기는 가독성을 위해 그대로 유지 — 셀 자체만 낮고 넓은 비율로 바뀐다). */
+.dash-calendar-card { flex: 1; padding: 16px !important; }
+.dash-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .dash-cal-header h3 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
 .dash-cal-nav { display: flex; align-items: center; gap: 6px; }
 .dash-cal-nav-btn { font-size: 11px; font-weight: 600; color: var(--text); background: var(--side2);
-                     border: 1px solid var(--border); border-radius: 6px; padding: 5px 11px; cursor: pointer;
+                     border: 1px solid var(--border); border-radius: 6px; padding: 4px 11px; cursor: pointer;
                      font-family: inherit; line-height: 1; transition: border-color .15s ease, color .15s ease; }
 .dash-cal-nav-btn:hover { border-color: var(--acc); color: var(--acc); }
-.dash-cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
-                      font-size: 10px; font-weight: 600; color: var(--sub); text-align: center; margin-bottom: 6px; }
-.dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.dash-cal-cell { display: flex; align-items: center; justify-content: center; aspect-ratio: 1 / 1;
-                  min-height: 34px; border-radius: 8px; font-size: 12px; font-weight: 500;
+.dash-cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+                      font-size: 10px; font-weight: 600; color: var(--sub); text-align: center; margin-bottom: 4px; }
+.dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.dash-cal-cell { display: flex; align-items: center; justify-content: center; height: 102px;
+                  border-radius: 8px; font-size: 12px; font-weight: 500;
                   color: var(--text); background: var(--gray-l); font-variant-numeric: tabular-nums; }
 .dash-cal-cell.is-muted { color: var(--sub); opacity: .45; background: transparent; }
 .dash-cal-cell.is-today { background: var(--acc); color: #fff; font-weight: 700; }
 @media (max-width: 480px) {
-  .dash-cal-cell { min-height: 26px; font-size: 11px; }
+  .dash-cal-cell { height: 42px; font-size: 11px; }
 }
 
 /* GitHub 스타일 화이트 UI는 이제 라이트 테마 토큰(css/variables.css :root)에서 전역으로 처리한다.
