@@ -1547,7 +1547,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    설명) → ACTION(하단 고정 링크) 순서를 유지. 상태(pass/warn/fail)에 따른 카드
    배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
 .dash-stat-card { display: flex; flex-direction: column; background: transparent;
-                   padding: 18px 20px; position: relative; }
+                   padding: 15px 17px; position: relative; }
 /* 우측 세로 영역의 KPI 스택 — 기존 가로 바(border-right 4등분)를 세로 바(border-bottom)로 전환 */
 .dash-side-stats { display: flex; flex-direction: column;
                      background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
@@ -1560,28 +1560,35 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-main-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
                     align-items: start; gap: 18px; }
 .dash-main-primary, .dash-main-secondary { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+/* 우측 열(KPI + 제품 유형)만 세로 간격을 압축 — 캘린더가 있는 좌측 열(.dash-main-primary)의
+   gap은 그대로 18px 유지, 우측만 1440px 기준 한 화면에 들어오도록 별도로 좁힌다. */
+.dash-main-secondary { gap: 14px; }
 @media (max-width: 1100px) {
   .dash-main-grid { grid-template-columns: 1fr; }
 }
 /* 좁은 우측 컬럼에 들어간 ptype-card — 원래(31px) 큰 hero 제목은 넓은 화면 전제라,
-   여기서만 한 단계 낮춰 좁은 폭에서도 줄바꿈 없이 잘 읽히게 한다. */
-.dash-main-secondary .ptype-card-type { font-size: 22px; }
+   여기서만 한 단계 낮춰 좁은 폭에서도 줄바꿈 없이 잘 읽히게 한다.
+   패딩/여백도 함께 압축(기존 대비 약 18%)해 우측 열 전체 높이를 줄인다 — 폰트 크기는 유지. */
+.dash-main-secondary .ptype-card { padding: 18px; margin-bottom: 0; }
+.dash-main-secondary .ptype-card-header { padding-bottom: 10px; margin-bottom: 12px; }
+.dash-main-secondary .ptype-card-type { font-size: 22px; margin-bottom: 5px; }
+.dash-main-secondary .ptype-card-type-en { margin-bottom: 9px; }
 .dash-main-secondary .ptype-card-desc { max-width: none; }
 /* EYEBROW — ptype-card-label과 같은 톤(10px/500/대문자) + 같은 청록 accent 점 하나만 */
 .dash-stat-label { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 500;
-                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+                    color: var(--sub); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 .dash-stat-label::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); flex-shrink: 0; }
 /* PRIMARY VALUE — 카드의 핵심 정보. 기존(28px)보다 한 단계 낮춰(--fs-metric 토큰, 22px)
    숫자가 과하게 "히어로"처럼 튀지 않게 하고, 업무 데이터(경고/최근 작업 등)와 위계를 맞춘다. */
 .dash-stat-val { font-size: var(--fs-metric); font-weight: 600; color: var(--hdr); line-height: 1.15; letter-spacing: -.5px;
                   font-variant-numeric: tabular-nums; }
 .dash-stat-unit { font-size: 12px; color: var(--sub); margin-left: 5px; font-weight: 500; letter-spacing: 0; }
-.dash-stat-sub { font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 8px; line-height: 1.5; }
+.dash-stat-sub { font-size: 11px; color: var(--sub); font-weight: 400; margin-top: 6px; line-height: 1.5; }
 .dash-stat-link { font-size: 10.5px; font-weight: 500; color: var(--acc); cursor: pointer; margin-top: auto;
-                   padding-top: 14px; display: inline-block; transition: color .2s ease; }
+                   padding-top: 11px; display: inline-block; transition: color .2s ease; }
 .dash-stat-link:hover { color: var(--acc2); }
 .dash-stat-track { width: 100%; height: 6px; background: var(--gray-l); border-radius: 999px;
-                    margin-top: 12px; overflow: hidden; }
+                    margin-top: 10px; overflow: hidden; }
 .dash-stat-fill { height: 100%; border-radius: 999px; background: var(--pass-t); transition: width .4s ease; }
 /* #ds-overall-card/#ds-warn-card는 진행바 톤 계산을 위해 JS가 pass/warn/fail 클래스를
    계속 토글한다(판정 로직·집계는 그대로) — 다만 이 클래스명이 표 셀 상태색 유틸리티
