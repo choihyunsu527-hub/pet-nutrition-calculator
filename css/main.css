@@ -1538,35 +1538,28 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cap-label { font-size: 11px; font-weight: 600; color: var(--hdr); }
 .dash-cap-badge { font-size: 11px; font-weight: 700; padding: 4px 14px; border-radius: 4px; }
 
-/* ── 대시보드 3차 리디자인: KPI 요약 바 → 빠른 작업 → 2-column 메인(좌: 최근 작업,
-   우: 기준 상태) → 계산 설정 아코디언, 순서로 시선이 흐르도록 재구성.
-   .dash-summary는 KPI 한 줄(.dash-stat-row)만 감싸는 얇은 래퍼 — 화면 폭 전체를
-   차지해 "핵심 지표"가 대시보드 진입 즉시 눈에 들어오게 한다(예전엔 ptype-card와
-   나란히 좁은 1fr 컬럼에 눌려 있었다). */
-.dash-summary { margin-bottom: 22px; }
+/* ── 대시보드 4차 리디자인: 상단 가로 KPI 바 제거 → 좌(75%) 캘린더 + 레시피 관리(축소
+   아코디언) / 우(25%) KPI 4개 세로 스택 + 제품 유형 분석, 2-column 레이아웃으로 재구성.
+   KPI 카드(.dash-stat-card) 마크업/ID는 그대로 두고 배치만 우측 세로 영역으로 옮긴다. */
 
-/* ── 대시보드: 요약 통계 타일(KPI 카드) — Stripe식 "단일 metric bar" ──
-   카드 4개를 따로 두지 않고, 하나의 흰색 카드 안을 얇은 구분선(border-right)으로
-   4등분한 한 줄짜리 바로 만든다("카드 안에 카드" 제거, hierarchy 단순화). 각 셀은
+/* ── 대시보드: 요약 통계 타일(KPI 카드) — 값/링크 구조는 기존 그대로, 배치만 세로 스택으로 변경.
    EYEBROW(accent dot+작은 라벨) → PRIMARY VALUE(--fs-metric) → SECONDARY(진행바/보조
    설명) → ACTION(하단 고정 링크) 순서를 유지. 상태(pass/warn/fail)에 따른 카드
    배경/테두리/숫자색 변경은 쓰지 않음(진행바 채움색만 기존 로직 그대로 유지). */
-.dash-stat-row { display: grid; grid-template-columns: repeat(4, 1fr);
-                  background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
-                  overflow: hidden; }
 .dash-stat-card { display: flex; flex-direction: column; background: transparent;
-                   padding: 18px 20px; position: relative;
-                   border-right: 1px solid var(--border); }
-.dash-stat-card:last-child { border-right: none; }
+                   padding: 18px 20px; position: relative; }
+/* 우측 세로 영역의 KPI 스택 — 기존 가로 바(border-right 4등분)를 세로 바(border-bottom)로 전환 */
+.dash-side-stats { display: flex; flex-direction: column;
+                     background: var(--side2); border: 1px solid var(--border); border-radius: var(--radius-md);
+                     overflow: hidden; }
+.dash-side-stats .dash-stat-card { border-bottom: 1px solid var(--border); }
+.dash-side-stats .dash-stat-card:last-child { border-bottom: none; }
 
-/* ── 대시보드: MAIN CONTENT 2-column — 좌(최근 작업, 넓게) : 우(기준/상태, 좁게) ──
-   실제 데이터가 있는 두 기존 컴포넌트(레시피 관리 목록 / 제품 유형·기준검증 상태
-   hero)를 나란히 배치. 1100px 이하(사이드바 접힌 상태 기준 대략 1280px 창 폭)에서는
-   세로로 자연스럽게 쌓인다. */
-.dash-main-grid { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr);
+/* ── 대시보드: MAIN CONTENT 2-column — 좌(캘린더 + 레시피 관리, 75%) : 우(KPI + 제품 유형, 25%) ──
+   1100px 이하(사이드바 접힌 상태 기준 대략 1280px 창 폭)에서는 세로로 자연스럽게 쌓인다. */
+.dash-main-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
                     align-items: start; gap: 18px; }
-.dash-main-primary, .dash-main-secondary { min-width: 0; }
-.dash-main-primary .dash-recent-card, .dash-main-secondary .ptype-card { height: 100%; margin-bottom: 0; }
+.dash-main-primary, .dash-main-secondary { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
 @media (max-width: 1100px) {
   .dash-main-grid { grid-template-columns: 1fr; }
 }
@@ -1634,6 +1627,33 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-settings-body .dash-bottom-grid { margin-top: 0; }
 /* 접힘 상태에서 폼 영역을 확실히 숨긴다(브라우저 기본 details 동작에 의존하지 않음). */
 .dash-settings-acc:not([open]) > .dash-settings-body { display: none; }
+
+/* 레시피 관리(최근/즐겨찾기) — 캘린더와 함께 좌측 열에 세로로 쌓이므로(.dash-main-primary의
+   flex gap이 간격을 담당), 공용 .dash-settings-acc의 margin-top은 상쇄한다. */
+.dash-recent-acc { margin-top: 0; }
+.dash-recent-body .dash-recent-list { max-height: 260px; overflow-y: auto; }
+
+/* ── 대시보드: 월간 캘린더 — 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조만 우선 구현.
+   일정 저장/DB 연동은 하지 않는 순수 표시용 위젯(js/ui.js의 renderDashCalendar). */
+.dash-calendar-card { flex: 1; }
+.dash-cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.dash-cal-header h3 { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+.dash-cal-nav { display: flex; align-items: center; gap: 6px; }
+.dash-cal-nav-btn { font-size: 11px; font-weight: 600; color: var(--text); background: var(--side2);
+                     border: 1px solid var(--border); border-radius: 6px; padding: 5px 11px; cursor: pointer;
+                     font-family: inherit; line-height: 1; transition: border-color .15s ease, color .15s ease; }
+.dash-cal-nav-btn:hover { border-color: var(--acc); color: var(--acc); }
+.dash-cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+                      font-size: 10px; font-weight: 600; color: var(--sub); text-align: center; margin-bottom: 6px; }
+.dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.dash-cal-cell { display: flex; align-items: center; justify-content: center; aspect-ratio: 1 / 1;
+                  min-height: 34px; border-radius: 8px; font-size: 12px; font-weight: 500;
+                  color: var(--text); background: var(--gray-l); font-variant-numeric: tabular-nums; }
+.dash-cal-cell.is-muted { color: var(--sub); opacity: .45; background: transparent; }
+.dash-cal-cell.is-today { background: var(--acc); color: #fff; font-weight: 700; }
+@media (max-width: 480px) {
+  .dash-cal-cell { min-height: 26px; font-size: 11px; }
+}
 
 /* GitHub 스타일 화이트 UI는 이제 라이트 테마 토큰(css/variables.css :root)에서 전역으로 처리한다.
    여기서는 대시보드 고유의 타이포 강조와 보조 영역 배경만 유지한다(색 아닌 굵기로 위계). */

@@ -201,6 +201,58 @@ function showTab(id, el) {
   if (id === 'history') renderChangeHistory();
   if (id === 'compare' && typeof renderCompareTab === 'function') renderCompareTab();
   if (id === 'label' && typeof renderLabelDraft === 'function') renderLabelDraft();
+  if (id === 'dash') renderDashCalendar();
+}
+
+// ── 대시보드: 월간 캘린더(표시 전용) ──────────────────────────────────────────
+// 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조만 제공한다. 일정 저장/DB 연동은
+// 이번 범위에 없음 — dashCalMonthOffset은 오늘로부터의 개월 수 차이만 세션 중 메모리에 둔다.
+let dashCalMonthOffset = 0;
+
+function shiftDashCalendar(delta) {
+  dashCalMonthOffset += delta;
+  renderDashCalendar();
+}
+
+function goToDashCalendarToday() {
+  dashCalMonthOffset = 0;
+  renderDashCalendar();
+}
+
+function renderDashCalendar() {
+  const titleEl = document.getElementById('dash-cal-title');
+  const gridEl = document.getElementById('dash-cal-grid');
+  if (!titleEl || !gridEl) return;
+
+  const today = new Date();
+  const view = new Date(today.getFullYear(), today.getMonth() + dashCalMonthOffset, 1);
+  const year = view.getFullYear();
+  const month = view.getMonth();
+  titleEl.textContent = `${year}년 ${month + 1}월`;
+
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+
+  const cells = [];
+  for (let i = firstWeekday - 1; i >= 0; i--) {
+    cells.push({ day: daysInPrevMonth - i, muted: true, today: false });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, muted: false, today: isCurrentMonth && d === today.getDate() });
+  }
+  let nextDay = 1;
+  while (cells.length % 7 !== 0) {
+    cells.push({ day: nextDay++, muted: true, today: false });
+  }
+
+  gridEl.innerHTML = cells.map(c => {
+    const cls = ['dash-cal-cell'];
+    if (c.muted) cls.push('is-muted');
+    if (c.today) cls.push('is-today');
+    return `<div class="${cls.join(' ')}">${c.day}</div>`;
+  }).join('');
 }
 
 // 배합 설계 탭의 "레시피명" 입력칸 — 제품/정보 탭의 sb-name과 같은 값을 가리키는

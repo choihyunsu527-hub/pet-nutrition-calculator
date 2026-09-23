@@ -1009,65 +1009,6 @@
               "
             >
               <div class="dash-panel">
-                <div class="dash-summary" aria-label="핵심 지표">
-                  <div class="dash-stat-row">
-                    <div class="dash-stat-card" id="ds-overall-card">
-                      <div class="dash-stat-label" id="ds-overall-label">
-                        전체 충족률 (AAFCO)
-                      </div>
-                      <div class="dash-stat-val" id="ds-overall-pct">
-                        ─<span class="dash-stat-unit">%</span>
-                      </div>
-                      <div class="dash-stat-track">
-                        <div
-                          class="dash-stat-fill"
-                          id="ds-overall-fill"
-                          style="width: 0%"
-                        ></div>
-                      </div>
-                      <span class="dash-stat-link" onclick="goTab('ana')"
-                        >상세 분석 보기 →</span
-                      >
-                    </div>
-                    <div class="dash-stat-card" id="ds-warn-card">
-                      <div class="dash-stat-label">경고 항목</div>
-                      <div class="dash-stat-val" id="ds-warn-total">─</div>
-                      <div class="dash-stat-sub" id="ds-warn-breakdown">
-                        위험 0건 · 주의 0건
-                      </div>
-                      <span class="dash-stat-link" onclick="goTab('warn')"
-                        >경고 패널 보기 →</span
-                      >
-                    </div>
-                    <div class="dash-stat-card">
-                      <div class="dash-stat-label">에너지 (ME, as-is)</div>
-                      <div class="dash-stat-val" id="ds-me">
-                        <span id="ds-me-val">─</span
-                        ><span class="dash-stat-unit">kcal/kg</span>
-                      </div>
-                      <div class="dash-stat-sub">
-                        건물 기준 <span id="ds-me-dmb">─</span> kcal/kg
-                      </div>
-                      <span class="dash-stat-link" onclick="goTab('ana')"
-                        >영양 분석 보기 →</span
-                      >
-                    </div>
-                    <div class="dash-stat-card">
-                      <div class="dash-stat-label">일일 급여량</div>
-                      <div class="dash-stat-val">
-                        <span id="ds-daily">─</span
-                        ><span class="dash-stat-unit">g/일</span>
-                      </div>
-                      <div class="dash-stat-sub">
-                        1회 <span id="ds-meal">─</span> g (2회 기준)
-                      </div>
-                      <span class="dash-stat-link" onclick="goTab('mix')"
-                        >배합 설계 보기 →</span
-                      >
-                    </div>
-                  </div>
-                </div>
-
                 <div class="dash-quick-actions" aria-label="빠른 작업">
                   <span class="dash-qa-label">빠른 작업</span>
                   <button
@@ -1107,63 +1048,163 @@
                   </button>
                 </div>
 
-                <!-- MAIN CONTENT — 좌: 최근 작업(레시피 관리, primary/wide) ·
-                     우: 기준 검증 상태(제품 유형 분석 hero, secondary/narrow) -->
+                <!-- MAIN CONTENT — 좌 75%: 월간 캘린더 + 레시피 관리(축소, 아코디언) ·
+                     우 25%: 핵심 지표 4개(세로 스택) + 제품 유형 분석 -->
                 <div class="dash-main-grid">
                   <div class="dash-main-primary">
-                    <div class="dash-section dash-recent-card">
-                      <h3>레시피 관리</h3>
-                      <div class="seg-control dash-recent-tabs">
-                        <button
-                          type="button"
-                          class="seg-btn active"
-                          data-view="recent"
-                          onclick="setDashRecipeView('recent')"
-                        >
-                          최근
-                        </button>
-                        <button
-                          type="button"
-                          class="seg-btn"
-                          data-view="favorite"
-                          onclick="setDashRecipeView('favorite')"
-                        >
-                          즐겨찾기
-                        </button>
-                      </div>
-                      <div class="dash-recent-search">
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          aria-hidden="true"
-                        >
-                          <circle cx="11" cy="11" r="8" />
-                          <path d="m21 21-4.34-4.34" />
-                        </svg>
-                        <input
-                          type="text"
-                          id="dash-recipe-search"
-                          placeholder="레시피 이름 검색…"
-                          autocomplete="off"
-                          oninput="applyDashRecipeFilter()"
-                          aria-label="레시피 이름 검색"
-                        />
-                      </div>
-                      <div
-                        class="dash-recent-list"
-                        id="dash-recent-recipe-list"
-                      >
-                        <div class="dash-recent-empty">
-                          저장된 레시피가 없습니다.
+                    <div class="dash-section dash-calendar-card">
+                      <div class="dash-cal-header">
+                        <h3 id="dash-cal-title">&nbsp;</h3>
+                        <div class="dash-cal-nav">
+                          <button
+                            type="button"
+                            class="dash-cal-nav-btn"
+                            onclick="shiftDashCalendar(-1)"
+                            aria-label="이전 달"
+                          >
+                            ‹
+                          </button>
+                          <button
+                            type="button"
+                            class="dash-cal-nav-btn"
+                            onclick="goToDashCalendarToday()"
+                          >
+                            오늘
+                          </button>
+                          <button
+                            type="button"
+                            class="dash-cal-nav-btn"
+                            onclick="shiftDashCalendar(1)"
+                            aria-label="다음 달"
+                          >
+                            ›
+                          </button>
                         </div>
                       </div>
+                      <div class="dash-cal-weekdays">
+                        <span>일</span><span>월</span><span>화</span
+                        ><span>수</span><span>목</span><span>금</span
+                        ><span>토</span>
+                      </div>
+                      <div class="dash-cal-grid" id="dash-cal-grid"></div>
                     </div>
+
+                    <details class="dash-settings-acc dash-recent-acc">
+                      <summary>
+                        레시피 관리
+                        <span class="dash-acc-hint"
+                          >— 최근 · 즐겨찾기, 펼쳐서 보기</span
+                        >
+                      </summary>
+                      <div class="dash-settings-body dash-recent-body">
+                        <div class="seg-control dash-recent-tabs">
+                          <button
+                            type="button"
+                            class="seg-btn active"
+                            data-view="recent"
+                            onclick="setDashRecipeView('recent')"
+                          >
+                            최근
+                          </button>
+                          <button
+                            type="button"
+                            class="seg-btn"
+                            data-view="favorite"
+                            onclick="setDashRecipeView('favorite')"
+                          >
+                            즐겨찾기
+                          </button>
+                        </div>
+                        <div class="dash-recent-search">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.34-4.34" />
+                          </svg>
+                          <input
+                            type="text"
+                            id="dash-recipe-search"
+                            placeholder="레시피 이름 검색…"
+                            autocomplete="off"
+                            oninput="applyDashRecipeFilter()"
+                            aria-label="레시피 이름 검색"
+                          />
+                        </div>
+                        <div
+                          class="dash-recent-list"
+                          id="dash-recent-recipe-list"
+                        >
+                          <div class="dash-recent-empty">
+                            저장된 레시피가 없습니다.
+                          </div>
+                        </div>
+                      </div>
+                    </details>
                   </div>
                   <div class="dash-main-secondary">
+                    <div class="dash-side-stats" aria-label="핵심 지표">
+                      <div class="dash-stat-card" id="ds-overall-card">
+                        <div class="dash-stat-label" id="ds-overall-label">
+                          전체 충족률 (AAFCO)
+                        </div>
+                        <div class="dash-stat-val" id="ds-overall-pct">
+                          ─<span class="dash-stat-unit">%</span>
+                        </div>
+                        <div class="dash-stat-track">
+                          <div
+                            class="dash-stat-fill"
+                            id="ds-overall-fill"
+                            style="width: 0%"
+                          ></div>
+                        </div>
+                        <span class="dash-stat-link" onclick="goTab('ana')"
+                          >상세 분석 보기 →</span
+                        >
+                      </div>
+                      <div class="dash-stat-card" id="ds-warn-card">
+                        <div class="dash-stat-label">경고 항목</div>
+                        <div class="dash-stat-val" id="ds-warn-total">─</div>
+                        <div class="dash-stat-sub" id="ds-warn-breakdown">
+                          위험 0건 · 주의 0건
+                        </div>
+                        <span class="dash-stat-link" onclick="goTab('warn')"
+                          >경고 패널 보기 →</span
+                        >
+                      </div>
+                      <div class="dash-stat-card">
+                        <div class="dash-stat-label">에너지 (ME, as-is)</div>
+                        <div class="dash-stat-val" id="ds-me">
+                          <span id="ds-me-val">─</span
+                          ><span class="dash-stat-unit">kcal/kg</span>
+                        </div>
+                        <div class="dash-stat-sub">
+                          건물 기준 <span id="ds-me-dmb">─</span> kcal/kg
+                        </div>
+                        <span class="dash-stat-link" onclick="goTab('ana')"
+                          >영양 분석 보기 →</span
+                        >
+                      </div>
+                      <div class="dash-stat-card">
+                        <div class="dash-stat-label">일일 급여량</div>
+                        <div class="dash-stat-val">
+                          <span id="ds-daily">─</span
+                          ><span class="dash-stat-unit">g/일</span>
+                        </div>
+                        <div class="dash-stat-sub">
+                          1회 <span id="ds-meal">─</span> g (2회 기준)
+                        </div>
+                        <span class="dash-stat-link" onclick="goTab('mix')"
+                          >배합 설계 보기 →</span
+                        >
+                      </div>
+                    </div>
                     <div class="ptype-card" id="ptype-card">
                       <div class="ptype-card-header">
                         <div class="ptype-card-label">제품 유형 분석</div>
