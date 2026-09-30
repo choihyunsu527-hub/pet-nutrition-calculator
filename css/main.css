@@ -1656,10 +1656,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
                       font-size: 10px; font-weight: 600; color: var(--sub); text-align: center; margin-bottom: 4px; }
 .dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-/* 현장 공동 일정표: 셀 = 상단 날짜 헤더(구분선) + 하단 일정 영역(제목 pill 최대 3개 + "+ N건").
-   pill/더보기 높이를 고정해 일정 수와 무관하게 셀 높이(108px)가 일정하다.
+/* 현장 공동 일정표: 셀 = 상단 날짜 헤더(구분선, 우측에 "+ N건") + 하단 일정 영역(제목 pill 최대 3개).
+   pill 높이를 고정해 일정 수와 무관하게 셀 높이(108px)가 일정하다 — 14px 제목 3개가 들어가도록
+   "+ N건"은 데스크톱에서 날짜 헤더 우측에 절대배치(모바일은 목록 아래 흐름 배치).
    셀 빈 영역 클릭 = 해당 날짜 일정 추가, pill = 상세, "+ N건" = 날짜별 목록(js/dash-schedule.js). */
-.dash-cal-cell { display: flex; flex-direction: column; align-items: stretch; height: 108px;
+.dash-cal-cell { position: relative; display: flex; flex-direction: column; align-items: stretch; height: 108px;
                   padding: 6px; box-sizing: border-box; cursor: pointer; min-width: 0; overflow: hidden;
                   border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid transparent;
                   color: var(--text); background: var(--gray-l); font-variant-numeric: tabular-nums;
@@ -1667,19 +1668,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-cell:hover { border-color: var(--acc); }
 .dash-cal-cell.is-muted { color: var(--sub); opacity: .45; background: transparent; }
 .dash-cal-cell.is-today { background: var(--acc); color: #fff; font-weight: 700; }
-.dash-cal-day { flex-shrink: 0; font-size: 12px; font-weight: 600; line-height: 1; color: var(--hdr);
+.dash-cal-day { flex-shrink: 0; font-size: 14px; font-weight: 600; line-height: 1; color: var(--hdr);
                  padding: 1px 2px 4px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
 .dash-cal-cell.is-muted .dash-cal-day { color: var(--sub); }
 .dash-cal-cell.is-today .dash-cal-day { color: #fff; font-weight: 700; border-bottom-color: rgba(255,255,255,.35); }
-.dash-cal-evts { display: flex; flex-direction: column; gap: 2px; min-height: 0; min-width: 0; }
-.dash-cal-evt { display: block; width: 100%; min-width: 0; height: 17px; flex-shrink: 0; box-sizing: border-box;
-                 padding: 0 7px; text-align: left; font-family: inherit; font-size: 10px; font-weight: 500; line-height: 15px;
+.dash-cal-evts { display: flex; flex-direction: column; gap: 3px; min-height: 0; min-width: 0; }
+.dash-cal-evt { display: block; width: 100%; min-width: 0; height: 21px; flex-shrink: 0; box-sizing: border-box;
+                 padding: 0 7px; text-align: left; font-family: inherit; font-size: 14px; font-weight: 500; line-height: 19px;
                  border: 1px solid var(--border); border-radius: 4px; background: var(--side2); color: var(--text);
                  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                  transition: border-color .15s ease, color .15s ease; }
 .dash-cal-evt:hover { border-color: var(--acc); color: var(--acc); }
-.dash-cal-more { align-self: flex-start; flex-shrink: 0; height: 14px; padding: 0 3px; border: none; background: none;
-                  font-family: inherit; font-size: 10px; font-weight: 600; line-height: 14px; color: var(--sub);
+.dash-cal-more { position: absolute; top: 5px; right: 6px; height: 17px; padding: 0 4px; border: none; background: none;
+                  font-family: inherit; font-size: 13px; font-weight: 600; line-height: 17px; color: var(--sub);
                   cursor: pointer; border-radius: 3px; white-space: nowrap; }
 .dash-cal-more:hover { color: var(--acc); background: var(--hover-tint); }
 /* 오늘 칸(포인트색 배경) 위에서도 pill 글자 대비가 유지되도록 흰 카드 + 본문색 고정 */
@@ -1688,10 +1689,10 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-cell.is-today .dash-cal-more { color: rgba(255,255,255,.9); }
 .dash-cal-cell.is-today .dash-cal-more:hover { color: #fff; background: rgba(255,255,255,.18); }
 @media (max-width: 480px) {
-  .dash-cal-cell { height: auto; min-height: 42px; padding: 3px; font-size: 11px; }
-  .dash-cal-day { font-size: 11px; padding-bottom: 3px; margin-bottom: 3px; }
-  .dash-cal-evt { font-size: 9px; padding: 0 3px; }
-  .dash-cal-more { font-size: 9px; padding: 0 1px; }
+  .dash-cal-cell { height: auto; min-height: 42px; padding: 3px 2px; font-size: 11px; }
+  .dash-cal-day { font-size: 11px; padding-bottom: 3px; margin-bottom: 3px; white-space: nowrap; }
+  .dash-cal-evt { height: 16px; font-size: 10px; line-height: 14px; padding: 0 3px; }
+  .dash-cal-more { position: static; align-self: flex-start; height: 14px; font-size: 9px; line-height: 14px; padding: 0; }
   .dash-cal-header { flex-wrap: wrap; gap: 6px; }
   .dash-cal-nav-btn { white-space: nowrap; }
 }
