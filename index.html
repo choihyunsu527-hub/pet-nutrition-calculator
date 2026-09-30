@@ -5337,6 +5337,39 @@
       </div>
     </div>
 
+    <!-- ══ 대시보드 일정표 — 날짜별 일정 목록 모달("+ N건") ══ -->
+    <div
+      class="modal-overlay"
+      id="dash-sched-day-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dash-sched-day-title"
+    >
+      <div class="modal dash-sched-modal" style="width: 440px">
+        <div class="modal-hdr">
+          <span id="dash-sched-day-title"></span>
+          <button onclick="closeModal('dash-sched-day-modal')" aria-label="닫기">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div
+            id="dash-sched-day-list"
+            class="dash-sched-day-list"
+            onclick="onDashScheduleDayListClick(event)"
+          ></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" onclick="addDashScheduleFromDayList()">
+            + 일정 추가
+          </button>
+          <button class="btn-save" onclick="closeModal('dash-sched-day-modal')">
+            닫기
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ 기준 검증 — 사용자 등록 기준 편집 모달 ══ -->
     <div
       class="modal-overlay"

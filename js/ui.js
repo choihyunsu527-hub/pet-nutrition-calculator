@@ -209,6 +209,7 @@ function showTab(id, el) {
 // 일정 저장/모달은 js/dash-schedule.js 담당 — 여기서는 셀마다 날짜(YYYY-MM-DD)를 달고
 // 해당 날짜의 일정 제목만 그린다. dashCalMonthOffset은 오늘로부터의 개월 수 차이(세션 메모리).
 let dashCalMonthOffset = 0;
+const DASH_CAL_MAX_EVTS = 3;   // 날짜 칸에 표시할 최대 일정 수(초과분은 "+ N건")
 
 function shiftDashCalendar(delta) {
   dashCalMonthOffset += delta;
@@ -258,11 +259,16 @@ function renderDashCalendar() {
     const cls = ['dash-cal-cell'];
     if (c.muted) cls.push('is-muted');
     if (c.today) cls.push('is-today');
-    const evts = (byDate[c.date] || []).map(ev =>
+    // 셀 높이 고정을 위해 최대 3건만 그리고, 나머지는 "+ N건"(해당 날짜 일정 목록)으로 묶는다.
+    const dayEvts = byDate[c.date] || [];
+    const evts = dayEvts.slice(0, DASH_CAL_MAX_EVTS).map(ev =>
       `<button type="button" class="dash-cal-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(ev.title)}">${escHtml(ev.title)}</button>`
     ).join('');
+    const more = dayEvts.length > DASH_CAL_MAX_EVTS
+      ? `<button type="button" class="dash-cal-more" data-date="${c.date}">+ ${dayEvts.length - DASH_CAL_MAX_EVTS}건</button>`
+      : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" title="${c.date} 일정 추가">` +
-      `<span class="dash-cal-day">${c.day}</span><div class="dash-cal-evts">${evts}</div></div>`;
+      `<div class="dash-cal-day">${c.day}</div><div class="dash-cal-evts">${evts}${more}</div></div>`;
   }).join('');
 
   // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달(셀 클릭으로 전파되지 않음),
@@ -272,6 +278,8 @@ function renderDashCalendar() {
     gridEl.addEventListener('click', e => {
       const evtEl = e.target.closest('.dash-cal-evt');
       if (evtEl) { e.stopPropagation(); openDashScheduleDetail(evtEl.dataset.schedId); return; }
+      const moreEl = e.target.closest('.dash-cal-more');
+      if (moreEl) { e.stopPropagation(); openDashScheduleDayList(moreEl.dataset.date); return; }
       const cellEl = e.target.closest('.dash-cal-cell');
       if (cellEl && cellEl.dataset.date) openDashScheduleForm(null, cellEl.dataset.date);
     });

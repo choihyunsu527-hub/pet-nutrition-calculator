@@ -116,3 +116,30 @@ function deleteDashScheduleFromDetail() {
   closeModal('dash-sched-detail-modal');
   renderDashCalendar();
 }
+
+// "+ N건" 클릭 시 해당 날짜의 전체 일정 목록 — 제목 클릭 = 상세, 하단에서 이 날짜로 일정 추가.
+let dashScheduleDayListDate = null;
+
+function openDashScheduleDayList(date) {
+  const list = getDashSchedulesByDate()[date] || [];
+  dashScheduleDayListDate = date;
+  document.getElementById('dash-sched-day-title').textContent = formatDashScheduleDate(date);
+  document.getElementById('dash-sched-day-list').innerHTML = list.map(ev =>
+    `<button type="button" class="dash-sched-day-item" data-sched-id="${escHtml(ev.id)}">` +
+    `<span class="dash-sched-day-item-title">${escHtml(ev.title)}</span>` +
+    `<span class="dash-sched-day-item-time">${escHtml(formatDashScheduleTime(ev))}</span></button>`
+  ).join('') || '<div class="dash-sched-day-empty">일정이 없습니다.</div>';
+  document.getElementById('dash-sched-day-modal').classList.add('open');
+}
+
+function onDashScheduleDayListClick(e) {
+  const item = e.target.closest('.dash-sched-day-item');
+  if (!item) return;
+  closeModal('dash-sched-day-modal');
+  openDashScheduleDetail(item.dataset.schedId);
+}
+
+function addDashScheduleFromDayList() {
+  closeModal('dash-sched-day-modal');
+  openDashScheduleForm(null, dashScheduleDayListDate);
+}
