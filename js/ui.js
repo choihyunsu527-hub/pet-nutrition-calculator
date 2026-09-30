@@ -201,12 +201,12 @@ function showTab(id, el) {
   if (id === 'history') renderChangeHistory();
   if (id === 'compare' && typeof renderCompareTab === 'function') renderCompareTab();
   if (id === 'label' && typeof renderLabelDraft === 'function') renderLabelDraft();
-  if (id === 'dash') renderDashCalendar();
+  if (id === 'dash') { renderDashCalendar(); if (typeof refreshDashSchedules === 'function') refreshDashSchedules(); }
 }
 
 // ── 대시보드: 월간 캘린더(현장 공동 일정표) ──────────────────────────────────
 // 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조 + 날짜 칸에 일정 제목 표시.
-// 일정 저장/모달은 js/dash-schedule.js 담당 — 여기서는 셀마다 날짜(YYYY-MM-DD)를 달고
+// 일정 저장(Supabase)/모달은 js/dash-schedule.js 담당 — 여기서는 셀마다 날짜(YYYY-MM-DD)를 달고
 // 해당 날짜의 일정 제목만 그린다. dashCalMonthOffset은 오늘로부터의 개월 수 차이(세션 메모리).
 let dashCalMonthOffset = 0;
 const DASH_CAL_MAX_EVTS = 3;   // 날짜 칸에 표시할 최대 일정 수(초과분은 "+ N건")
