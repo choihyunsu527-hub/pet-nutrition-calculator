@@ -1640,8 +1640,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-recent-acc { margin-top: 0; }
 .dash-recent-body .dash-recent-list { max-height: 260px; overflow-y: auto; }
 
-/* ── 대시보드: 월간 캘린더 — 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조만 우선 구현.
-   일정 저장/DB 연동은 하지 않는 순수 표시용 위젯(js/ui.js의 renderDashCalendar).
+/* ── 대시보드: 월간 캘린더 — 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조 + 현장 공동 일정표.
+   렌더는 js/ui.js의 renderDashCalendar, 일정 저장(localStorage)/모달은 js/dash-schedule.js.
    행 높이는 aspect-ratio(정사각형, 컬럼 폭에 종속) 대신 고정 height로 직접 제어해
    1440px 기준 대시보드가 한 화면에 최대한 들어오도록 기존 대비 약 20% 낮춘다
    (글자 크기는 가독성을 위해 그대로 유지 — 셀 자체만 낮고 넓은 비율로 바뀐다). */
@@ -1656,14 +1656,42 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
                       font-size: 10px; font-weight: 600; color: var(--sub); text-align: center; margin-bottom: 4px; }
 .dash-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-.dash-cal-cell { display: flex; align-items: center; justify-content: center; height: 102px;
-                  border-radius: 8px; font-size: 12px; font-weight: 500;
-                  color: var(--text); background: var(--gray-l); font-variant-numeric: tabular-nums; }
+/* 현장 공동 일정표: 셀 = 좌상단 날짜 + 일정 제목 목록(제목만, 여러 개면 줄바꿈으로 쌓고 넘치면 셀 안 스크롤).
+   셀 빈 영역 클릭 = 해당 날짜 일정 추가, 제목 클릭 = 상세(js/dash-schedule.js). */
+.dash-cal-cell { display: flex; flex-direction: column; align-items: stretch; gap: 3px; height: 102px;
+                  padding: 5px; box-sizing: border-box; cursor: pointer; min-width: 0;
+                  border-radius: 8px; font-size: 12px; font-weight: 500; border: 1px solid transparent;
+                  color: var(--text); background: var(--gray-l); font-variant-numeric: tabular-nums;
+                  transition: border-color .15s ease; }
+.dash-cal-cell:hover { border-color: var(--acc); }
 .dash-cal-cell.is-muted { color: var(--sub); opacity: .45; background: transparent; }
 .dash-cal-cell.is-today { background: var(--acc); color: #fff; font-weight: 700; }
+.dash-cal-day { line-height: 1; padding: 1px 2px; }
+.dash-cal-evts { display: flex; flex-direction: column; gap: 2px; min-height: 0; overflow-y: auto; }
+.dash-cal-evt { display: block; width: 100%; text-align: left; font-family: inherit; font-size: 10px; font-weight: 500;
+                 line-height: 1.35; padding: 1px 5px; border: none; border-left: 2px solid var(--acc); border-radius: 3px;
+                 background: var(--side2); color: var(--text); cursor: pointer;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+.dash-cal-evt:hover { background: var(--hover-tint); color: var(--acc); }
+.dash-cal-cell.is-today .dash-cal-evt { background: rgba(255,255,255,.2); border-left-color: #fff; color: #fff; }
+.dash-cal-cell.is-today .dash-cal-evt:hover { background: rgba(255,255,255,.32); }
 @media (max-width: 480px) {
-  .dash-cal-cell { height: 42px; font-size: 11px; }
+  .dash-cal-cell { height: auto; min-height: 42px; padding: 3px; font-size: 11px; }
+  .dash-cal-evt { font-size: 9px; padding: 1px 3px; }
 }
+
+/* 일정 추가/상세 모달 — 공용 .modal 세트 재사용, 좁은 모달에 맞게 라벨 폭과 textarea만 보정 */
+.dash-sched-modal .modal-row label { width: 90px; }
+.dash-sched-modal .modal-row input { min-width: 0; }
+.dash-sched-modal .modal-row textarea { flex: 1; padding: 7px 10px; border: 1px solid var(--border); resize: vertical;
+                   font-size: 12px; font-family: inherit; color: var(--text); background: var(--side2);
+                   outline: none; border-radius: 6px; transition: border-color .15s ease, box-shadow .15s ease; }
+.dash-sched-modal .modal-row textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-modal .modal-row > span { font-size: 12px; color: var(--text); }
+.dash-sched-tilde { flex: 0 0 auto !important; margin: 0 6px; color: var(--sub) !important; }
+.dash-sched-memo-row { align-items: flex-start; }
+.dash-sched-memo-row > span { white-space: pre-wrap; flex: 1; }
+.dash-sched-del-btn { margin-right: auto; color: #b03a2e !important; }
 
 /* GitHub 스타일 화이트 UI는 이제 라이트 테마 토큰(css/variables.css :root)에서 전역으로 처리한다.
    여기서는 대시보드 고유의 타이포 강조와 보조 영역 배경만 유지한다(색 아닌 굵기로 위계). */

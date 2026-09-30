@@ -204,9 +204,10 @@ function showTab(id, el) {
   if (id === 'dash') renderDashCalendar();
 }
 
-// ── 대시보드: 월간 캘린더(표시 전용) ──────────────────────────────────────────
-// 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조만 제공한다. 일정 저장/DB 연동은
-// 이번 범위에 없음 — dashCalMonthOffset은 오늘로부터의 개월 수 차이만 세션 중 메모리에 둔다.
+// ── 대시보드: 월간 캘린더(현장 공동 일정표) ──────────────────────────────────
+// 현재 월 표시 + 이전/다음 달 이동 + 오늘 강조 + 날짜 칸에 일정 제목 표시.
+// 일정 저장/모달은 js/dash-schedule.js 담당 — 여기서는 셀마다 날짜(YYYY-MM-DD)를 달고
+// 해당 날짜의 일정 제목만 그린다. dashCalMonthOffset은 오늘로부터의 개월 수 차이(세션 메모리).
 let dashCalMonthOffset = 0;
 
 function shiftDashCalendar(delta) {
@@ -235,24 +236,46 @@ function renderDashCalendar() {
   const daysInPrevMonth = new Date(year, month, 0).getDate();
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
 
+  const ymd = (y, m, d) => {
+    const dt = new Date(y, m, d);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  };
   const cells = [];
   for (let i = firstWeekday - 1; i >= 0; i--) {
-    cells.push({ day: daysInPrevMonth - i, muted: true, today: false });
+    cells.push({ day: daysInPrevMonth - i, date: ymd(year, month - 1, daysInPrevMonth - i), muted: true, today: false });
   }
   for (let d = 1; d <= daysInMonth; d++) {
-    cells.push({ day: d, muted: false, today: isCurrentMonth && d === today.getDate() });
+    cells.push({ day: d, date: ymd(year, month, d), muted: false, today: isCurrentMonth && d === today.getDate() });
   }
   let nextDay = 1;
   while (cells.length % 7 !== 0) {
-    cells.push({ day: nextDay++, muted: true, today: false });
+    cells.push({ day: nextDay, date: ymd(year, month + 1, nextDay), muted: true, today: false });
+    nextDay++;
   }
 
+  const byDate = typeof getDashSchedulesByDate === 'function' ? getDashSchedulesByDate() : {};
   gridEl.innerHTML = cells.map(c => {
     const cls = ['dash-cal-cell'];
     if (c.muted) cls.push('is-muted');
     if (c.today) cls.push('is-today');
-    return `<div class="${cls.join(' ')}">${c.day}</div>`;
+    const evts = (byDate[c.date] || []).map(ev =>
+      `<button type="button" class="dash-cal-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(ev.title)}">${escHtml(ev.title)}</button>`
+    ).join('');
+    return `<div class="${cls.join(' ')}" data-date="${c.date}" title="${c.date} 일정 추가">` +
+      `<span class="dash-cal-day">${c.day}</span><div class="dash-cal-evts">${evts}</div></div>`;
   }).join('');
+
+  // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달(셀 클릭으로 전파되지 않음),
+  // 그 외 셀 영역 클릭 = 해당 날짜로 일정 추가 모달.
+  if (!gridEl.dataset.bound) {
+    gridEl.dataset.bound = '1';
+    gridEl.addEventListener('click', e => {
+      const evtEl = e.target.closest('.dash-cal-evt');
+      if (evtEl) { e.stopPropagation(); openDashScheduleDetail(evtEl.dataset.schedId); return; }
+      const cellEl = e.target.closest('.dash-cal-cell');
+      if (cellEl && cellEl.dataset.date) openDashScheduleForm(null, cellEl.dataset.date);
+    });
+  }
 }
 
 // 배합 설계 탭의 "레시피명" 입력칸 — 제품/정보 탭의 sb-name과 같은 값을 가리키는
