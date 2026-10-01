@@ -1557,8 +1557,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 
 /* ── 대시보드: MAIN CONTENT 2-column — 좌(캘린더 + 레시피 관리, 75%) : 우(KPI + 제품 유형, 25%) ──
    1100px 이하(사이드바 접힌 상태 기준 대략 1280px 창 폭)에서는 세로로 자연스럽게 쌓인다. */
+/* 그리드 밖 '반려동물 정보' 아코디언이 좌측 열과 같은 폭을 계산할 때 쓰는 값.
+   fr은 calc()에 쓸 수 없어 아래 grid-template-columns(3fr/1fr)·gap(18px)과 반드시 같이 바꿀 것. */
+#tab-dash .dash-panel { --dash-main-primary-fr: 3; --dash-main-secondary-fr: 1; --dash-main-gap: 18px; }
 .dash-main-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
-                    align-items: start; gap: 18px; }
+                    align-items: start; gap: var(--dash-main-gap, 18px); }
 .dash-main-primary, .dash-main-secondary { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
 /* 우측 열(KPI + 제품 유형)만 세로 간격을 압축 — 캘린더가 있는 좌측 열(.dash-main-primary)의
    gap은 그대로 18px 유지, 우측만 1440px 기준 한 화면에 들어오도록 별도로 좁힌다. */
@@ -1638,14 +1641,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 레시피 관리(최근/즐겨찾기) — 캘린더와 함께 좌측 열에 세로로 쌓이므로(.dash-main-primary의
    flex gap이 간격을 담당), 공용 .dash-settings-acc의 margin-top은 상쇄한다. */
 .dash-recent-acc { margin-top: 0; }
-/* 2열 레이아웃에서는 레시피 관리가 좌측 열에 갇히지 않고 아래 '반려동물 정보' 아코디언과
-   같은 본문 전체 폭을 쓰도록, 좌측 열 래퍼를 풀어(display: contents) 캘린더/우측 열/레시피를
-   .dash-main-grid에 직접 배치한다. 1열(≤1100px)에서는 기존 flex 스택 그대로. */
+/* 2열 레이아웃에서 그리드 밖의 '반려동물 정보' 아코디언도 레시피 관리(좌측 3fr 열)와
+   같은 폭·좌우 끝을 갖도록, .dash-main-grid와 같은 열 비율/간격 변수로 좌측 열 폭을 계산한다.
+   1열(≤1100px)에서는 기존처럼 전체 폭. */
 @media (min-width: 1101px) {
-  .dash-main-primary { display: contents; }
-  .dash-main-primary > .dash-calendar-card { grid-column: 1; grid-row: 1; }
-  .dash-main-secondary { grid-column: 2; grid-row: 1; }
-  .dash-main-primary > .dash-recent-acc { grid-column: 1 / -1; grid-row: 2; }
+  .dash-main-grid ~ .dash-settings-acc {
+    width: calc((100% - var(--dash-main-gap)) * var(--dash-main-primary-fr)
+                / (var(--dash-main-primary-fr) + var(--dash-main-secondary-fr)));
+  }
 }
 .dash-recent-body .dash-recent-list { max-height: 260px; overflow-y: auto; }
 
