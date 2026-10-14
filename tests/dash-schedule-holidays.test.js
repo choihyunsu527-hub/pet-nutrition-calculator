@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { spawnSync } = require('node:child_process');
-const { generateKrHolidays, weekday } = require('./helpers/kr-holiday-rules.js');
+const { generateKrHolidays, weekday } = require('../scripts/lib/kr-holiday-rules.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const SRC = fs.readFileSync(path.join(ROOT, 'js', 'kr-holidays.js'), 'utf8');

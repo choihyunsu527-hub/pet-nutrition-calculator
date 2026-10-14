@@ -275,7 +275,7 @@ function renderDashCalendar() {
       ? `<button type="button" class="dash-cal-more" data-date="${c.date}">+ ${hidden}건</button>`
       : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
-      `<div class="dash-cal-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}>${c.day}</div><div class="dash-cal-evts">${evts}${more}</div></div>`;
+      `<div class="dash-cal-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}><span class="cal-day-num">${c.day}</span></div><div class="dash-cal-evts">${evts}${more}</div></div>`;
   }).join('') + (typeof dashCalBarsHtml === 'function' ? dashCalBarsHtml(layout.bars, 'dash-cal-evt dash-cal-bar') : '');
 
   // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달, "+ N건" 클릭 = 해당 날짜 일정 목록.

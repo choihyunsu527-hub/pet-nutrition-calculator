@@ -26,7 +26,11 @@
   --th-bg:    #F1F3F5;
   --pass-bg:  rgba(46,160,67,0.12);  --pass-t:  #1E7E34;
   --fail-bg:  rgba(211,47,47,0.12);  --fail-t:  #C0392B;
-  --cal-holiday: #D32F2F;   /* 달력 일요일·공휴일 날짜 숫자 */
+  /* 달력 일요일·공휴일 날짜 숫자 — 밝고 선명한 순수 빨강(회색 칸 #F1F3F5 위 대비 4.5:1 이상, tests/dash-schedule-holidays.test.js 가 검사).
+     오늘 칸(청록 배경)에서는 날짜 숫자 뒤에 흰 칩을 깔고 그 위에 --cal-holiday-on-chip(흰색 대비 5:1)을 쓴다. */
+  --cal-holiday: #E00000;
+  --cal-chip-bg: #FFFFFF;
+  --cal-holiday-on-chip: #E00000;
   --warn-bg:  rgba(217,142,15,0.15); --warn-t:  #966600;
   --orange:   rgba(245,199,110,0.18);
   --gray-l:   #F1F3F5;
@@ -77,7 +81,9 @@ html[data-theme="dark"] {
   --th-bg:    #26313f;
   --pass-bg:  rgba(143,191,160,0.18); --pass-t:  #9FD4B4;
   --fail-bg:  rgba(224,140,140,0.2);  --fail-t:  #E0A0A0;
-  --cal-holiday: #FF8A80;   /* 다크 테마: 어두운 칸 배경 위에서 읽히는 밝은 빨강 */
+  --cal-holiday: #FF7A7A;   /* 다크 테마: 어두운 칸 배경(≈#2F3947) 위 대비 4.5:1 이상인 밝은 레드 */
+  --cal-chip-bg: #FFFFFF;
+  --cal-holiday-on-chip: #E00000;
   --warn-bg:  rgba(232,201,138,0.2);  --warn-t:  #E8C98A;
   --orange:   rgba(245,199,110,0.16);
   --gray-l:   rgba(255,255,255,0.04);
