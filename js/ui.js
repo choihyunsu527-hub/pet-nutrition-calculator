@@ -267,12 +267,12 @@ function renderDashCalendar() {
     const more = dayEvts.length > DASH_CAL_MAX_EVTS
       ? `<button type="button" class="dash-cal-more" data-date="${c.date}">+ ${dayEvts.length - DASH_CAL_MAX_EVTS}건</button>`
       : '';
-    return `<div class="${cls.join(' ')}" data-date="${c.date}" title="${c.date} 일정 추가">` +
+    return `<div class="${cls.join(' ')}" data-date="${c.date}">` +
       `<div class="dash-cal-day">${c.day}</div><div class="dash-cal-evts">${evts}${more}</div></div>`;
   }).join('');
 
-  // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달(셀 클릭으로 전파되지 않음),
-  // 그 외 셀 영역 클릭 = 해당 날짜로 일정 추가 모달.
+  // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달, "+ N건" 클릭 = 해당 날짜 일정 목록.
+  // 빈 날짜 칸 클릭으로는 일정 추가 모달을 열지 않는다.
   if (!gridEl.dataset.bound) {
     gridEl.dataset.bound = '1';
     gridEl.addEventListener('click', e => {
@@ -280,8 +280,6 @@ function renderDashCalendar() {
       if (evtEl) { e.stopPropagation(); openDashScheduleDetail(evtEl.dataset.schedId); return; }
       const moreEl = e.target.closest('.dash-cal-more');
       if (moreEl) { e.stopPropagation(); openDashScheduleDayList(moreEl.dataset.date); return; }
-      const cellEl = e.target.closest('.dash-cal-cell');
-      if (cellEl && cellEl.dataset.date) openDashScheduleForm(null, cellEl.dataset.date);
     });
   }
 }
