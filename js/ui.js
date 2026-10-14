@@ -260,6 +260,7 @@ function renderDashCalendar() {
     const cls = ['dash-cal-cell'];
     if (c.muted) cls.push('is-muted');
     if (c.today) cls.push('is-today');
+    if (typeof krDayClasses === 'function') cls.push(...krDayClasses(c.date));   // 일요일/공휴일 날짜 숫자 빨강(js/kr-holidays.js, 캘린더 탭과 공통)
     // 셀 높이 고정을 위해 막대+하루짜리 합쳐 최대 3줄만 그리고, 나머지는 "+ N건"(해당 날짜 일정 목록)으로 묶는다.
     const dayEvts = byDate[c.date] || [];
     const info = layout.info[c.date] || { lanes: 0, bars: 0 };
@@ -274,7 +275,7 @@ function renderDashCalendar() {
       ? `<button type="button" class="dash-cal-more" data-date="${c.date}">+ ${hidden}건</button>`
       : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
-      `<div class="dash-cal-day">${c.day}</div><div class="dash-cal-evts">${evts}${more}</div></div>`;
+      `<div class="dash-cal-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}>${c.day}</div><div class="dash-cal-evts">${evts}${more}</div></div>`;
   }).join('') + (typeof dashCalBarsHtml === 'function' ? dashCalBarsHtml(layout.bars, 'dash-cal-evt dash-cal-bar') : '');
 
   // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달, "+ N건" 클릭 = 해당 날짜 일정 목록.

@@ -490,13 +490,14 @@ function renderCalendarTab() {
     if (c.muted) cls.push('is-muted');
     if (c.date === todayYmd) cls.push('is-today');
     if (c.date === calTabSelectedDate) cls.push('is-selected');
+    if (typeof krDayClasses === 'function') cls.push(...krDayClasses(c.date));   // 일요일/공휴일 날짜 숫자 빨강(대시보드 달력과 같은 공통 로직)
     if (dayEvts.length) cls.push('has-evt');
     const pad = info.lanes ? `<div class="cal-tab-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
     const pills = shown.map(ev =>
       `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(dashScheduleTip(ev))}">${escHtml(ev.title)}</button>`).join('');
     const more = hidden > 0 ? `<button type="button" class="cal-tab-more" data-date="${c.date}">+ ${hidden}건</button>` : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
-      `<span class="cal-tab-day">${c.day}</span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;
+      `<span class="cal-tab-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}>${c.day}</span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;
   }).join('') + dashCalBarsHtml(layout.bars, 'cal-tab-bar');
 
   // 목록: 보고 있는 달의 일정만 날짜순(같은 날은 getDashSchedulesByDate 정렬 그대로)

@@ -1684,6 +1684,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-day { flex-shrink: 0; font-size: 14px; font-weight: 600; line-height: 1; color: var(--hdr);
                  padding: 1px 2px 5px; margin-bottom: 4px; }
 .dash-cal-cell.is-muted .dash-cal-day { color: var(--sub); }
+.dash-cal-cell.is-sun .dash-cal-day, .dash-cal-cell.is-holiday .dash-cal-day { color: var(--cal-holiday); }   /* 일요일·공휴일 날짜 숫자만 빨강(토요일은 그대로) */
 .dash-cal-cell.is-today .dash-cal-day { color: #fff; font-weight: 700; }
 .dash-cal-evts { display: flex; flex-direction: column; gap: 3px; min-height: 0; min-width: 0; }
 .dash-cal-evt { display: block; width: 100%; min-width: 0; height: 21px; flex-shrink: 0; box-sizing: border-box;
@@ -1828,6 +1829,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 날짜 숫자 = 대시보드 .dash-cal-day와 동일(14px, 줄높이 1, 같은 여백) → 칸 높이/날짜 위치/일정 영역 세로 공간이 같다 */
 .cal-tab-day { flex-shrink: 0; font-size: 14px; font-weight: 600; line-height: 1; color: var(--hdr); padding: 1px 2px 5px; margin-bottom: 4px; }
 .cal-tab-cell.is-muted .cal-tab-day { color: var(--sub); }
+.cal-tab-cell.is-sun .cal-tab-day, .cal-tab-cell.is-holiday .cal-tab-day { color: var(--cal-holiday); }   /* 일요일·공휴일 날짜 숫자만 빨강 */
 .cal-tab-cell.is-today { font-weight: 700; }
 .cal-tab-cell.is-today .cal-tab-day { color: #fff; font-weight: 700; }
 .cal-tab-cell:hover { border-color: var(--acc); }
