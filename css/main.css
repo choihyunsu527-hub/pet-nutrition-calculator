@@ -1805,6 +1805,18 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   #tab-dash .dash-cal-more { top: 3px; }
 }
 
+/* 변경 이력 탭 > 캘린더 변경이력 섹션 — 기존 레시피 이력 표 아래 독립 섹션(각 섹션이 자기 영역에서 스크롤) */
+.cal-history-wrap { border-top: 1px solid var(--border); }
+.cal-history-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.cal-history-title { font-size: 14px; font-weight: 600; color: var(--hdr); }
+.cal-history-desc { font-size: 11px; color: var(--sub); }
+.cal-hist-act { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; background: var(--gray-l); color: var(--text); }
+.cal-hist-act-create, .cal-hist-act-restore { background: var(--calc); color: var(--acc); }
+.cal-hist-act-delete { background: rgba(176,58,46,.12); color: #b03a2e; }
+.cal-hist-done { font-size: 11px; color: var(--sub); }
+#cal-history-table { width: 100%; }
+#cal-history-table td.left { white-space: normal; overflow-wrap: anywhere; }   /* 긴 변경 내용은 줄바꿈 — 표가 화면 밖으로 넘치지 않게 */
+
 /* 캘린더 탭(사이드바 작업 > 캘린더): 좌 월간 달력(일정 있는 날짜 = 건수 배지) + 우 해당 월 일정 목록 */
 .cal-tab-wrap { display: flex; gap: 14px; align-items: flex-start; padding: 16px; overflow: auto; min-height: 0; }
 .cal-tab-main { flex: 1 1 0; min-width: 0; padding: 16px !important; }

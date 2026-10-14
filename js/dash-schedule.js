@@ -332,6 +332,7 @@ async function saveDashScheduleForm() {
   }
   if (dashScheduleHasEndDate) row.end_date = multiDay ? endDate : null;   // NULL = 하루짜리(기간 → 하루로 줄이는 수정도 반영)
   const editingId = dashScheduleEditingId;
+  const beforeEv = editingId ? loadDashSchedules().find(x => x.id === editingId) : null;   // 변경 이력용 수정 전 스냅샷
   const saveBtn = document.querySelector('#dash-sched-form-modal .btn-save');
   dashScheduleSaving = true;
   if (saveBtn) saveBtn.disabled = true;
@@ -350,6 +351,10 @@ async function saveDashScheduleForm() {
     errEl.textContent = '';
     closeModal('dash-sched-form-modal');
     dashScheduleEditingId = null;
+    if (typeof logDashScheduleHistory === 'function') {   // 캘린더 변경이력(등록/수정) — 실패해도 일정 저장 결과에는 영향 없음
+      const afterEv = { title, date, endDate: multiDay ? endDate : date, start, end, owner: val('dash-sched-owner'), memo: val('dash-sched-memo'), product: productName, qty, unit: qty === null ? '' : unit };
+      await logDashScheduleHistory(editingId ? 'update' : 'create', beforeEv, afterEv, editingId || (data && data[0] && data[0].id));
+    }
     await refreshDashSchedules();
   } catch (e) {
     errEl.textContent = dashScheduleErrMsg(e, '저장하');
@@ -383,12 +388,14 @@ async function deleteDashScheduleFromDetail() {
   const id = dashScheduleDetailId;
   if (!id || !confirm('이 일정을 삭제할까요?')) return;
   if (!supabaseClient || !currentUser) { alert('로그인 후 이용할 수 있습니다.'); return; }
+  const beforeEv = loadDashSchedules().find(x => x.id === id);   // 변경 이력용 삭제 전 스냅샷(복원에 사용)
   try {
     const { error } = await supabaseClient.from(DASH_SCHEDULE_TABLE).delete().eq('id', id);
     if (error) { alert(dashScheduleErrMsg(error, '삭제하')); return; }
   } catch (e) { alert(dashScheduleErrMsg(e, '삭제하')); return; }
   dashScheduleDetailId = null;
   closeModal('dash-sched-detail-modal');
+  if (beforeEv && typeof logDashScheduleHistory === 'function') await logDashScheduleHistory('delete', beforeEv, null, id);
   await refreshDashSchedules();
 }
 

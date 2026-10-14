@@ -196,7 +196,7 @@ function showTab(id, el) {
   // (goTab(savedTab)) 항상 최신 목록을 불러오도록 여기서 한 번만 트리거한다.
   if (id === 'admin') { loadAdminUsers(); loadAuditLogs(); }
   if (id === 'mix') syncMixRecipeNameField();
-  if (id === 'history') renderChangeHistory();
+  if (id === 'history') { renderChangeHistory(); if (typeof loadDashScheduleHistory === 'function') loadDashScheduleHistory(); }
   if (id === 'compare' && typeof renderCompareTab === 'function') renderCompareTab();
   if (id === 'label' && typeof renderLabelDraft === 'function') renderLabelDraft();
   if (id === 'dash') { renderDashCalendar(); if (typeof refreshDashSchedules === 'function') refreshDashSchedules(); }

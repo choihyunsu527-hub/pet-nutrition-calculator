@@ -3297,6 +3297,27 @@
                   <tbody id="change-history-body"></tbody>
                 </table>
               </div>
+              <!-- 캘린더 변경이력: 일정 등록/수정/삭제/복원 기록(Supabase dash_schedule_history, js/dash-schedule-history.js) — 위 레시피 이력과 별개 섹션 -->
+              <div class="tbl-wrap cal-history-wrap">
+                <div class="cal-history-head">
+                  <h3 class="cal-history-title">캘린더 변경이력</h3>
+                  <span class="cal-history-desc">대시보드·캘린더 일정의 등록 · 수정 · 삭제 · 복원 기록 (공동 일정, 최근 200건)</span>
+                </div>
+                <div id="cal-history-status" class="dash-cal-status" role="alert" hidden></div>
+                <table id="cal-history-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 140px">변경 시각</th>
+                      <th style="width: 110px">사용자</th>
+                      <th style="width: 90px">작업 유형</th>
+                      <th style="width: 200px">일정명</th>
+                      <th>변경 내용</th>
+                      <th style="width: 80px">복원</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cal-history-body"></tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -5534,6 +5555,7 @@
     <script src="js/utils.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/dash-schedule.js"></script>
+    <script src="js/dash-schedule-history.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/ingredients.js"></script>
     <script src="js/ingredient-schema.js"></script>
