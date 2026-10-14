@@ -1817,9 +1817,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cal-tab-cell.is-muted { opacity: .45; background: transparent; color: var(--sub); }
 .cal-tab-cell.is-today { background: var(--acc); color: #fff; }
 .cal-tab-cell.is-selected { border-color: var(--acc); box-shadow: 0 0 0 2px var(--calc); }
-.cal-tab-badge { position: absolute; right: 6px; top: 5px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
-                 border-radius: 9px; background: var(--acc); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
-.cal-tab-cell.is-today .cal-tab-badge { background: #fff; color: var(--acc); }
+/* 하루 일정 제목 pill + "+ N건" — 대시보드 달력(.dash-cal-evt/.dash-cal-more)과 같은 모양(글자만 12px) */
+.cal-tab-evts { display: flex; flex-direction: column; gap: var(--cal-evt-gap); min-height: 0; min-width: 0; }
+.cal-tab-evt { display: block; width: 100%; min-width: 0; height: var(--cal-evt-h); flex-shrink: 0; box-sizing: border-box;
+               padding: 0 7px; text-align: left; font-family: inherit; font-size: 12px; font-weight: 500; line-height: calc(var(--cal-evt-h) - 2px);
+               border: 1px solid var(--border); border-radius: 4px; background: var(--side2); color: var(--text);
+               cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: border-color .15s ease, color .15s ease; }
+.cal-tab-evt:hover { border-color: var(--acc); color: var(--acc); }
+.cal-tab-cell.is-today .cal-tab-evt { background: #fff; border-color: transparent; color: #171B21; }
+.cal-tab-cell.is-today .cal-tab-evt:hover { color: var(--acc); }
+.cal-tab-more { position: absolute; top: 3px; right: 6px; height: 17px; padding: 0 4px; border: none; background: none;
+                font-family: inherit; font-size: 13px; font-weight: 600; line-height: 17px; color: var(--sub);
+                cursor: pointer; border-radius: 3px; white-space: nowrap; }
+.cal-tab-more:hover { color: var(--acc); background: var(--hover-tint); }
+.cal-tab-cell.is-today .cal-tab-more { color: rgba(255,255,255,.9); }
+.cal-tab-cell.is-today .cal-tab-more:hover { color: #fff; background: rgba(255,255,255,.18); }
 .cal-tab-list { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow-y: auto; }
 .cal-tab-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 1px solid var(--border);
                 border-radius: 8px; background: var(--side2); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
@@ -1835,7 +1847,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 @media (max-width: 480px) {
   .cal-tab-cell { height: auto; min-height: 42px; padding: 3px 2px; font-size: 11px; }
   .cal-tab-day { font-size: 11px; padding-bottom: 3px; margin-bottom: 3px; white-space: nowrap; }
-  .cal-tab-badge { position: static; align-self: flex-start; min-width: 15px; height: 15px; line-height: 15px; font-size: 10px; }
+  .cal-tab-evt { font-size: 10px; padding: 0 3px; }
+  .cal-tab-more { position: static; align-self: flex-start; height: 14px; font-size: 9px; line-height: 14px; padding: 0; }
   #cal-tab-grid { --cal-bar-top: 22px; --cal-evt-h: 16px; --cal-evt-gap: 2px; }
   .cal-tab-bar { font-size: 10px; padding: 0 3px; }
 }

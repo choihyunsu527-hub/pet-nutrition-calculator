@@ -415,19 +415,24 @@ function renderCalendarTab() {
   for (let n = 1; cells.length % 7 !== 0; n++) cells.push({ day: n, date: ymd(year, month + 1, n), muted: true });
 
   const byDate = getDashSchedulesByDate();
-  const layout = layoutDashCalendarBars(cells, CAL_TAB_MAX_LANES);   // 기간 일정은 막대, 나머지(하루짜리/못 그린 막대)는 배지 건수
+  const layout = layoutDashCalendarBars(cells, CAL_TAB_MAX_LANES);   // 기간 일정은 막대, 하루짜리는 대시보드와 같이 제목 pill
   gridEl.innerHTML = cells.map((c, i) => {
     const info = layout.info[c.date];
-    const cnt = (byDate[c.date] || []).length - info.bars;
+    const dayEvts = byDate[c.date] || [];
+    const singles = dayEvts.filter(ev => !dashScheduleIsMulti(ev));
+    const shown = singles.slice(0, Math.max(0, CAL_TAB_MAX_LANES - info.lanes));   // 막대+하루짜리 합쳐 최대 3줄
+    const hidden = dayEvts.length - info.bars - shown.length;                        // 못 그린 일정은 "+ N건"
     const cls = ['cal-tab-cell'];
     if (c.muted) cls.push('is-muted');
     if (c.date === todayYmd) cls.push('is-today');
     if (c.date === calTabSelectedDate) cls.push('is-selected');
-    if (cnt || info.bars) cls.push('has-evt');
+    if (dayEvts.length) cls.push('has-evt');
     const pad = info.lanes ? `<div class="cal-tab-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
+    const pills = shown.map(ev =>
+      `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(ev.title)}">${escHtml(ev.title)}</button>`).join('');
+    const more = hidden > 0 ? `<button type="button" class="cal-tab-more" data-date="${c.date}">+ ${hidden}건</button>` : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
-      `<span class="cal-tab-day">${c.day}</span>${pad}` +
-      (cnt ? `<span class="cal-tab-badge" title="일정 ${cnt}건">${cnt}</span>` : '') + `</div>`;
+      `<span class="cal-tab-day">${c.day}</span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;
   }).join('') + dashCalBarsHtml(layout.bars, 'cal-tab-bar');
 
   // 목록: 보고 있는 달의 일정만 날짜순(같은 날은 getDashSchedulesByDate 정렬 그대로)
@@ -445,8 +450,10 @@ function renderCalendarTab() {
   if (!gridEl.dataset.bound) {
     gridEl.dataset.bound = '1';
     gridEl.addEventListener('click', e => {
-      const bar = e.target.closest('.cal-tab-bar');
-      if (bar) { openDashScheduleDetail(bar.dataset.schedId); return; }   // 기간 일정 막대 = 상세 조회
+      const bar = e.target.closest('.cal-tab-bar, .cal-tab-evt');
+      if (bar) { openDashScheduleDetail(bar.dataset.schedId); return; }   // 기간 일정 막대/하루 일정 제목 = 상세 조회
+      const more = e.target.closest('.cal-tab-more');
+      if (more) { openDashScheduleDayList(more.dataset.date); return; }   // "+ N건" = 해당 날짜 일정 목록
       const cell = e.target.closest('.cal-tab-cell');
       if (!cell) return;
       calTabSelectedDate = cell.dataset.date;
