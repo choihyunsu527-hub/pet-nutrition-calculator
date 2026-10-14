@@ -73,3 +73,76 @@ test('formatDashScheduleRange / dashScheduleListDateLabel', () => {
   assert.equal(run(`dashScheduleListDateLabel(__e.cross, __m[0], __m[1])`), '9/28~10/2');
   assert.equal(run(`dashScheduleListDateLabel(__e.year, '2026-12-01', '2026-12-31')`), '2026.12/30~2027.1/2');
 });
+
+// ── 기간 일정 가로 막대 레이아웃 (layoutDashCalendarBars) ─────────────────────
+// 일요일 시작 7열 격자의 날짜 배열을 만든다(firstSunday 부터 weeks 주).
+function gridCells(firstSunday, weeks) {
+  ctx.__fs = firstSunday; ctx.__w = weeks;
+  return run(`Array.from({ length: __w * 7 }, (_, i) => ({ date: dashScheduleAddDays(__fs, i) }))`);
+}
+function layout(cells, events, maxLanes = 3) {
+  ctx.__cells = cells;
+  run(`dashSchedules = ${JSON.stringify(events)}`);
+  return run(`layoutDashCalendarBars(__cells, ${maxLanes})`);
+}
+const ev = (id, date, endDate, createdAt = 1) => ({ id, title: id, date, endDate, start: '', end: '', owner: '', memo: '', createdAt });
+
+test('막대: 한 주 안의 기간 일정은 시작~종료 칸에 걸친 막대 1개', () => {
+  const cells = gridCells('2026-09-27', 5);              // 2026-10 격자(9/27 ~ 10/31)
+  const { bars, info } = layout(cells, [ev('A', '2026-10-12', '2026-10-15')]);
+  assert.equal(bars.length, 1);
+  assert.deepEqual({ row: bars[0].row, c1: bars[0].c1, c2: bars[0].c2, lane: bars[0].lane, s: bars[0].isStart, e: bars[0].isEnd }, { row: 3, c1: 1, c2: 4, lane: 0, s: true, e: true });
+  assert.equal(info['2026-10-12'].lanes, 1);
+  assert.equal(info['2026-10-12'].bars, 1);
+  assert.equal(info['2026-10-16'].lanes, 0);
+});
+
+test('막대: 주 경계를 넘으면 주마다 구간으로 나뉘고 시작/끝 표시가 맞는다', () => {
+  const cells = gridCells('2026-09-27', 5);
+  const { bars } = layout(cells, [ev('B', '2026-10-14', '2026-10-21')]);   // 수 ~ 다음 주 수
+  assert.deepEqual(bars.map(b => [b.row, b.c1, b.c2, b.isStart, b.isEnd]), [[3, 3, 6, true, false], [4, 0, 3, false, true]]);
+});
+
+test('막대: 한 주를 통째로 가로지르는 구간(양쪽 이어짐), 6행 달', () => {
+  const cells = gridCells('2026-07-26', 6);              // 2026-08 격자(7/26 ~ 9/5)
+  const { bars } = layout(cells, [ev('Aug', '2026-08-04', '2026-08-18')]);
+  assert.deepEqual(bars.map(b => [b.row, b.c1, b.c2, b.isStart, b.isEnd]), [[2, 2, 6, true, false], [3, 0, 6, false, false], [4, 0, 2, false, true]]);
+});
+
+test('막대: 월 경계/연말연초 — 달 격자에 보이는 칸까지만 그리고 다음 달 격자에서 이어진다', () => {
+  const oct = layout(gridCells('2026-09-27', 5), [ev('D', '2026-10-29', '2026-11-02')]).bars;
+  assert.deepEqual(oct.map(b => [b.row, b.c1, b.c2, b.isStart, b.isEnd]), [[5, 4, 6, true, false]]);   // 10/29~10/31 (11/1~은 격자 밖)
+  const nov = layout(gridCells('2026-11-01', 5), [ev('D', '2026-10-29', '2026-11-02')]).bars;
+  assert.deepEqual(nov.map(b => [b.row, b.c1, b.c2, b.isStart, b.isEnd]), [[1, 0, 1, false, true]]);
+  const dec = layout(gridCells('2026-11-29', 5), [ev('Y', '2026-12-30', '2027-01-02')]).bars;           // 12월 격자 11/29 ~ 1/2
+  assert.deepEqual(dec.map(b => [b.row, b.c1, b.c2, b.isStart, b.isEnd]), [[5, 3, 6, true, true]]);
+  const jan = layout(gridCells('2026-12-27', 5), [ev('Y', '2026-12-30', '2027-01-02')]).bars;           // 1월 격자 12/27 ~ 1/30
+  assert.deepEqual(jan.map(b => [b.row, b.c1, b.c2, b.isStart, b.isEnd]), [[1, 3, 6, true, true]]);
+});
+
+test('막대: 겹치는 일정은 줄을 나눠 쌓고(시작 빠른 순→긴 순→등록순), 안 겹치면 같은 줄 재사용', () => {
+  const cells = gridCells('2026-09-27', 5);
+  const { bars } = layout(cells, [
+    ev('late', '2026-10-14', '2026-10-15', 3), ev('first', '2026-10-12', '2026-10-13', 1), ev('long', '2026-10-12', '2026-10-15', 2),
+  ]);
+  const lane = id => bars.find(b => b.ev.id === id).lane;
+  assert.equal(lane('long'), 0);      // 같은 시작일이면 긴 일정이 먼저
+  assert.equal(lane('first'), 1);
+  assert.equal(lane('late'), 1);      // first(월~화)와 안 겹쳐 같은 줄 재사용
+});
+
+test('막대: 줄이 모자라면(maxLanes 초과) 그리지 않고 칸 정보에는 반영하지 않는다(+N건에 포함되도록)', () => {
+  const cells = gridCells('2026-09-27', 5);
+  const events = ['a', 'b', 'c', 'd'].map((id, i) => ev(id, '2026-10-14', '2026-10-16', i));
+  const { bars, info } = layout(cells, events, 3);
+  assert.equal(bars.length, 3);
+  assert.equal(info['2026-10-14'].lanes, 3);
+  assert.equal(info['2026-10-14'].bars, 3);       // 그려진 막대만 센다 → 하루 일정 수 - bars = 숨겨진 건수
+});
+
+test('막대: 하루짜리/기존 일정(endDate 없음)은 막대 대상이 아니다', () => {
+  const cells = gridCells('2026-09-27', 5);
+  const { bars, info } = layout(cells, [ev('one', '2026-10-12', '2026-10-12'), { id: 'old', title: 'old', date: '2026-10-13', start: '', end: '', owner: '', memo: '', createdAt: 1 }]);
+  assert.equal(bars.length, 0);
+  assert.equal(info['2026-10-12'].lanes, 0);
+});

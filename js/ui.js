@@ -254,21 +254,28 @@ function renderDashCalendar() {
   }
 
   const byDate = typeof getDashSchedulesByDate === 'function' ? getDashSchedulesByDate() : {};
-  gridEl.innerHTML = cells.map(c => {
+  // 기간(여러 날) 일정은 주 단위 가로 막대로 따로 그리고(js/dash-schedule.js), 칸에는 막대가 차지한 줄만큼 공간을 비워 둔다.
+  const layout = typeof layoutDashCalendarBars === 'function' ? layoutDashCalendarBars(cells, DASH_CAL_MAX_EVTS) : { bars: [], info: {} };
+  gridEl.innerHTML = cells.map((c, i) => {
     const cls = ['dash-cal-cell'];
     if (c.muted) cls.push('is-muted');
     if (c.today) cls.push('is-today');
-    // 셀 높이 고정을 위해 최대 3건만 그리고, 나머지는 "+ N건"(해당 날짜 일정 목록)으로 묶는다.
+    // 셀 높이 고정을 위해 막대+하루짜리 합쳐 최대 3줄만 그리고, 나머지는 "+ N건"(해당 날짜 일정 목록)으로 묶는다.
     const dayEvts = byDate[c.date] || [];
-    const evts = dayEvts.slice(0, DASH_CAL_MAX_EVTS).map(ev =>
+    const info = layout.info[c.date] || { lanes: 0, bars: 0 };
+    const singles = dayEvts.filter(ev => !(ev.endDate && ev.endDate > ev.date));
+    const shown = singles.slice(0, Math.max(0, DASH_CAL_MAX_EVTS - info.lanes));
+    const pad = info.lanes ? `<div class="dash-cal-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
+    const evts = pad + shown.map(ev =>
       `<button type="button" class="dash-cal-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(ev.title)}">${escHtml(ev.title)}</button>`
     ).join('');
-    const more = dayEvts.length > DASH_CAL_MAX_EVTS
-      ? `<button type="button" class="dash-cal-more" data-date="${c.date}">+ ${dayEvts.length - DASH_CAL_MAX_EVTS}건</button>`
+    const hidden = dayEvts.length - info.bars - shown.length;
+    const more = hidden > 0
+      ? `<button type="button" class="dash-cal-more" data-date="${c.date}">+ ${hidden}건</button>`
       : '';
-    return `<div class="${cls.join(' ')}" data-date="${c.date}">` +
+    return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
       `<div class="dash-cal-day">${c.day}</div><div class="dash-cal-evts">${evts}${more}</div></div>`;
-  }).join('');
+  }).join('') + (typeof dashCalBarsHtml === 'function' ? dashCalBarsHtml(layout.bars, 'dash-cal-evt dash-cal-bar') : '');
 
   // 클릭 위임은 한 번만 연결 — 일정 제목 클릭 = 상세 모달, "+ N건" 클릭 = 해당 날짜 일정 목록.
   // 빈 날짜 칸 클릭으로는 일정 추가 모달을 열지 않는다.

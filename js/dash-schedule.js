@@ -149,6 +149,58 @@ function getDashSchedulesByDate() {
   return map;
 }
 
+// ── 기간 일정 가로 막대 레이아웃 (대시보드 달력 + 캘린더 탭 공용) ─────────────────────
+// 달력 그리드는 7열 × N주. 기간(여러 날) 일정은 날짜마다 따로 그리지 않고 "주(週) 단위 구간"마다
+// 시작 칸~종료 칸에 걸친 하나의 막대로 그린다(그리드 항목을 grid-row/grid-column으로 겹쳐 배치).
+//  · 한 주 안에서 겹치는 기간 일정은 줄(lane 0,1,2…)을 나눠 쌓는다(시작일 빠른 순 → 긴 일정 먼저 → 등록순).
+//  · 막대는 maxLanes 줄까지만 그린다. 그리지 못한 일정은 그 날짜의 "+ N건"/건수 배지에 포함된다.
+//  · info[date] = { lanes: 그 칸 위쪽에 막대가 차지하는 줄 수(하루짜리 일정/칸 높이 예약용), bars: 그 칸을 지나는 "그려진" 막대 수 }
+function dashScheduleIsMulti(ev) {
+  return !!ev.endDate && ev.endDate > ev.date;
+}
+
+function layoutDashCalendarBars(cells, maxLanes) {
+  const multi = loadDashSchedules().filter(dashScheduleIsMulti);
+  const bars = [];
+  const info = {};
+  cells.forEach(c => { info[c.date] = { lanes: 0, bars: 0 }; });
+  for (let w = 0; w * 7 < cells.length; w++) {
+    const first = cells[w * 7].date, last = cells[w * 7 + 6].date;
+    const segs = multi.filter(ev => ev.date <= last && ev.endDate >= first)
+      .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) ||
+        (dashScheduleSpanDays(b.date, b.endDate) - dashScheduleSpanDays(a.date, a.endDate)) ||
+        ((a.createdAt || 0) - (b.createdAt || 0)))
+      .map(ev => {
+        const s0 = ev.date < first ? first : ev.date, e0 = ev.endDate > last ? last : ev.endDate;
+        return { ev, row: w + 1, c1: dashScheduleSpanDays(first, s0), c2: dashScheduleSpanDays(first, e0),
+                 isStart: ev.date >= first, isEnd: ev.endDate <= last };
+      });
+    const laneUsed = [];   // laneUsed[lane] = [[c1, c2], …]
+    segs.forEach(sg => {
+      let lane = 0;
+      while (laneUsed[lane] && laneUsed[lane].some(([a, b]) => !(sg.c2 < a || sg.c1 > b))) lane++;
+      (laneUsed[lane] = laneUsed[lane] || []).push([sg.c1, sg.c2]);
+      sg.lane = lane;
+      if (lane >= maxLanes) return;   // 줄이 모자라 못 그림 → "+ N건"/배지에 포함
+      bars.push(sg);
+      for (let col = sg.c1; col <= sg.c2; col++) {
+        const i = info[cells[w * 7 + col].date];
+        i.lanes = Math.max(i.lanes, lane + 1);
+        i.bars++;
+      }
+    });
+  }
+  return { bars, info };
+}
+
+// 막대 버튼 HTML — cls: 'dash-cal-evt dash-cal-bar'(대시보드) / 'cal-tab-bar'(캘린더 탭)
+function dashCalBarsHtml(bars, cls) {
+  return bars.map(b =>
+    `<button type="button" class="${cls}${b.isStart ? ' is-start' : ''}${b.isEnd ? ' is-end' : ''}" data-sched-id="${escHtml(b.ev.id)}"` +
+    ` title="${escHtml(b.ev.title)}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${escHtml(b.ev.title)}</button>`
+  ).join('');
+}
+
 function dashScheduleTodayYmd() {
   const t = new Date();
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
@@ -313,6 +365,7 @@ function addDashScheduleFromDayList() {
 // ── 캘린더 탭 (사이드바 작업 > 캘린더) ───────────────────────────────────────
 // 대시보드와 같은 dashSchedules 캐시/모달/CRUD를 그대로 쓴다. 이 탭은 월간 달력(일정 있는 날짜 = 건수 배지)
 // + 보고 있는 달의 일정 목록만 그린다. 월 offset과 선택 날짜는 대시보드와 별개(세션 메모리).
+const CAL_TAB_MAX_LANES = 3;     // 한 주에 쌓아 그리는 기간 일정 막대 최대 줄 수(초과분은 배지 건수에 포함)
 let calTabMonthOffset = 0;
 let calTabSelectedDate = null;   // 마지막으로 클릭한 날짜(YYYY-MM-DD) — "+ 일정 추가" 기본 날짜
 
@@ -362,16 +415,20 @@ function renderCalendarTab() {
   for (let n = 1; cells.length % 7 !== 0; n++) cells.push({ day: n, date: ymd(year, month + 1, n), muted: true });
 
   const byDate = getDashSchedulesByDate();
-  gridEl.innerHTML = cells.map(c => {
-    const cnt = (byDate[c.date] || []).length;
+  const layout = layoutDashCalendarBars(cells, CAL_TAB_MAX_LANES);   // 기간 일정은 막대, 나머지(하루짜리/못 그린 막대)는 배지 건수
+  gridEl.innerHTML = cells.map((c, i) => {
+    const info = layout.info[c.date];
+    const cnt = (byDate[c.date] || []).length - info.bars;
     const cls = ['cal-tab-cell'];
     if (c.muted) cls.push('is-muted');
     if (c.date === todayYmd) cls.push('is-today');
     if (c.date === calTabSelectedDate) cls.push('is-selected');
-    if (cnt) cls.push('has-evt');
-    return `<div class="${cls.join(' ')}" data-date="${c.date}"><span class="cal-tab-day">${c.day}</span>` +
+    if (cnt || info.bars) cls.push('has-evt');
+    const pad = info.lanes ? `<div class="cal-tab-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
+    return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
+      `<span class="cal-tab-day">${c.day}</span>${pad}` +
       (cnt ? `<span class="cal-tab-badge" title="일정 ${cnt}건">${cnt}</span>` : '') + `</div>`;
-  }).join('');
+  }).join('') + dashCalBarsHtml(layout.bars, 'cal-tab-bar');
 
   // 목록: 보고 있는 달의 일정만 날짜순(같은 날은 getDashSchedulesByDate 정렬 그대로)
   const monthStart = ymd(year, month, 1), monthEnd = ymd(year, month, daysInMonth);
@@ -388,6 +445,8 @@ function renderCalendarTab() {
   if (!gridEl.dataset.bound) {
     gridEl.dataset.bound = '1';
     gridEl.addEventListener('click', e => {
+      const bar = e.target.closest('.cal-tab-bar');
+      if (bar) { openDashScheduleDetail(bar.dataset.schedId); return; }   // 기간 일정 막대 = 상세 조회
       const cell = e.target.closest('.cal-tab-cell');
       if (!cell) return;
       calTabSelectedDate = cell.dataset.date;
