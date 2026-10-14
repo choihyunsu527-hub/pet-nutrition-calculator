@@ -1686,9 +1686,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-cell.is-muted { color: var(--sub); opacity: .45; background: transparent; }
 .dash-cal-cell.is-today { background: var(--acc); color: #fff; font-weight: 700; }
 .dash-cal-day { flex-shrink: 0; font-size: 14px; font-weight: 600; line-height: 1; color: var(--hdr);
-                 padding: 1px 2px 4px; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+                 padding: 1px 2px 5px; margin-bottom: 4px; }
 .dash-cal-cell.is-muted .dash-cal-day { color: var(--sub); }
-.dash-cal-cell.is-today .dash-cal-day { color: #fff; font-weight: 700; border-bottom-color: rgba(255,255,255,.35); }
+.dash-cal-cell.is-today .dash-cal-day { color: #fff; font-weight: 700; }
 .dash-cal-evts { display: flex; flex-direction: column; gap: 3px; min-height: 0; min-width: 0; }
 .dash-cal-evt { display: block; width: 100%; min-width: 0; height: 21px; flex-shrink: 0; box-sizing: border-box;
                  padding: 0 7px; text-align: left; font-family: inherit; font-size: 14px; font-weight: 500; line-height: 19px;
