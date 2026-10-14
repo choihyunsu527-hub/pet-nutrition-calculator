@@ -5320,6 +5320,36 @@
             />
           </div>
           <div class="modal-row">
+            <label for="dash-sched-product">제품명 (선택)</label>
+            <input
+              type="text"
+              id="dash-sched-product"
+              maxlength="100"
+              placeholder="예: 고구마 소프트 트릿"
+            />
+          </div>
+          <div class="modal-row">
+            <label for="dash-sched-qty">생산 수량 (선택)</label>
+            <input
+              type="number"
+              id="dash-sched-qty"
+              min="0"
+              max="999999999"
+              step="any"
+              inputmode="decimal"
+              placeholder="예: 1200"
+            />
+            <select id="dash-sched-unit" aria-label="수량 단위">
+              <option value="kg">kg</option>
+              <option value="g">g</option>
+              <option value="개">개</option>
+              <option value="박스">박스</option>
+              <option value="포">포</option>
+              <option value="L">L</option>
+              <option value="mL">mL</option>
+            </select>
+          </div>
+          <div class="modal-row">
             <label for="dash-sched-date">시작일</label>
             <input
               type="date"
@@ -5386,6 +5416,12 @@
           </div>
           <div class="modal-row">
             <label>시간</label><span id="dash-sched-detail-time"></span>
+          </div>
+          <div class="modal-row">
+            <label>제품명</label><span id="dash-sched-detail-product"></span>
+          </div>
+          <div class="modal-row">
+            <label>생산 수량</label><span id="dash-sched-detail-qty"></span>
           </div>
           <div class="modal-row">
             <label>담당자</label><span id="dash-sched-detail-owner"></span>

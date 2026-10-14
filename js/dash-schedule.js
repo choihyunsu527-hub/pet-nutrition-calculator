@@ -14,15 +14,22 @@
 // 이전 성공 시각만 별도 키(…_migrated)에 기록한다.
 // 기간 일정: end_date(종료일) 컬럼(supabase/sql/008_dash_schedules_date_range.sql). NULL = 하루짜리(기존 데이터 전부).
 //  · 008 미적용 DB에서도 기존 일정이 그대로 보이도록, end_date 포함 조회가 컬럼 오류로 실패하면 end_date 없이 다시 조회한다.
+// 생산 정보: product_name(제품명) / production_qty(수량) / production_unit(단위) 컬럼(supabase/sql/009_dash_schedules_production.sql).
+//  · 모두 NULL 허용(기존 일정은 그대로). 메모(memo)·담당자(assignee)는 기존 컬럼을 그대로 쓴다.
+//  · 009 미적용 DB에서는 조회가 컬럼 오류로 실패하면 해당 컬럼 없이 다시 조회하고(기존 일정 그대로 표시), 생산 정보를 입력해 저장하면 안내 문구를 보여 준다.
 // 캐시 일정 형식: { id, title, date:'YYYY-MM-DD'(시작일), endDate:'YYYY-MM-DD'(종료일, 하루짜리는 date와 같음),
-//                  start:'HH:MM'|'', end:'HH:MM'|'', owner, memo, createdAt }
+//                  start:'HH:MM'|'', end:'HH:MM'|'', owner, memo, product:'제품명'|'', qty:number|null, unit:'kg'|'', createdAt }
 const DASH_SCHEDULE_KEY = 'feedcalc_v4_dash_schedules';                    // (레거시, 읽기 전용)
 const DASH_SCHEDULE_MIGRATED_KEY = 'feedcalc_v4_dash_schedules_migrated';  // 레거시 이전 완료 시각
 const DASH_SCHEDULE_TABLE = 'dash_schedules';
 const DASH_SCHEDULE_COLS = 'id,schedule_date,title,start_time,end_time,assignee,memo,created_at';
 const DASH_SCHEDULE_COLS_RANGE = DASH_SCHEDULE_COLS + ',end_date';
+const DASH_SCHEDULE_COLS_PRODUCTION = ',product_name,production_qty,production_unit';
+const DASH_SCHEDULE_UNITS = ['kg', 'g', '개', '박스', '포', 'L', 'mL'];   // 단위 선택 목록(폼 select와 동일)
+const DASH_SCHEDULE_MAX_QTY = 999999999;
 const DASH_SCHEDULE_MAX_SPAN_DAYS = 366;   // 종료일은 시작일로부터 최대 366일 뒤까지(DB 제약과 동일)
 let dashScheduleHasEndDate = true;         // 008(end_date 컬럼) 적용 여부 — 조회 오류로 판별
+let dashScheduleHasProduction = true;      // 009(제품명/수량/단위 컬럼) 적용 여부 — 조회 오류로 판별
 
 let dashSchedules = [];             // DB에서 불러온 공동 일정(메모리 캐시)
 let dashScheduleLoading = null;     // 진행 중인 refresh Promise(중복 호출 방지)
@@ -60,13 +67,36 @@ function dashScheduleFromRow(r) {
     id: r.id, title: r.title, date: r.schedule_date, endDate: r.end_date || r.schedule_date,
     start: hm(r.start_time), end: hm(r.end_time),
     owner: r.assignee || '', memo: r.memo || '',
+    product: r.product_name || '',
+    qty: r.production_qty === null || r.production_qty === undefined || r.production_qty === '' ? null : Number(r.production_qty),
+    unit: r.production_unit || '',
     createdAt: Date.parse(r.created_at) || 0,
   };
+}
+
+// 생산 정보 표시: "제품명 · 1,200 kg" (없는 항목은 생략, 둘 다 없으면 빈 문자열)
+function formatDashScheduleQty(ev) {
+  return ev.qty === null || ev.qty === undefined || Number.isNaN(ev.qty) ? ''
+    : `${ev.qty.toLocaleString('ko-KR', { maximumFractionDigits: 3 })}${ev.unit ? ' ' + ev.unit : ''}`;
+}
+function formatDashScheduleProduction(ev) {
+  return [ev.product, formatDashScheduleQty(ev)].filter(Boolean).join(' · ');
+}
+// 목록 항목 제목 아래 한 줄(제품명 · 수량) — 없으면 빈 문자열
+function dashScheduleSubHtml(ev, cls) {
+  const prod = formatDashScheduleProduction(ev);
+  return prod ? `<small class="${cls}">${escHtml(prod)}</small>` : '';
+}
+// 달력 pill/막대 툴팁(title 속성): 일정명 + 생산 정보
+function dashScheduleTip(ev) {
+  const prod = formatDashScheduleProduction(ev);
+  return prod ? `${ev.title} — ${prod}` : ev.title;
 }
 
 // Supabase 오류 → 사용자에게 보여줄 문장 (action: '불러오' | '저장' | '삭제')
 function dashScheduleErrMsg(error, action) {
   const msg = (error && error.message) || '';
+  if (/product_name|production_qty|production_unit/i.test(msg) && /column|schema cache|constraint/i.test(msg)) return '제품명/생산 수량을 저장하려면 DB 업데이트(supabase/sql/009_dash_schedules_production.sql 실행)가 필요합니다. 관리자에게 문의하세요.';
   if (/end_date/i.test(msg) && /column|schema cache/i.test(msg)) return '기간 일정을 저장하려면 DB 업데이트(supabase/sql/008_dash_schedules_date_range.sql 실행)가 필요합니다. 관리자에게 문의하세요.';
   if (/fetch|network|Load failed/i.test(msg)) return `서버에 연결하지 못해 일정을 ${action}지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도하세요.`;
   if (/JWT|auth|permission|row-level security/i.test(msg)) return `로그인이 만료되었거나 권한이 없어 일정을 ${action}지 못했습니다. 다시 로그인해 주세요.`;
@@ -119,10 +149,15 @@ function refreshDashSchedules() {
     try { await supabaseClient.rpc('purge_expired_dash_schedules'); } catch (e) {}   // 안전장치 — 실패해도 조회는 계속
     try { await migrateLegacyDashSchedules(); } catch (e) { console.warn('[일정] 이전 오류', e); }
     const query = cols => supabaseClient.from(DASH_SCHEDULE_TABLE).select(cols).order('schedule_date', { ascending: true });
-    let { data, error } = await query(dashScheduleHasEndDate ? DASH_SCHEDULE_COLS_RANGE : DASH_SCHEDULE_COLS);
-    if (error && dashScheduleHasEndDate && /end_date/i.test(error.message || '')) {   // 008 미적용 DB — 기존(하루짜리) 일정만이라도 표시
-      dashScheduleHasEndDate = false;
-      ({ data, error } = await query(DASH_SCHEDULE_COLS));
+    const cols = () => DASH_SCHEDULE_COLS + (dashScheduleHasEndDate ? ',end_date' : '') + (dashScheduleHasProduction ? DASH_SCHEDULE_COLS_PRODUCTION : '');
+    let { data, error } = await query(cols());
+    // 008/009 미적용 DB — 없는 컬럼을 빼고 다시 조회해 기존 일정만이라도 표시(최대 2번 재시도)
+    for (let retry = 0; error && retry < 2; retry++) {
+      const m = error.message || '';
+      if (dashScheduleHasEndDate && /end_date/i.test(m)) dashScheduleHasEndDate = false;
+      else if (dashScheduleHasProduction && /product_name|production_qty|production_unit/i.test(m)) dashScheduleHasProduction = false;
+      else break;
+      ({ data, error } = await query(cols()));
     }
     if (error) { setDashCalStatus(dashScheduleErrMsg(error, '불러오'), true); return; }
     dashSchedules = (data || []).map(dashScheduleFromRow);
@@ -197,7 +232,7 @@ function layoutDashCalendarBars(cells, maxLanes) {
 function dashCalBarsHtml(bars, cls) {
   return bars.map(b =>
     `<button type="button" class="${cls}${b.isStart ? ' is-start' : ''}${b.isEnd ? ' is-end' : ''}" data-sched-id="${escHtml(b.ev.id)}"` +
-    ` title="${escHtml(b.ev.title)}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${escHtml(b.ev.title)}</button>`
+    ` title="${escHtml(dashScheduleTip(b.ev))}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${escHtml(b.ev.title)}</button>`
   ).join('');
 }
 
@@ -235,6 +270,9 @@ function openDashScheduleForm(id, date) {
   const startYmd = ev ? ev.date : (date || dashScheduleTodayYmd());
   document.getElementById('dash-sched-date').value = startYmd;
   document.getElementById('dash-sched-end-date').value = ev ? (ev.endDate || ev.date) : startYmd;   // 하루짜리 = 시작일과 같음
+  document.getElementById('dash-sched-product').value = ev ? (ev.product || '') : '';
+  document.getElementById('dash-sched-qty').value = ev && ev.qty !== null && ev.qty !== undefined ? String(ev.qty) : '';
+  document.getElementById('dash-sched-unit').value = ev && ev.unit && DASH_SCHEDULE_UNITS.includes(ev.unit) ? ev.unit : DASH_SCHEDULE_UNITS[0];
   document.getElementById('dash-sched-start').value = ev ? (ev.start || '') : '';
   document.getElementById('dash-sched-end').value = ev ? (ev.end || '') : '';
   document.getElementById('dash-sched-owner').value = ev ? (ev.owner || '') : '';
@@ -267,6 +305,18 @@ async function saveDashScheduleForm() {
   if (dashScheduleSpanDays(date, endDate) > DASH_SCHEDULE_MAX_SPAN_DAYS) { errEl.textContent = `일정 기간은 최대 ${DASH_SCHEDULE_MAX_SPAN_DAYS}일까지 가능합니다.`; return; }
   const multiDay = endDate > date;
   if (!multiDay && start && end && end < start) { errEl.textContent = '종료 시간이 시작 시간보다 빠릅니다.'; return; }   // 기간 일정은 종료일의 종료 시각이 더 이를 수 있다
+  const productName = val('dash-sched-product');
+  const qtyRaw = val('dash-sched-qty');
+  const unit = document.getElementById('dash-sched-unit').value;
+  let qty = null;
+  if (qtyRaw !== '') {
+    qty = Number(qtyRaw);
+    if (!Number.isFinite(qty) || qty < 0) { errEl.textContent = '생산 수량은 0 이상의 숫자로 입력하세요.'; return; }
+    if (qty > DASH_SCHEDULE_MAX_QTY) { errEl.textContent = '생산 수량이 너무 큽니다.'; return; }
+    qty = Math.round(qty * 1000) / 1000;   // DB 소수 3자리
+    if (!DASH_SCHEDULE_UNITS.includes(unit)) { errEl.textContent = '단위를 선택하세요.'; return; }
+  }
+  if ((productName || qty !== null) && !dashScheduleHasProduction) { errEl.textContent = dashScheduleErrMsg({ message: 'production_qty column' }, '저장하'); return; }
   if (multiDay && !dashScheduleHasEndDate) { errEl.textContent = dashScheduleErrMsg({ message: 'end_date column' }, '저장하'); return; }
   if (!supabaseClient || !currentUser) { errEl.textContent = '로그인 후 이용할 수 있습니다.'; return; }
 
@@ -275,6 +325,11 @@ async function saveDashScheduleForm() {
     schedule_date: date, title, start_time: start || null, end_time: end || null,
     assignee: val('dash-sched-owner') || null, memo: val('dash-sched-memo') || null,
   };
+  if (dashScheduleHasProduction) {   // 비우면 NULL로 저장 → 수정 화면에서 지운 값도 반영
+    row.product_name = productName || null;
+    row.production_qty = qty;
+    row.production_unit = qty === null ? null : unit;
+  }
   if (dashScheduleHasEndDate) row.end_date = multiDay ? endDate : null;   // NULL = 하루짜리(기간 → 하루로 줄이는 수정도 반영)
   const editingId = dashScheduleEditingId;
   const saveBtn = document.querySelector('#dash-sched-form-modal .btn-save');
@@ -311,6 +366,8 @@ function openDashScheduleDetail(id) {
   document.getElementById('dash-sched-detail-title').textContent = ev.title;
   document.getElementById('dash-sched-detail-date').textContent = formatDashScheduleRange(ev);
   document.getElementById('dash-sched-detail-time').textContent = formatDashScheduleTime(ev);
+  document.getElementById('dash-sched-detail-product').textContent = ev.product || '-';
+  document.getElementById('dash-sched-detail-qty').textContent = formatDashScheduleQty(ev) || '-';
   document.getElementById('dash-sched-detail-owner').textContent = ev.owner || '-';
   document.getElementById('dash-sched-detail-memo').textContent = ev.memo || '-';
   document.getElementById('dash-sched-detail-modal').classList.add('open');
@@ -344,7 +401,7 @@ function openDashScheduleDayList(date) {
   document.getElementById('dash-sched-day-title').textContent = formatDashScheduleDate(date);
   document.getElementById('dash-sched-day-list').innerHTML = list.map(ev =>
     `<button type="button" class="dash-sched-day-item" data-sched-id="${escHtml(ev.id)}">` +
-    `<span class="dash-sched-day-item-title">${escHtml(ev.title)}</span>` +
+    `<span class="dash-sched-day-item-title">${escHtml(ev.title)}${dashScheduleSubHtml(ev, 'dash-sched-day-item-sub')}</span>` +
     `<span class="dash-sched-day-item-time">${escHtml(formatDashScheduleTime(ev))}</span></button>`
   ).join('') || '<div class="dash-sched-day-empty">일정이 없습니다.</div>';
   document.getElementById('dash-sched-day-modal').classList.add('open');
@@ -429,7 +486,7 @@ function renderCalendarTab() {
     if (dayEvts.length) cls.push('has-evt');
     const pad = info.lanes ? `<div class="cal-tab-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
     const pills = shown.map(ev =>
-      `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(ev.title)}">${escHtml(ev.title)}</button>`).join('');
+      `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(dashScheduleTip(ev))}">${escHtml(ev.title)}</button>`).join('');
     const more = hidden > 0 ? `<button type="button" class="cal-tab-more" data-date="${c.date}">+ ${hidden}건</button>` : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
       `<span class="cal-tab-day">${c.day}</span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;
@@ -443,7 +500,7 @@ function renderCalendarTab() {
   listEl.innerHTML = inMonth.map(ev =>
     `<button type="button" class="cal-tab-item" data-sched-id="${escHtml(ev.id)}">` +
     `<span class="cal-tab-item-date">${escHtml(dashScheduleListDateLabel(ev, monthStart, monthEnd))}</span>` +
-    `<span class="cal-tab-item-title">${escHtml(ev.title)}</span>` +
+    `<span class="cal-tab-item-title">${escHtml(ev.title)}${dashScheduleSubHtml(ev, 'cal-tab-item-sub')}</span>` +
     `<span class="cal-tab-item-time">${escHtml(formatDashScheduleTime(ev))}</span></button>`
   ).join('') || '<div class="dash-sched-day-empty">이 달에 등록된 일정이 없습니다.</div>';
 

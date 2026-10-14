@@ -1718,12 +1718,17 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-sched-day-item:hover { border-color: var(--acc); }
 .dash-sched-day-item-title { min-width: 0; font-size: 12px; font-weight: 500; color: var(--text);
                               white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-sched-day-item-sub, .cal-tab-item-sub { display: block; margin-top: 1px; font-size: 11px; font-weight: 400; color: var(--sub);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dash-sched-day-item-time { flex-shrink: 0; font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
 .dash-sched-day-empty { font-size: 12px; color: var(--sub); }
 
 /* 일정 추가/상세 모달 — 공용 .modal 세트 재사용, 좁은 모달에 맞게 라벨 폭과 textarea만 보정 */
 .dash-sched-modal .modal-row label { width: 90px; }
 .dash-sched-modal .modal-row input { min-width: 0; }
+.dash-sched-modal .modal-row select { flex: 0 0 auto; margin-left: 6px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; font-family: inherit; color: var(--text); background: var(--side2); outline: none; }
+.dash-sched-modal .modal-row select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .dash-sched-modal .modal-row textarea { flex: 1; padding: 7px 10px; border: 1px solid var(--border); resize: vertical;
                    font-size: 12px; font-family: inherit; color: var(--text); background: var(--side2);
                    outline: none; border-radius: 6px; transition: border-color .15s ease, box-shadow .15s ease; }
