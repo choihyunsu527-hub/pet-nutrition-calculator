@@ -1738,6 +1738,34 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-sched-memo-row > span { white-space: pre-wrap; flex: 1; }
 .dash-sched-del-btn { margin-right: auto; color: #b03a2e !important; }
 
+/* 캘린더 탭(사이드바 작업 > 캘린더): 좌 월간 달력(일정 있는 날짜 = 건수 배지) + 우 해당 월 일정 목록 */
+.cal-tab-wrap { display: flex; gap: 14px; align-items: flex-start; padding: 16px; overflow: auto; min-height: 0; }
+.cal-tab-main { flex: 1 1 0; min-width: 0; padding: 16px !important; }
+.cal-tab-side { flex: 0 0 320px; min-width: 0; padding: 16px !important; }
+.cal-tab-cell { position: relative; height: 72px; box-sizing: border-box; padding: 6px; cursor: pointer; border-radius: 8px;
+                border: 1px solid transparent; background: var(--gray-l); color: var(--text); font-size: 13px; font-weight: 600;
+                font-variant-numeric: tabular-nums; transition: border-color .15s ease; }
+.cal-tab-cell:hover { border-color: var(--acc); }
+.cal-tab-cell.is-muted { opacity: .45; background: transparent; color: var(--sub); }
+.cal-tab-cell.is-today { background: var(--acc); color: #fff; }
+.cal-tab-cell.is-selected { border-color: var(--acc); box-shadow: 0 0 0 2px var(--calc); }
+.cal-tab-badge { position: absolute; left: 6px; bottom: 6px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box;
+                 border-radius: 9px; background: var(--acc); color: #fff; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+.cal-tab-cell.is-today .cal-tab-badge { background: #fff; color: var(--acc); }
+.cal-tab-list { display: flex; flex-direction: column; gap: 6px; max-height: 560px; overflow-y: auto; }
+.cal-tab-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 1px solid var(--border);
+                border-radius: 8px; background: var(--side2); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.cal-tab-item:hover { border-color: var(--acc); }
+.cal-tab-item-date { flex-shrink: 0; width: 34px; font-size: 12px; font-weight: 700; color: var(--acc); }
+.cal-tab-item-title { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-tab-item-time { flex-shrink: 0; font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
+@media (max-width: 900px) {
+  .cal-tab-wrap { flex-direction: column; align-items: stretch; }
+  .cal-tab-side { flex: none; }
+  .cal-tab-cell { height: 48px; padding: 3px 4px; font-size: 11px; }
+  .cal-tab-badge { left: 3px; bottom: 3px; min-width: 15px; height: 15px; line-height: 15px; font-size: 10px; }
+}
+
 /* GitHub 스타일 화이트 UI는 이제 라이트 테마 토큰(css/variables.css :root)에서 전역으로 처리한다.
    여기서는 대시보드 고유의 타이포 강조와 보조 영역 배경만 유지한다(색 아닌 굵기로 위계). */
 #tab-dash .dash-settings-body { background: var(--gray-l); }

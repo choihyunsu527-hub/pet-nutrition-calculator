@@ -47,11 +47,13 @@ function dashScheduleErrMsg(error, action) {
 }
 
 function setDashCalStatus(text, withRetry) {
-  const el = document.getElementById('dash-cal-status');
-  if (!el) return;
-  el.hidden = !text;
-  el.innerHTML = text ? `<span>${escHtml(text)}</span>` +
-    (withRetry ? '<button type="button" class="dash-cal-nav-btn" onclick="refreshDashSchedules()">다시 시도</button>' : '') : '';
+  ['dash-cal-status', 'cal-tab-status'].forEach(id => {   // 대시보드 + 캘린더 탭 공용
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.hidden = !text;
+    el.innerHTML = text ? `<span>${escHtml(text)}</span>` +
+      (withRetry ? '<button type="button" class="dash-cal-nav-btn" onclick="refreshDashSchedules()">다시 시도</button>' : '') : '';
+  });
 }
 
 // 예전 브라우저 localStorage 일정 → DB 1회 이전. 실패하면 플래그를 남기지 않아 다음 접속 때 재시도한다.
@@ -95,6 +97,7 @@ function refreshDashSchedules() {
     dashSchedules = (data || []).map(dashScheduleFromRow);
     setDashCalStatus('');
     renderDashCalendar();
+    renderCalendarTab();
   })().catch(e => {
     setDashCalStatus(dashScheduleErrMsg(e, '불러오'), true);
   }).finally(() => { dashScheduleLoading = null; });
@@ -249,4 +252,84 @@ function onDashScheduleDayListClick(e) {
 function addDashScheduleFromDayList() {
   closeModal('dash-sched-day-modal');
   openDashScheduleForm(null, dashScheduleDayListDate);
+}
+
+// ── 캘린더 탭 (사이드바 작업 > 캘린더) ───────────────────────────────────────
+// 대시보드와 같은 dashSchedules 캐시/모달/CRUD를 그대로 쓴다. 이 탭은 월간 달력(일정 있는 날짜 = 건수 배지)
+// + 보고 있는 달의 일정 목록만 그린다. 월 offset과 선택 날짜는 대시보드와 별개(세션 메모리).
+let calTabMonthOffset = 0;
+let calTabSelectedDate = null;   // 마지막으로 클릭한 날짜(YYYY-MM-DD) — "+ 일정 추가" 기본 날짜
+
+function shiftCalendarTab(delta) {
+  calTabMonthOffset += delta;
+  renderCalendarTab();
+}
+
+function goToCalendarTabToday() {
+  calTabMonthOffset = 0;
+  calTabSelectedDate = null;
+  renderCalendarTab();
+}
+
+function renderCalendarTab() {
+  const gridEl = document.getElementById('cal-tab-grid');
+  const listEl = document.getElementById('cal-tab-list');
+  const titleEl = document.getElementById('cal-tab-title');
+  if (!gridEl || !listEl || !titleEl) return;
+
+  const today = new Date();
+  const view = new Date(today.getFullYear(), today.getMonth() + calTabMonthOffset, 1);
+  const year = view.getFullYear(), month = view.getMonth();
+  titleEl.textContent = `${year}년 ${month + 1}월`;
+  document.getElementById('cal-tab-list-title').textContent = `${month + 1}월 일정`;
+
+  const ymd = (y, m, d) => {
+    const dt = new Date(y, m, d);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+  };
+  const todayYmd = dashScheduleTodayYmd();
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const cells = [];
+  for (let i = firstWeekday - 1; i >= 0; i--) cells.push({ day: daysInPrevMonth - i, date: ymd(year, month - 1, daysInPrevMonth - i), muted: true });
+  for (let d = 1; d <= daysInMonth; d++) cells.push({ day: d, date: ymd(year, month, d), muted: false });
+  for (let n = 1; cells.length % 7 !== 0; n++) cells.push({ day: n, date: ymd(year, month + 1, n), muted: true });
+
+  const byDate = getDashSchedulesByDate();
+  gridEl.innerHTML = cells.map(c => {
+    const cnt = (byDate[c.date] || []).length;
+    const cls = ['cal-tab-cell'];
+    if (c.muted) cls.push('is-muted');
+    if (c.date === todayYmd) cls.push('is-today');
+    if (c.date === calTabSelectedDate) cls.push('is-selected');
+    if (cnt) cls.push('has-evt');
+    return `<div class="${cls.join(' ')}" data-date="${c.date}"><span class="cal-tab-day">${c.day}</span>` +
+      (cnt ? `<span class="cal-tab-badge" title="일정 ${cnt}건">${cnt}</span>` : '') + `</div>`;
+  }).join('');
+
+  // 목록: 보고 있는 달의 일정만 날짜순(같은 날은 getDashSchedulesByDate 정렬 그대로)
+  const prefix = ymd(year, month, 1).slice(0, 7);
+  const dates = Object.keys(byDate).filter(d => d.startsWith(prefix)).sort();
+  listEl.innerHTML = dates.map(d => byDate[d].map(ev =>
+    `<button type="button" class="cal-tab-item" data-sched-id="${escHtml(ev.id)}">` +
+    `<span class="cal-tab-item-date">${Number(d.slice(8))}일</span>` +
+    `<span class="cal-tab-item-title">${escHtml(ev.title)}</span>` +
+    `<span class="cal-tab-item-time">${escHtml(formatDashScheduleTime(ev))}</span></button>`
+  ).join('')).join('') || '<div class="dash-sched-day-empty">이 달에 등록된 일정이 없습니다.</div>';
+
+  if (!gridEl.dataset.bound) {
+    gridEl.dataset.bound = '1';
+    gridEl.addEventListener('click', e => {
+      const cell = e.target.closest('.cal-tab-cell');
+      if (!cell) return;
+      calTabSelectedDate = cell.dataset.date;
+      renderCalendarTab();
+      openDashScheduleForm(null, calTabSelectedDate);
+    });
+    listEl.addEventListener('click', e => {
+      const item = e.target.closest('.cal-tab-item');
+      if (item) openDashScheduleDetail(item.dataset.schedId);
+    });
+  }
 }

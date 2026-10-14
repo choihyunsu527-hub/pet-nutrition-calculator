@@ -494,6 +494,22 @@
               </div>
             </div>
           </div>
+          <div
+            class="nav-item"
+            data-tab="calendar"
+            data-label="캘린더"
+            onclick="showTab('calendar', this)"
+            role="button"
+            tabindex="0"
+          >
+            <svg class="nav-icon" viewBox="0 0 24 24">
+              <path d="M8 2v4" />
+              <path d="M16 2v4" />
+              <rect width="18" height="18" x="3" y="4" rx="2" />
+              <path d="M3 10h18" />
+            </svg>
+            <span>캘린더</span>
+          </div>
 
           <div class="nav-divider"></div>
           <div class="nav-section-label">분석</div>
@@ -3192,6 +3208,54 @@
                   </thead>
                   <tbody id="warn-body"></tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── 캘린더 (일정 관리: 대시보드 달력과 같은 공동 일정 데이터 사용) ── -->
+          <div class="tab-pane" id="tab-calendar">
+            <div class="hdr-bar hdr-bar-left" data-eyebrow="작업">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex-shrink: 0; color: var(--hdr)"
+              >
+                <path d="M8 2v4" />
+                <path d="M16 2v4" />
+                <rect width="18" height="18" x="3" y="4" rx="2" />
+                <path d="M3 10h18" />
+              </svg>
+              <span class="hdr-title">캘린더</span>
+              <span class="hdr-desc">현장 공동 일정을 월별로 확인하고 관리합니다</span>
+            </div>
+            <div class="tab-panel">
+              <div class="cal-tab-wrap">
+                <div class="dash-section cal-tab-main">
+                  <div class="dash-cal-header">
+                    <h3 id="cal-tab-title">&nbsp;</h3>
+                    <div class="dash-cal-nav">
+                      <button type="button" class="dash-cal-nav-btn" onclick="shiftCalendarTab(-1)" aria-label="이전 달">‹</button>
+                      <button type="button" class="dash-cal-nav-btn" onclick="goToCalendarTabToday()">오늘</button>
+                      <button type="button" class="dash-cal-nav-btn" onclick="shiftCalendarTab(1)" aria-label="다음 달">›</button>
+                      <button type="button" class="dash-cal-nav-btn dash-cal-add-btn" onclick="openDashScheduleForm(null, calTabSelectedDate)">+ 일정 추가</button>
+                    </div>
+                  </div>
+                  <div id="cal-tab-status" class="dash-cal-status" role="alert" hidden></div>
+                  <div class="dash-cal-weekdays">
+                    <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                  </div>
+                  <div class="dash-cal-grid" id="cal-tab-grid"></div>
+                </div>
+                <div class="dash-section cal-tab-side">
+                  <h3 id="cal-tab-list-title">일정 목록</h3>
+                  <div id="cal-tab-list" class="cal-tab-list"></div>
+                </div>
               </div>
             </div>
           </div>
