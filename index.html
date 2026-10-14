@@ -5320,8 +5320,16 @@
             />
           </div>
           <div class="modal-row">
-            <label for="dash-sched-date">날짜</label>
-            <input type="date" id="dash-sched-date" />
+            <label for="dash-sched-date">시작일</label>
+            <input
+              type="date"
+              id="dash-sched-date"
+              onchange="syncDashScheduleEndDate()"
+            />
+          </div>
+          <div class="modal-row">
+            <label for="dash-sched-end-date">종료일</label>
+            <input type="date" id="dash-sched-end-date" />
           </div>
           <div class="modal-row">
             <label for="dash-sched-start">시간 (선택)</label>
@@ -5374,7 +5382,7 @@
         </div>
         <div class="modal-body">
           <div class="modal-row">
-            <label>날짜</label><span id="dash-sched-detail-date"></span>
+            <label>일정 기간</label><span id="dash-sched-detail-date"></span>
           </div>
           <div class="modal-row">
             <label>시간</label><span id="dash-sched-detail-time"></span>

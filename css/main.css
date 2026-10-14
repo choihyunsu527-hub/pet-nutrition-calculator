@@ -1797,7 +1797,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cal-tab-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border: 1px solid var(--border);
                 border-radius: 8px; background: var(--side2); color: var(--text); text-align: left; cursor: pointer; font: inherit; }
 .cal-tab-item:hover { border-color: var(--acc); }
-.cal-tab-item-date { flex-shrink: 0; width: 34px; font-size: 12px; font-weight: 700; color: var(--acc); }
+.cal-tab-item-date { flex-shrink: 0; min-width: 34px; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--acc); }
 .cal-tab-item-title { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-tab-item-time { flex-shrink: 0; font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
 @media (max-width: 900px) {
