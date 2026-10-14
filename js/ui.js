@@ -189,8 +189,6 @@ function showTab(id, el) {
   const parentGroup = el ? el.closest('.nav-group') : null;
   document.querySelectorAll('.nav-group').forEach(g => g.classList.toggle('open', g === parentGroup));
   if (parentGroup) parentGroup.classList.add('has-active');
-  const vt = document.getElementById('top-view-title');
-  if (vt) vt.textContent = TAB_LABELS[id] || '';
   sessionStorage.setItem('feedcalc_v4_tab', id);
   syncTabHash(id);   // 현재 탭을 URL 해시(#dash, #ing, ...)에 반영 → 새로고침·뒤로가기에서 복원 가능
   if (lastResult) syncPanelWidths();
