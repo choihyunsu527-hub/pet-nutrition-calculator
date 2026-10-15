@@ -1734,9 +1734,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 일정 등록/수정 폼(#dash-sched-form-modal): 제목 → 작업 유형(세그먼트 버튼) → 일정 정보 카드 → 제품 정보 카드 → 추가 정보.
    상세/날짜 목록 모달은 위 .modal-row 규칙을 그대로 쓴다. */
 #dash-sched-form-modal .modal { background: var(--panel-bg); }
-#dash-sched-form-modal .modal-hdr { background: transparent; padding: 16px 24px; font-size: 15px; }
+#dash-sched-form-modal .modal-hdr { background: var(--panel-bg); padding: 16px 24px; font-size: 15px; }
 #dash-sched-form-modal .modal-body { padding: 4px 24px 8px; }
-#dash-sched-form-modal .modal-footer { background: var(--gray-l); align-items: center; }
+#dash-sched-form-modal .modal-footer { background: linear-gradient(var(--gray-l), var(--gray-l)), var(--panel-bg); align-items: center; }
 .dash-sched-cap, .dash-sched-col label, .dash-sched-extra label { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 600; color: var(--sub); }
 .dash-sched-title-wrap { padding: 12px 0 4px; }
 .dash-sched-sec { margin-top: 20px; }
