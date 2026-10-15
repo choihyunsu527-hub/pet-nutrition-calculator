@@ -1731,32 +1731,42 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 일정 추가/상세 모달 — 공용 .modal 세트 재사용, 좁은 모달에 맞게 라벨 폭과 textarea만 보정 */
 .dash-sched-modal .modal-row label { width: 90px; }
 .dash-sched-modal .modal-row input { min-width: 0; }
-/* 일정 등록/수정 폼(#dash-sched-form-modal): 라벨을 입력창 위에 두는 2열 그리드. 상세/날짜 목록 모달은 위 .modal-row 규칙을 그대로 쓴다. */
+/* 일정 등록/수정 폼(#dash-sched-form-modal): 제목 → 작업 유형(세그먼트 버튼) → 일정 정보 카드 → 제품 정보 카드 → 추가 정보.
+   상세/날짜 목록 모달은 위 .modal-row 규칙을 그대로 쓴다. */
 #dash-sched-form-modal .modal { background: var(--panel-bg); }
-#dash-sched-form-modal .modal-hdr { background: transparent; }
-#dash-sched-form-modal .modal-footer { background: transparent; align-items: center; }
-.dash-sched-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
-.dash-sched-full { grid-column: 1 / -1; }
-.dash-sched-field { min-width: 0; }
-.dash-sched-field > label { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 600; color: var(--sub); }
-.dash-sched-field input:not([type="checkbox"]), .dash-sched-field select, .dash-sched-field textarea {
-  display: block; width: 100%; min-width: 0; box-sizing: border-box; padding: 0 10px; height: 34px;
+#dash-sched-form-modal .modal-hdr { background: transparent; padding: 16px 24px; font-size: 15px; }
+#dash-sched-form-modal .modal-body { padding: 4px 24px 8px; }
+#dash-sched-form-modal .modal-footer { background: var(--gray-l); align-items: center; }
+.dash-sched-cap, .dash-sched-col label, .dash-sched-extra label { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 600; color: var(--sub); }
+.dash-sched-title-wrap { padding: 12px 0 4px; }
+.dash-sched-sec { margin-top: 20px; }
+.dash-sched-sec-h { margin: 0 0 8px; font-size: 12px; font-weight: 700; color: var(--hdr); }
+.dash-sched-sec-h small { margin-left: 6px; font-size: 11px; font-weight: 400; color: var(--sub); }
+.dash-sched-card { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--gray-l); }
+.dash-sched-col { min-width: 0; }
+.dash-sched-col-h { margin-bottom: 8px; font-size: 12px; font-weight: 700; color: var(--hdr); }
+.dash-sched-col input + label { margin-top: 10px; }
+.dash-sched-title-input, .dash-sched-col input, .dash-sched-col select, .dash-sched-extra input, .dash-sched-extra textarea {
+  display: block; width: 100%; min-width: 0; box-sizing: border-box; height: 36px; padding: 0 11px;
   border: 1px solid var(--border); border-radius: 6px; background: var(--side2); color: var(--text);
   font-size: 12px; font-family: inherit; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
-.dash-sched-field textarea { height: auto; padding: 8px 10px; resize: vertical; }
-.dash-sched-field input:focus, .dash-sched-field select:focus, .dash-sched-field textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
-.dash-sched-pair { display: flex; align-items: center; gap: 6px; }
+.dash-sched-title-input { height: 44px; padding: 0 14px; font-size: 15px; font-weight: 600; }
+.dash-sched-extra textarea { height: auto; padding: 9px 11px; resize: vertical; }
+.dash-sched-extra input + label { margin-top: 10px; }
+.dash-sched-title-input:focus, .dash-sched-col input:focus, .dash-sched-col select:focus, .dash-sched-extra input:focus, .dash-sched-extra textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-pair { display: flex; gap: 6px; }
 .dash-sched-pair select { flex: 0 0 76px; width: 76px; }
-.dash-sched-tilde { flex: 0 0 auto; color: var(--sub); font-size: 12px; }
-.dash-sched-work-opts { display: flex; flex-wrap: wrap; gap: 6px; }
-.dash-sched-work-opts label { display: inline-flex; align-items: center; gap: 5px; height: 34px; box-sizing: border-box; padding: 0 11px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text); }
-.dash-sched-work-opts label:hover { border-color: var(--acc); }
-.dash-sched-work-opts label:has(input:checked) { border-color: var(--acc); background: var(--calc); color: var(--acc); font-weight: 600; }
-.dash-sched-work-opts input { margin: 0; }
+.dash-sched-work-opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.dash-sched-work-opts label { position: relative; display: flex; align-items: center; justify-content: center; height: 38px; box-sizing: border-box; border: 1px solid var(--border); border-radius: 6px; background: var(--side2); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease; }
+.dash-sched-work-opts label:hover { border-color: var(--hdr); }
+.dash-sched-work-opts label:has(input:checked) { border-color: var(--topbar-bg); background: var(--topbar-bg); color: #fff; }
+.dash-sched-work-opts label:has(input:focus-visible) { box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-work-opts input { position: absolute; opacity: 0; pointer-events: none; }
 .dash-sched-req { color: #b03a2e; }
 .dash-sched-foot-note { margin-right: auto; font-size: 11px; color: var(--sub); }
 @media (max-width: 560px) {
-  .dash-sched-grid { grid-template-columns: 1fr; }
+  .dash-sched-card { grid-template-columns: 1fr; gap: 12px; }
+  .dash-sched-work-opts { grid-template-columns: repeat(2, 1fr); }
 }
 .dash-sched-modal .modal-row > span { font-size: 12px; color: var(--text); }
 .dash-sched-memo-row { align-items: flex-start; }
