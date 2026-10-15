@@ -276,12 +276,12 @@ html.sidebar-collapsed .nav-group-body { display: none; }
    배경 틴트 + 포인트 컬러(--acc) 텍스트로 표시한다. 아이콘은 stroke:currentColor라 텍스트
    색을 그대로 물려받아 아이콘을 따로 바꿀 필요가 없다. 패딩은 기본 .nav-item과 동일하게
    맞춰(예전엔 9px 8px로 더 작았음) 활성/비활성 전환 시 아이콘·텍스트 위치가 흔들리지 않는다. */
-.nav-item.active { color: var(--acc); background: rgba(255,255,255,0.07); font-weight: 700; }
+.nav-item.active { color: #fff; background: var(--sel); font-weight: 700; }
 .nav-item.active::before {
   content: ''; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px;
-  background: var(--acc); border-radius: 0 3px 3px 0;
+  background: #fff; border-radius: 0 3px 3px 0;
 }
-.nav-item.active:hover { background: rgba(255,255,255,0.1); color: var(--acc); }
+.nav-item.active:hover { background: var(--sel); color: #fff; }
 
 /* Lucide 라인 아이콘 — stroke는 currentColor를 상속해 텍스트와 같은 색/상태로 움직인다 */
 .nav-icon { width: 18px; height: 18px; flex-shrink: 0; display: block;
@@ -334,9 +334,9 @@ html.sidebar-collapsed .nav-group-body { display: none; }
 /* 활성 메뉴 = 유일한 청록 강조: 포인트색 텍스트 + 은은한 배경 + 얇은 좌측 인디케이터.
    배경을 카드형 톤(면 전체가 아니라 좌측 인디케이터 중심)으로 유지해 "AI 대시보드"식
    화려한 필(pill) 강조 대신 절제된 실무 SaaS 느낌을 준다. */
-.nav-item.active { color: var(--acc); background: rgba(79,179,166,0.12); font-weight: 500; }
+.nav-item.active { color: #fff; background: var(--sel); font-weight: 500; }
 .nav-item.active::before { top: 7px; bottom: 7px; width: 2px; border-radius: 0 2px 2px 0; }
-.nav-item.active:hover { background: rgba(79,179,166,0.16); color: var(--acc); }
+.nav-item.active:hover { background: var(--sel); color: #fff; }
 .nav-icon { width: 16px; height: 16px; }
 .nav-label { gap: 10px; }
 .nav-subitem { font-size: 13px; padding-left: 36px; }
@@ -396,7 +396,7 @@ html.sidebar-collapsed .nav-group-body { display: none; }
            transition: background-color .2s ease, color .2s ease; }
 .seg-btn + .seg-btn { border-left: 1px solid var(--border); }
 .seg-btn:hover { background: var(--gray-l); }
-.seg-btn.active { background: var(--acc); color: #fff; }
+.seg-btn.active { background: var(--sel); color: #fff; }
 
 /* ── BCS(신체지수) 컬러 게이지 바 — 값은 숨겨진 select(#pet-bcs)가 그대로 보유 ── */
 .bcs-gauge { position: relative; padding-top: 20px; }
@@ -645,7 +645,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                        border: 1px solid var(--border); background: var(--side); color: var(--sub);
                        cursor: pointer; transition: .2s; white-space: nowrap; font-family: inherit; }
 .ana-contrib-nutbtn:hover { border-color: var(--acc); color: var(--acc); }
-.ana-contrib-nutbtn.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.ana-contrib-nutbtn.active { background: var(--sel); color: #fff; border-color: var(--sel); }
 .ana-contrib-summary { font-size: 12px; font-weight: 600; color: var(--hdr); background: var(--calc);
                         padding: 9px 12px; border-radius: 8px; margin-bottom: 14px; line-height: 1.5; }
 /* 원료를 아직 하나도 선택하지 않아 JS가 내용을 채우기 전에는, 빈 색상 막대만 떠 있는
@@ -742,7 +742,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-sort-btn { display: inline-flex; align-items: center; justify-content: center; margin-left: 2px;
                 padding: 0; border: none; background: none; color: var(--sub); cursor: pointer; flex-shrink: 0; }
 .mix-sort-btn:hover { color: var(--hdr); }
-.mix-sort-btn.active { color: var(--acc); }
+.mix-sort-btn.active { color: var(--sel-text); }
 /* #mix-body에 overflow-y:auto를 두면 (계산상 overflow-x도 auto가 되어) #mix-body가 sticky
    기준 스크롤 컨테이너가 되는데, min-width:max-content라 자체 가로 스크롤이 없어 본문 행의
    좌측 sticky 컬럼(원료명·배합비)이 .mix-table-wrap 가로 스크롤에 그대로 밀려났다.
@@ -815,8 +815,8 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .mix-ing-opt { padding: 6px 8px; font-size: 11px; color: var(--text); cursor: pointer;
                white-space: normal; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.3;
                display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.mix-ing-opt:hover, .mix-ing-opt.active { background: var(--hover-tint); }
-.mix-ing-opt.active { box-shadow: inset 2px 0 0 var(--acc); }
+.mix-ing-opt:hover { background: var(--hover-tint); }
+.mix-ing-opt.active { background: var(--sel-tint); color: var(--sel-text); box-shadow: inset 2px 0 0 var(--sel-text); }
 .mix-ing-opt-none { color: var(--sub); font-style: italic; border-bottom: 1px solid var(--border); }
 .mix-ing-hl { color: var(--acc); font-weight: 700; }
 .mix-ing-empty { padding: 8px; font-size: 11px; color: var(--sub); text-align: center; }
@@ -1066,16 +1066,16 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                        cursor: pointer; font-family: inherit; border-radius: 6px;
                        transition: border-color .15s ease, background-color .15s ease; }
 .ing-toolbar button:hover { border-color: var(--acc); background: var(--hover-tint); }
-.ing-toolbar button.ing-btn-primary { background: var(--acc); color: #fff; border-color: var(--acc); }
-.ing-toolbar button.ing-btn-primary:hover { opacity: .9; background: var(--acc); }
+.ing-toolbar button.ing-btn-primary { background: var(--sel); color: #fff; border-color: var(--sel); }
+.ing-toolbar button.ing-btn-primary:hover { opacity: .9; background: var(--sel); }
 /* 선택 삭제 — 기존 위험색(#B03A2E, 인라인 style로 이미 지정됨)은 그대로 두고 테두리만 맞춰준다 */
 .ing-toolbar button[onclick="deleteSelectedIng()"] { border-color: #B03A2E; color: #fff; }
 .ing-toolbar button[onclick="deleteSelectedIng()"]:hover { opacity: .9; background: #B03A2E; }
 /* 정렬 토글("원래 순서"/"가나다순 정렬")은 주요 동작이 아니라 "현재 어떤 정렬 모드인지" 보여주는
    상태 표시라, "원료 추가"의 꽉 찬 포인트 컬러(.ing-btn-primary)와는 구분되게 옅은 틴트 칩으로
    표시한다 — 새 색상이 아니라 포커스 링에 쓰는 기존 --calc(accent 16% 톤)를 재사용. */
-.ing-toolbar button.active { background: var(--calc); color: var(--acc); border-color: var(--acc); }
-.ing-toolbar button.active:hover { background: var(--calc); }
+.ing-toolbar button.active { background: var(--sel-tint); color: var(--sel-text); border-color: var(--sel-text); }
+.ing-toolbar button.active:hover { background: var(--sel-tint); }
 /* 검색+정렬(필터 영역)과 추가/삭제(액션 영역) 사이만 얇은 구분선으로 그룹을 나눈다 */
 #sort-btn { position: relative; margin-right: 12px; }
 #sort-btn::after { content: ''; position: absolute; right: -12px; top: 50%; transform: translateY(-50%);
@@ -1464,7 +1464,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
    — .ing-toolbar button.active와 같은 절제된 패턴(포커스 링에 쓰는 --calc 재사용). */
 .dash-recent-tabs { width: 100%; flex-wrap: nowrap; margin-bottom: 10px; }
 .dash-recent-tabs .seg-btn { padding: 4px 10px; white-space: nowrap; }
-.dash-recent-tabs .seg-btn.active { background: var(--calc); color: var(--acc); font-weight: 500; }
+.dash-recent-tabs .seg-btn.active { background: var(--sel-tint); color: var(--sel-text); font-weight: 500; }
 /* 항목별 즐겨찾기 별 버튼(☆/★) — 더 이상 자기 박스를 갖지 않는 절제된 아이콘 버튼 */
 .dash-fav-toggle-btn { width: 26px; height: 26px; flex-shrink: 0; padding: 0;
                         display: flex; align-items: center; justify-content: center;
@@ -1472,7 +1472,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                         color: var(--sub); cursor: pointer; box-shadow: none;
                         transition: background-color .15s ease, color .15s ease; }
 .dash-fav-toggle-btn:hover { background: var(--hover-tint); color: var(--acc); }
-.dash-fav-toggle-btn.active { color: var(--acc); }
+.dash-fav-toggle-btn.active { color: var(--sel-text); }
 
 /* ── 기준 검증 탭 ── */
 .stdverify-deficit-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px;
@@ -1868,7 +1868,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cal-tab-cell:hover { border-color: var(--acc); }
 .cal-tab-cell.is-muted { opacity: .45; background: transparent; color: var(--sub); }
 .cal-tab-cell.is-today { background: var(--acc); color: #fff; }
-.cal-tab-cell.is-selected { border-color: var(--acc); box-shadow: 0 0 0 2px var(--calc); }
+.cal-tab-cell.is-selected { border-color: var(--sel); box-shadow: 0 0 0 2px var(--sel-tint); }
 /* 하루 일정 제목 pill + "+ N건" — 대시보드 달력(.dash-cal-evt/.dash-cal-more)과 같은 모양(글자만 12px) */
 .cal-tab-evts { display: flex; flex-direction: column; gap: var(--cal-evt-gap); min-height: 0; min-width: 0; }
 .cal-tab-evt { display: block; width: 100%; min-width: 0; height: var(--cal-evt-h); flex-shrink: 0; box-sizing: border-box;
@@ -1987,7 +1987,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
            border: 1px solid var(--border); background: var(--side2); color: var(--sub);
            cursor: pointer; transition: all .15s ease; user-select: none; }
 .gl-chip:hover { border-color: var(--acc); color: var(--acc); }
-.gl-chip.active { background: var(--acc); color: #fff; border-color: var(--acc); }
+.gl-chip.active { background: var(--sel); color: #fff; border-color: var(--sel); }
 .gl-groups { display: flex; flex-direction: column; gap: 16px; }
 .gl-cat-hdr { font-size: 11px; font-weight: 600; color: var(--sub); text-transform: uppercase;
               letter-spacing: .6px; margin: 2px 2px 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
@@ -2030,7 +2030,7 @@ ul.cb-list.law-cols > li { break-inside: avoid; }
 .law-check-row:hover { border-color: var(--acc); }
 .law-check-row input { margin-top: 2px; flex-shrink: 0; accent-color: var(--acc); cursor: pointer; }
 .law-check-row span b { color: var(--hdr); }
-.law-check-row:has(input:checked) { background: var(--calc); border-color: var(--acc); }
+.law-check-row:has(input:checked) { background: var(--sel-tint); border-color: var(--sel-text); }
 .law-check-row:has(input:checked) span { color: var(--sub); }
 .law-check-row span { min-width: 0; overflow-wrap: anywhere; }
 /* 좁은 화면에서 카드 폭보다 큰 트랙이 강제되어 가로 스크롤이 생기지 않도록,

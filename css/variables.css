@@ -49,6 +49,10 @@
   --panel-border: #D9DEE5;
   --hover-tint: rgba(31,35,40,0.05);
   --pill-bg:    #2f9188;
+  /* 선택 상태(활성 메뉴/선택 탭/주요 버튼/선택 항목) 전용 딥 네이비 — 포인트색(--acc, 링크·포커스·데이터 강조)과 분리 */
+  --sel:        #1D2939;
+  --sel-tint:   rgba(29,41,57,0.08);   /* 선택된 드롭다운/목록 항목 배경(옅은 네이비) */
+  --sel-text:   #1D2939;               /* 옅은 배경 위 선택 항목 글씨(진한 네이비) */
   --pill-text:  #FFFFFF;
   --scrollbar-thumb:       rgba(31,35,40,0.18);
   --scrollbar-thumb-hover: rgba(31,35,40,0.32);
@@ -102,6 +106,9 @@ html[data-theme="dark"] {
   --panel-border: rgba(255,255,255,0.08);
   --hover-tint: rgba(255,255,255,0.08);
   --pill-bg:    #4fb3a6;
+  --sel:        #3d516b;               /* 다크 패널(#1e2733) 위에서도 보이도록 한 단계 밝은 네이비 */
+  --sel-tint:   rgba(255,255,255,0.10);
+  --sel-text:   #FFFFFF;
   --pill-text:  #FFFFFF;
   --scrollbar-thumb:       rgba(255,255,255,0.15);
   --scrollbar-thumb-hover: rgba(255,255,255,0.28);
