@@ -97,6 +97,11 @@ function formatDashScheduleProduction(ev) {
   const work = formatDashScheduleWorkTypes(ev);
   return [work && `[${work}]`, ev.product, formatDashScheduleQty(ev)].filter(Boolean).join(' · ');
 }
+// 달력 날짜 칸 pill/막대에 보이는 텍스트: "생산·포장 | 일정명"(미선택이면 일정명만). 좁은 칸에서는 뒤쪽(제목)부터 말줄임 처리된다.
+function dashScheduleCellLabel(ev) {
+  const work = formatDashScheduleWorkTypes(ev);
+  return work ? `${work} | ${ev.title}` : ev.title;
+}
 // 목록 항목 제목 아래 한 줄(제품명 · 수량) — 없으면 빈 문자열
 function dashScheduleSubHtml(ev, cls) {
   const prod = formatDashScheduleProduction(ev);
@@ -249,7 +254,7 @@ function layoutDashCalendarBars(cells, maxLanes) {
 function dashCalBarsHtml(bars, cls) {
   return bars.map(b =>
     `<button type="button" class="${cls}${b.isStart ? ' is-start' : ''}${b.isEnd ? ' is-end' : ''}" data-sched-id="${escHtml(b.ev.id)}"` +
-    ` title="${escHtml(dashScheduleTip(b.ev))}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${escHtml(b.ev.title)}</button>`
+    ` title="${escHtml(dashScheduleTip(b.ev))}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${escHtml(dashScheduleCellLabel(b.ev))}</button>`
   ).join('');
 }
 
@@ -517,7 +522,7 @@ function renderCalendarTab() {
     if (dayEvts.length) cls.push('has-evt');
     const pad = info.lanes ? `<div class="cal-tab-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
     const pills = shown.map(ev =>
-      `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(dashScheduleTip(ev))}">${escHtml(ev.title)}</button>`).join('');
+      `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(dashScheduleTip(ev))}">${escHtml(dashScheduleCellLabel(ev))}</button>`).join('');
     const more = hidden > 0 ? `<button type="button" class="cal-tab-more" data-date="${c.date}">+ ${hidden}건</button>` : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
       `<span class="cal-tab-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}><span class="cal-day-num">${c.day}</span></span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;

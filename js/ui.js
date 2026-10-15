@@ -268,7 +268,7 @@ function renderDashCalendar() {
     const shown = singles.slice(0, Math.max(0, DASH_CAL_MAX_EVTS - info.lanes));
     const pad = info.lanes ? `<div class="dash-cal-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
     const evts = pad + shown.map(ev =>
-      `<button type="button" class="dash-cal-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(typeof dashScheduleTip === 'function' ? dashScheduleTip(ev) : ev.title)}">${escHtml(ev.title)}</button>`
+      `<button type="button" class="dash-cal-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(typeof dashScheduleTip === 'function' ? dashScheduleTip(ev) : ev.title)}">${escHtml(typeof dashScheduleCellLabel === 'function' ? dashScheduleCellLabel(ev) : ev.title)}</button>`
     ).join('');
     const hidden = dayEvts.length - info.bars - shown.length;
     const more = hidden > 0

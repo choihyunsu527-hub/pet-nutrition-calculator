@@ -66,3 +66,10 @@ test('작업 유형(생산/포장/출고): 행 변환·정규화·표시, 미선
   assert.deepEqual(f({ workTypes: ['packing'], product: '북어 껌', qty: 3, unit: '박스' }), ['포장', '[포장] · 북어 껌 · 3 박스']);
   assert.deepEqual(f({ product: '', qty: null, unit: '' }), ['', '']);
 });
+
+test('날짜 칸 라벨: 작업 유형이 제목 앞, 미선택이면 제목만', () => {
+  const f = o => { ctx.__e = o; return run(`dashScheduleCellLabel(__e)`); };
+  assert.equal(f({ title: '고구마 트릿', workTypes: ['production', 'packing'] }), '생산·포장 | 고구마 트릿');
+  assert.equal(f({ title: '고구마 트릿', workTypes: [] }), '고구마 트릿');
+  assert.equal(f({ title: '고구마 트릿' }), '고구마 트릿');
+});
