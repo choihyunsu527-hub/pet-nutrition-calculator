@@ -80,3 +80,13 @@ test('우측 패널 칩: 선택한 유형만 고정 순서로, 미선택이면 �
   assert.doesNotMatch(f({ workTypes: ['packing'] }), /생산|출고/);
   assert.equal(f({ workTypes: [] }), '');
 });
+
+test('작업 유형 기타: 4종 고정 순서·표시·칩, 제품명/수량 없으면 구분자 없음', () => {
+  ctx.__r = { ...BASE, work_types: ['other', 'production'] };
+  assert.deepEqual(run(`dashScheduleFromRow(__r).workTypes`), ['production', 'other']);
+  const f = o => { ctx.__e = o; return run(`[formatDashScheduleProduction(__e), dashScheduleCellLabel(__e)]`); };
+  assert.deepEqual(f({ title: 'T', workTypes: ['other'], product: '', qty: null, unit: '' }), ['[기타]', '기타 | T']);
+  assert.deepEqual(f({ title: 'T', workTypes: [], product: '', qty: null, unit: '' }), ['', 'T']);
+  ctx.__e = { workTypes: ['other'] };
+  assert.match(run(`dashScheduleChipsHtml(__e)`), /cal-chip-other">기타</);
+});

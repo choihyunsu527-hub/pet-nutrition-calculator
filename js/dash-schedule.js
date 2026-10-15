@@ -26,7 +26,7 @@ const DASH_SCHEDULE_COLS = 'id,schedule_date,title,start_time,end_time,assignee,
 const DASH_SCHEDULE_COLS_RANGE = DASH_SCHEDULE_COLS + ',end_date';
 const DASH_SCHEDULE_COLS_PRODUCTION = ',product_name,production_qty,production_unit';
 const DASH_SCHEDULE_COLS_WORK = ',work_types';
-const DASH_SCHEDULE_WORK_TYPES = [['production', '생산'], ['packing', '포장'], ['shipping', '출고']];   // [저장값, 표시명] — 폼 체크박스 순서와 동일
+const DASH_SCHEDULE_WORK_TYPES = [['production', '생산'], ['packing', '포장'], ['shipping', '출고'], ['other', '기타']];   // [저장값, 표시명] — 폼 체크박스 순서와 동일
 const DASH_SCHEDULE_UNITS = ['kg', 'g', '개', '박스', '포', 'L', 'mL'];   // 단위 선택 목록(폼 select와 동일)
 const DASH_SCHEDULE_MAX_QTY = 999999999;
 const DASH_SCHEDULE_MAX_SPAN_DAYS = 366;   // 종료일은 시작일로부터 최대 366일 뒤까지(DB 제약과 동일)
@@ -64,7 +64,7 @@ function dashScheduleDatesInRange(start, end) {
   return out;
 }
 
-// 작업 유형 정규화: 알 수 없는 값 제거 + 고정 순서(생산→포장→출고). 미선택 = []
+// 작업 유형 정규화: 알 수 없는 값 제거 + 고정 순서(생산→포장→출고→기타). 미선택 = []
 function dashScheduleNormWorkTypes(v) {
   const arr = Array.isArray(v) ? v : [];
   return DASH_SCHEDULE_WORK_TYPES.map(([k]) => k).filter(k => arr.includes(k));
@@ -404,9 +404,12 @@ function openDashScheduleDetail(id) {
   document.getElementById('dash-sched-detail-title').textContent = ev.title;
   document.getElementById('dash-sched-detail-date').textContent = formatDashScheduleRange(ev);
   document.getElementById('dash-sched-detail-time').textContent = formatDashScheduleTime(ev);
-  document.getElementById('dash-sched-detail-work').textContent = formatDashScheduleWorkTypes(ev) || '-';
-  document.getElementById('dash-sched-detail-product').textContent = ev.product || '-';
-  document.getElementById('dash-sched-detail-qty').textContent = formatDashScheduleQty(ev) || '-';
+  // 작업 유형/제품명/수량은 선택 입력 — 비어 있으면 줄 자체를 숨긴다(빈 칸·"-" 표시 방지)
+  [['work', formatDashScheduleWorkTypes(ev)], ['product', ev.product || ''], ['qty', formatDashScheduleQty(ev)]].forEach(([k, v]) => {
+    const el = document.getElementById('dash-sched-detail-' + k);
+    el.textContent = v;
+    el.parentElement.style.display = v ? '' : 'none';
+  });
   document.getElementById('dash-sched-detail-owner').textContent = ev.owner || '-';
   document.getElementById('dash-sched-detail-memo').textContent = ev.memo || '-';
   document.getElementById('dash-sched-detail-modal').classList.add('open');

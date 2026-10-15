@@ -5333,13 +5333,14 @@
           </button>
         </div>
         <div class="modal-body">
+          <div class="dash-sched-req-hint"><b>*</b> 표시는 필수 항목입니다. 나머지는 비워도 저장됩니다.</div>
           <div class="modal-row">
-            <label for="dash-sched-title">일정명 *</label>
+            <label for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
             <input
               type="text"
               id="dash-sched-title"
               maxlength="60"
-              placeholder="예: 원료 입고"
+              placeholder="예: 고구마 트릿 생산"
               onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
             />
           </div>
@@ -5349,7 +5350,26 @@
               <label><input type="checkbox" name="dash-sched-work" value="production" /> 생산</label>
               <label><input type="checkbox" name="dash-sched-work" value="packing" /> 포장</label>
               <label><input type="checkbox" name="dash-sched-work" value="shipping" /> 출고</label>
+              <label><input type="checkbox" name="dash-sched-work" value="other" /> 기타</label>
             </span>
+          </div>
+          <div class="modal-row">
+            <label for="dash-sched-date">시작일 <b class="dash-sched-req">*</b></label>
+            <input
+              type="date"
+              id="dash-sched-date"
+              onchange="syncDashScheduleEndDate()"
+            />
+          </div>
+          <div class="modal-row">
+            <label for="dash-sched-end-date">종료일</label>
+            <input type="date" id="dash-sched-end-date" />
+          </div>
+          <div class="modal-row">
+            <label for="dash-sched-start">시간 (선택)</label>
+            <input type="time" id="dash-sched-start" aria-label="시작 시간" />
+            <span class="dash-sched-tilde">~</span>
+            <input type="time" id="dash-sched-end" aria-label="종료 시간" />
           </div>
           <div class="modal-row">
             <label for="dash-sched-product">제품명 (선택)</label>
@@ -5361,7 +5381,7 @@
             />
           </div>
           <div class="modal-row">
-            <label for="dash-sched-qty">생산 수량 (선택)</label>
+            <label for="dash-sched-qty">수량 (선택)</label>
             <input
               type="number"
               id="dash-sched-qty"
@@ -5380,24 +5400,6 @@
               <option value="L">L</option>
               <option value="mL">mL</option>
             </select>
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-date">시작일</label>
-            <input
-              type="date"
-              id="dash-sched-date"
-              onchange="syncDashScheduleEndDate()"
-            />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-end-date">종료일</label>
-            <input type="date" id="dash-sched-end-date" />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-start">시간 (선택)</label>
-            <input type="time" id="dash-sched-start" aria-label="시작 시간" />
-            <span class="dash-sched-tilde">~</span>
-            <input type="time" id="dash-sched-end" aria-label="종료 시간" />
           </div>
           <div class="modal-row">
             <label for="dash-sched-owner">담당자 (선택)</label>
