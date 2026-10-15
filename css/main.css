@@ -1865,6 +1865,25 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cal-tab-item-date { flex-shrink: 0; min-width: 34px; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--acc); }
 .cal-tab-item-title { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cal-tab-item-time { flex-shrink: 0; font-size: 11px; color: var(--sub); font-variant-numeric: tabular-nums; }
+/* 캘린더 탭 우측 상세 패널(선택한 날짜의 일정) */
+.cal-side-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.cal-side-hdr h3 { margin: 0; font-size: 14px; }
+.cal-day-item { display: flex; align-items: flex-start; gap: 6px; padding: 9px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--side2); }
+.cal-day-item:hover { border-color: var(--acc); }
+.cal-day-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; padding: 0; border: none; background: none; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.cal-day-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.cal-chip { padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; line-height: 16px; }
+.cal-chip-production { background: rgba(59,130,246,.18); color: #3b82f6; }
+.cal-chip-packing { background: rgba(245,158,11,.20); color: #d97706; }
+.cal-chip-shipping { background: rgba(16,185,129,.18); color: #059669; }
+.cal-day-title { font-size: 13px; font-weight: 600; line-height: 1.35; overflow-wrap: anywhere; }
+.cal-day-meta { font-size: 11px; color: var(--sub); overflow-wrap: anywhere; }
+.cal-day-meta:empty { display: none; }
+.cal-day-actions { display: flex; flex-shrink: 0; gap: 4px; }
+.cal-day-actions button { padding: 2px 7px; border: 1px solid var(--border); border-radius: 5px; background: none; color: var(--sub); font: inherit; font-size: 11px; cursor: pointer; }
+.cal-day-actions button:hover { border-color: var(--acc); color: var(--acc); }
+.cal-day-actions .cal-day-del:hover { border-color: #b03a2e; color: #b03a2e; }
+.cal-day-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 0; font-size: 12px; color: var(--sub); }
 @media (max-width: 900px) {
   .cal-tab-wrap { flex-direction: column; align-items: stretch; }
   .cal-tab-side { flex: none; }

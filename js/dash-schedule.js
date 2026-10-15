@@ -97,6 +97,12 @@ function formatDashScheduleProduction(ev) {
   const work = formatDashScheduleWorkTypes(ev);
   return [work && `[${work}]`, ev.product, formatDashScheduleQty(ev)].filter(Boolean).join(' · ');
 }
+// 우측 패널용 작업 유형 색상 칩(미선택이면 빈 문자열)
+function dashScheduleChipsHtml(ev) {
+  const arr = dashScheduleNormWorkTypes(ev.workTypes);
+  return arr.length ? `<span class="cal-day-chips">${DASH_SCHEDULE_WORK_TYPES.filter(([k]) => arr.includes(k))
+    .map(([k, label]) => `<span class="cal-chip cal-chip-${k}">${label}</span>`).join('')}</span>` : '';
+}
 // 달력 날짜 칸 pill/막대에 보이는 텍스트: "생산·포장 | 일정명"(미선택이면 일정명만). 좁은 칸에서는 뒤쪽(제목)부터 말줄임 처리된다.
 function dashScheduleCellLabel(ev) {
   const work = formatDashScheduleWorkTypes(ev);
@@ -491,7 +497,8 @@ function renderCalendarTab() {
   const view = new Date(today.getFullYear(), today.getMonth() + calTabMonthOffset, 1);
   const year = view.getFullYear(), month = view.getMonth();
   titleEl.textContent = `${year}년 ${month + 1}월`;
-  document.getElementById('cal-tab-list-title').textContent = `${month + 1}월 일정`;
+  const panelDate = calTabSelectedDate || dashScheduleTodayYmd();   // 우측 패널 기준 날짜(선택 없으면 오늘)
+  document.getElementById('cal-tab-list-title').textContent = formatDashScheduleDate(panelDate);
 
   const ymd = (y, m, d) => {
     const dt = new Date(y, m, d);
@@ -528,17 +535,18 @@ function renderCalendarTab() {
       `<span class="cal-tab-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}><span class="cal-day-num">${c.day}</span></span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;
   }).join('') + dashCalBarsHtml(layout.bars, 'cal-tab-bar');
 
-  // 목록: 보고 있는 달의 일정만 날짜순(같은 날은 getDashSchedulesByDate 정렬 그대로)
-  const monthStart = ymd(year, month, 1), monthEnd = ymd(year, month, daysInMonth);
-  const inMonth = loadDashSchedules().filter(ev => ev.date <= monthEnd && (ev.endDate || ev.date) >= monthStart)   // 이 달과 기간이 겹치는 일정
-    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) ||
-      (!!a.start !== !!b.start ? (a.start ? -1 : 1) : (a.start < b.start ? -1 : a.start > b.start ? 1 : (a.createdAt || 0) - (b.createdAt || 0))));
-  listEl.innerHTML = inMonth.map(ev =>
-    `<button type="button" class="cal-tab-item" data-sched-id="${escHtml(ev.id)}">` +
-    `<span class="cal-tab-item-date">${escHtml(dashScheduleListDateLabel(ev, monthStart, monthEnd))}</span>` +
-    `<span class="cal-tab-item-title">${escHtml(ev.title)}${dashScheduleSubHtml(ev, 'cal-tab-item-sub')}</span>` +
-    `<span class="cal-tab-item-time">${escHtml(formatDashScheduleTime(ev))}</span></button>`
-  ).join('') || '<div class="dash-sched-day-empty">이 달에 등록된 일정이 없습니다.</div>';
+  // 우측 패널: 선택한 날짜의 일정 목록(기간 일정은 포함된 날짜마다 표시). 없으면 빈 상태 + 일정 추가.
+  const dayList = byDate[panelDate] || [];
+  listEl.innerHTML = dayList.map(ev => {
+    const meta = [formatDashScheduleTime(ev), ev.product, formatDashScheduleQty(ev)].filter(Boolean).join(' · ');
+    const range = dashScheduleIsMulti(ev) ? ` · ${dashScheduleListDateLabel(ev, '', '')}` : '';
+    return `<div class="cal-day-item" data-sched-id="${escHtml(ev.id)}">` +
+      `<button type="button" class="cal-day-main">${dashScheduleChipsHtml(ev)}` +
+      `<span class="cal-day-title">${escHtml(ev.title)}</span>` +
+      `<span class="cal-day-meta">${escHtml(meta + range)}</span></button>` +
+      `<span class="cal-day-actions"><button type="button" class="cal-day-edit">수정</button><button type="button" class="cal-day-del">삭제</button></span></div>`;
+  }).join('') || `<div class="cal-day-empty"><div>등록된 일정이 없습니다.</div>` +
+    `<button type="button" class="dash-cal-nav-btn dash-cal-add-btn cal-day-add">+ 일정 추가</button></div>`;
 
   if (!gridEl.dataset.bound) {
     gridEl.dataset.bound = '1';
@@ -549,13 +557,18 @@ function renderCalendarTab() {
       if (more) { openDashScheduleDayList(more.dataset.date); return; }   // "+ N건" = 해당 날짜 일정 목록
       const cell = e.target.closest('.cal-tab-cell');
       if (!cell) return;
-      calTabSelectedDate = cell.dataset.date;
+      calTabSelectedDate = cell.dataset.date;   // 날짜 클릭 = 우측 패널에 그 날짜 일정 표시(추가는 패널의 "+ 일정 추가")
       renderCalendarTab();
-      openDashScheduleForm(null, calTabSelectedDate);
+      listEl.scrollIntoView({ block: 'nearest', behavior: 'smooth' });   // 모바일(패널이 아래로 쌓일 때)에서 패널로 이동
     });
     listEl.addEventListener('click', e => {
-      const item = e.target.closest('.cal-tab-item');
-      if (item) openDashScheduleDetail(item.dataset.schedId);
+      if (e.target.closest('.cal-day-add')) { openDashScheduleForm(null, calTabSelectedDate || dashScheduleTodayYmd()); return; }
+      const item = e.target.closest('.cal-day-item');
+      if (!item) return;
+      const id = item.dataset.schedId;
+      if (e.target.closest('.cal-day-edit')) openDashScheduleForm(id);
+      else if (e.target.closest('.cal-day-del')) { dashScheduleDetailId = id; deleteDashScheduleFromDetail(); }   // 기존 삭제 흐름(확인창·이력·새로고침) 재사용
+      else openDashScheduleDetail(id);
     });
   }
 }

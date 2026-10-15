@@ -73,3 +73,10 @@ test('날짜 칸 라벨: 작업 유형이 제목 앞, 미선택이면 제목만'
   assert.equal(f({ title: '고구마 트릿', workTypes: [] }), '고구마 트릿');
   assert.equal(f({ title: '고구마 트릿' }), '고구마 트릿');
 });
+
+test('우측 패널 칩: 선택한 유형만 고정 순서로, 미선택이면 빈 문자열', () => {
+  const f = o => { ctx.__e = o; return run(`dashScheduleChipsHtml(__e)`); };
+  assert.match(f({ workTypes: ['shipping', 'production'] }), /cal-chip-production">생산<.*cal-chip-shipping">출고</);
+  assert.doesNotMatch(f({ workTypes: ['packing'] }), /생산|출고/);
+  assert.equal(f({ workTypes: [] }), '');
+});

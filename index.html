@@ -3252,7 +3252,10 @@
                   <div class="dash-cal-grid" id="cal-tab-grid"></div>
                 </div>
                 <div class="dash-section cal-tab-side">
-                  <h3 id="cal-tab-list-title">일정 목록</h3>
+                  <div class="cal-side-hdr">
+                    <h3 id="cal-tab-list-title">일정 목록</h3>
+                    <button type="button" class="dash-cal-nav-btn dash-cal-add-btn" onclick="openDashScheduleForm(null, calTabSelectedDate || dashScheduleTodayYmd())">+ 일정 추가</button>
+                  </div>
                   <div id="cal-tab-list" class="cal-tab-list"></div>
                 </div>
               </div>
