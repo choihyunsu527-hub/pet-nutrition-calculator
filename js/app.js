@@ -551,7 +551,7 @@ function renderContribHeatmapInto(containerId, analysis, defs, rowClickFn) {
         if (pct < 0.5) {
           html += `<td style="background:var(--side2);color:var(--sub)">─</td>`;
         } else {
-          const bg = `color-mix(in srgb, var(--acc) ${Math.min(pct, 100).toFixed(0)}%, var(--side2))`;
+          const bg = `color-mix(in srgb, var(--data) ${Math.min(pct, 100).toFixed(0)}%, var(--side2))`;
           const color = pct > 55 ? '#fff' : 'var(--text)';
           html += `<td style="background:${bg};color:${color}">${fmtPctVal(pct)}%</td>`;
         }
@@ -1270,7 +1270,7 @@ function renderEnergyAnalysis(result, pc) {
   const kcalCarb = Math.max((asis[ING_IDX.CARB] || 0) - (asis[ING_IDX.CRUDE_FIBER] || 0), 0) * 3.5 * 10;
   const kcalTot  = kcalProt + kcalFat + kcalCarb;
   const macros = [
-    { label: '단백질',   kcal: kcalProt, color: 'var(--acc)',   dmb: result.dmb.prot },
+    { label: '단백질',   kcal: kcalProt, color: 'var(--data)',  dmb: result.dmb.prot },
     { label: '지방',     kcal: kcalFat,  color: 'var(--warn-t)', dmb: result.dmb.fat },
     { label: '탄수화물', kcal: kcalCarb, color: 'var(--nrc-t)',  dmb: result.dmb.nfe },
   ];
@@ -1401,7 +1401,7 @@ function renderDashIngredientDonut() {
   const slices = top5.map(r => ({ name: r[0], pct: r[1] }));
   if (restSum > 0) slices.push({ name: '기타', pct: restSum });
 
-  const colors = ['var(--acc)','var(--nrc-t)','var(--fed-t)','var(--warn-t)','var(--aa-t)','var(--sub)'];
+  const colors = ['var(--data)','var(--nrc-t)','var(--fed-t)','var(--warn-t)','var(--aa-t)','var(--sub)'];
   const total = slices.reduce((s,x) => s + x.pct, 0) || 1;
   let acc = 0;
   const stops = slices.map((s,i) => {

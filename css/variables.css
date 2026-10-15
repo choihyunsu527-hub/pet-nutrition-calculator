@@ -10,8 +10,11 @@
   --side:     #FFFFFF;
   --side2:    #FFFFFF;
   --hdr:      #1c2531;
-  --acc:      #2f9188;
-  --acc2:     #256f68;
+  /* 포인트색 = 딥 네이비. 링크·포커스·hover·강조 테두리·라벨 등 UI 크롬 전용. 차트/데이터 막대는 --data(청록)를 쓴다. */
+  --acc:      #1D2939;
+  --acc2:     #52657A;   /* 보조 네이비(링크 hover 등) */
+  --data:     #2f9188;   /* 차트·기여도 막대·히트맵 등 데이터 시각화 전용(의미 색이라 UI 크롬 색과 분리) */
+  --data2:    #256f68;
   --acc-grad: #FFFFFF;
   --panel-grad: #FFFFFF;
   --gray-grad: #FFFFFF;
@@ -19,7 +22,7 @@
   --sub:      #59636E;
   --border:   #D9DEE5;
   --inp:      #FFFFFF;
-  --calc:     rgba(47,145,136,0.14);
+  --calc:     rgba(29,41,57,0.14);   /* 포커스 링 / 옅은 네이비 틴트 */
   --sec:      #FFFFFF;
   --odd:      var(--side2);
   --even:     var(--side2);
@@ -48,10 +51,9 @@
   --panel-bg:   #ffffff;
   --panel-border: #D9DEE5;
   --hover-tint: rgba(31,35,40,0.05);
-  --pill-bg:    #2f9188;
   /* 선택 상태(활성 메뉴/선택 탭/주요 버튼/선택 항목) 전용 딥 네이비 — 포인트색(--acc, 링크·포커스·데이터 강조)과 분리 */
   --sel:        #1D2939;
-  --sel-tint:   rgba(29,41,57,0.08);   /* 선택된 드롭다운/목록 항목 배경(옅은 네이비) */
+  --sel-tint:   #E9EDF2;               /* 선택된 드롭다운/목록 항목 배경(옅은 네이비) */
   --sel-text:   #1D2939;               /* 옅은 배경 위 선택 항목 글씨(진한 네이비) */
   --pill-text:  #FFFFFF;
   --scrollbar-thumb:       rgba(31,35,40,0.18);
@@ -70,8 +72,10 @@ html[data-theme="dark"] {
   --side:     #1e2733;
   --side2:    #26313f;
   --hdr:      #FFFFFF;
-  --acc:      #4fb3a6;
-  --acc2:     #6fada3;
+  --acc:      #8fa3bd;   /* 다크 배경(#1e2733) 위 텍스트·테두리 대비를 확보한 밝은 네이비 계열 */
+  --acc2:     #a9b8cc;
+  --data:     #4fb3a6;
+  --data2:    #6fada3;
   --acc-grad: linear-gradient(135deg, #2e3946 0%, #1e2733 100%);
   --panel-grad: linear-gradient(180deg, #2e3946 0%, #1e2733 100%);
   --gray-grad: linear-gradient(135deg, #2e3946 0%, #1e2733 100%);
@@ -79,7 +83,7 @@ html[data-theme="dark"] {
   --sub:      #b8c1cb;
   --border:   rgba(255,255,255,0.14);
   --inp:      rgba(255,255,255,0.06);
-  --calc:     rgba(79,179,166,0.22);
+  --calc:     rgba(143,163,189,0.22);
   --sec:      rgba(255,255,255,0.05);
   --odd:      rgba(255,255,255,0.03);
   --th-bg:    #26313f;
@@ -105,7 +109,6 @@ html[data-theme="dark"] {
   --panel-bg:   #1e2733;
   --panel-border: rgba(255,255,255,0.08);
   --hover-tint: rgba(255,255,255,0.08);
-  --pill-bg:    #4fb3a6;
   --sel:        #3d516b;               /* 다크 패널(#1e2733) 위에서도 보이도록 한 단계 밝은 네이비 */
   --sel-tint:   rgba(255,255,255,0.10);
   --sel-text:   #FFFFFF;
