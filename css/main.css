@@ -1731,23 +1731,34 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 일정 추가/상세 모달 — 공용 .modal 세트 재사용, 좁은 모달에 맞게 라벨 폭과 textarea만 보정 */
 .dash-sched-modal .modal-row label { width: 90px; }
 .dash-sched-modal .modal-row input { min-width: 0; }
-.dash-sched-modal .modal-row .dash-sched-work-opts { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
-.dash-sched-modal .modal-row .dash-sched-work-opts label { width: auto; display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border: 1px solid var(--border); border-radius: 14px; cursor: pointer; font-size: 12px; }
-.dash-sched-modal .modal-row .dash-sched-work-opts label:hover { border-color: var(--acc); }
-.dash-sched-modal .modal-row .dash-sched-work-opts label:has(input:checked) { border-color: var(--acc); background: var(--calc); color: var(--acc); font-weight: 600; }
+/* 일정 등록/수정 폼(#dash-sched-form-modal): 라벨을 입력창 위에 두는 2열 그리드. 상세/날짜 목록 모달은 위 .modal-row 규칙을 그대로 쓴다. */
+#dash-sched-form-modal .modal { background: var(--panel-bg); }
+#dash-sched-form-modal .modal-hdr { background: transparent; }
+#dash-sched-form-modal .modal-footer { background: transparent; align-items: center; }
+.dash-sched-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; }
+.dash-sched-full { grid-column: 1 / -1; }
+.dash-sched-field { min-width: 0; }
+.dash-sched-field > label { display: block; margin-bottom: 5px; font-size: 11px; font-weight: 600; color: var(--sub); }
+.dash-sched-field input:not([type="checkbox"]), .dash-sched-field select, .dash-sched-field textarea {
+  display: block; width: 100%; min-width: 0; box-sizing: border-box; padding: 0 10px; height: 34px;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--side2); color: var(--text);
+  font-size: 12px; font-family: inherit; outline: none; transition: border-color .15s ease, box-shadow .15s ease; }
+.dash-sched-field textarea { height: auto; padding: 8px 10px; resize: vertical; }
+.dash-sched-field input:focus, .dash-sched-field select:focus, .dash-sched-field textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-pair { display: flex; align-items: center; gap: 6px; }
+.dash-sched-pair select { flex: 0 0 76px; width: 76px; }
+.dash-sched-tilde { flex: 0 0 auto; color: var(--sub); font-size: 12px; }
+.dash-sched-work-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.dash-sched-work-opts label { display: inline-flex; align-items: center; gap: 5px; height: 34px; box-sizing: border-box; padding: 0 11px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text); }
+.dash-sched-work-opts label:hover { border-color: var(--acc); }
+.dash-sched-work-opts label:has(input:checked) { border-color: var(--acc); background: var(--calc); color: var(--acc); font-weight: 600; }
+.dash-sched-work-opts input { margin: 0; }
 .dash-sched-req { color: #b03a2e; }
-.dash-sched-req-hint { margin-bottom: 10px; font-size: 11px; color: var(--sub); }
-.dash-sched-req-hint b { color: #b03a2e; }
-.dash-sched-modal .modal-row .dash-sched-work-opts input { width: auto; margin: 0; }
-.dash-sched-modal .modal-row select { flex: 0 0 auto; margin-left: 6px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px;
-  font-size: 12px; font-family: inherit; color: var(--text); background: var(--side2); outline: none; }
-.dash-sched-modal .modal-row select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
-.dash-sched-modal .modal-row textarea { flex: 1; padding: 7px 10px; border: 1px solid var(--border); resize: vertical;
-                   font-size: 12px; font-family: inherit; color: var(--text); background: var(--side2);
-                   outline: none; border-radius: 6px; transition: border-color .15s ease, box-shadow .15s ease; }
-.dash-sched-modal .modal-row textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-foot-note { margin-right: auto; font-size: 11px; color: var(--sub); }
+@media (max-width: 560px) {
+  .dash-sched-grid { grid-template-columns: 1fr; }
+}
 .dash-sched-modal .modal-row > span { font-size: 12px; color: var(--text); }
-.dash-sched-tilde { flex: 0 0 auto !important; margin: 0 6px; color: var(--sub) !important; }
 .dash-sched-memo-row { align-items: flex-start; }
 .dash-sched-memo-row > span { white-space: pre-wrap; flex: 1; }
 .dash-sched-del-btn { margin-right: auto; color: #b03a2e !important; }

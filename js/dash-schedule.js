@@ -293,7 +293,8 @@ function formatDashScheduleTime(ev) {
 function openDashScheduleForm(id, date) {
   const ev = id ? loadDashSchedules().find(x => x.id === id) : null;
   dashScheduleEditingId = ev ? ev.id : null;
-  document.getElementById('dash-sched-form-title').textContent = ev ? '일정 수정' : '일정 추가';
+  document.getElementById('dash-sched-form-title').textContent = ev ? '일정 수정' : '일정 등록';
+  document.querySelector('#dash-sched-form-modal .btn-save').textContent = ev ? '일정 수정' : '일정 등록';
   document.getElementById('dash-sched-title').value = ev ? ev.title : '';
   const startYmd = ev ? ev.date : (date || dashScheduleTodayYmd());
   document.getElementById('dash-sched-date').value = startYmd;

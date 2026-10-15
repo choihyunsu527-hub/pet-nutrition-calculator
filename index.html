@@ -5325,89 +5325,90 @@
       aria-modal="true"
       aria-labelledby="dash-sched-form-title"
     >
-      <div class="modal dash-sched-modal" style="width: 440px">
+      <div class="modal dash-sched-modal" style="width: 600px; max-width: calc(100vw - 32px)">
         <div class="modal-hdr">
-          <span id="dash-sched-form-title">일정 추가</span>
+          <span id="dash-sched-form-title">일정 등록</span>
           <button onclick="closeModal('dash-sched-form-modal')" aria-label="닫기">
             ✕
           </button>
         </div>
         <div class="modal-body">
-          <div class="dash-sched-req-hint"><b>*</b> 표시는 필수 항목입니다. 나머지는 비워도 저장됩니다.</div>
-          <div class="modal-row">
-            <label for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
-            <input
-              type="text"
-              id="dash-sched-title"
-              maxlength="60"
-              placeholder="예: 고구마 트릿 생산"
-              onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
-            />
-          </div>
-          <div class="modal-row">
-            <label>작업 유형 (선택)</label>
-            <span class="dash-sched-work-opts">
-              <label><input type="checkbox" name="dash-sched-work" value="production" /> 생산</label>
-              <label><input type="checkbox" name="dash-sched-work" value="packing" /> 포장</label>
-              <label><input type="checkbox" name="dash-sched-work" value="shipping" /> 출고</label>
-              <label><input type="checkbox" name="dash-sched-work" value="other" /> 기타</label>
-            </span>
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-date">시작일 <b class="dash-sched-req">*</b></label>
-            <input
-              type="date"
-              id="dash-sched-date"
-              onchange="syncDashScheduleEndDate()"
-            />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-end-date">종료일</label>
-            <input type="date" id="dash-sched-end-date" />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-start">시간 (선택)</label>
-            <input type="time" id="dash-sched-start" aria-label="시작 시간" />
-            <span class="dash-sched-tilde">~</span>
-            <input type="time" id="dash-sched-end" aria-label="종료 시간" />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-product">제품명 (선택)</label>
-            <input
-              type="text"
-              id="dash-sched-product"
-              maxlength="100"
-              placeholder="예: 고구마 소프트 트릿"
-            />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-qty">수량 (선택)</label>
-            <input
-              type="number"
-              id="dash-sched-qty"
-              min="0"
-              max="999999999"
-              step="any"
-              inputmode="decimal"
-              placeholder="예: 1200"
-            />
-            <select id="dash-sched-unit" aria-label="수량 단위">
-              <option value="kg">kg</option>
-              <option value="g">g</option>
-              <option value="개">개</option>
-              <option value="박스">박스</option>
-              <option value="포">포</option>
-              <option value="L">L</option>
-              <option value="mL">mL</option>
-            </select>
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-owner">담당자 (선택)</label>
-            <input type="text" id="dash-sched-owner" maxlength="30" />
-          </div>
-          <div class="modal-row">
-            <label for="dash-sched-memo">메모 (선택)</label>
-            <textarea id="dash-sched-memo" rows="3" maxlength="500"></textarea>
+          <div class="dash-sched-grid">
+            <div class="dash-sched-field dash-sched-full">
+              <label for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
+              <input
+                type="text"
+                id="dash-sched-title"
+                maxlength="60"
+                placeholder="예: 고구마 트릿 생산"
+                onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
+              />
+            </div>
+            <div class="dash-sched-field">
+              <label>작업 유형 (선택)</label>
+              <span class="dash-sched-work-opts">
+                <label><input type="checkbox" name="dash-sched-work" value="production" /> 생산</label>
+                <label><input type="checkbox" name="dash-sched-work" value="packing" /> 포장</label>
+                <label><input type="checkbox" name="dash-sched-work" value="shipping" /> 출고</label>
+                <label><input type="checkbox" name="dash-sched-work" value="other" /> 기타</label>
+              </span>
+            </div>
+            <div class="dash-sched-field">
+              <label for="dash-sched-date">작업 날짜 <b class="dash-sched-req">*</b></label>
+              <div class="dash-sched-pair">
+                <input type="date" id="dash-sched-date" aria-label="시작일" onchange="syncDashScheduleEndDate()" />
+                <span class="dash-sched-tilde">~</span>
+                <input type="date" id="dash-sched-end-date" aria-label="종료일" />
+              </div>
+            </div>
+            <div class="dash-sched-field">
+              <label for="dash-sched-start">시작 시간 (선택)</label>
+              <input type="time" id="dash-sched-start" />
+            </div>
+            <div class="dash-sched-field">
+              <label for="dash-sched-end">종료 시간 (선택)</label>
+              <input type="time" id="dash-sched-end" />
+            </div>
+            <div class="dash-sched-field">
+              <label for="dash-sched-product">제품명 (선택)</label>
+              <input
+                type="text"
+                id="dash-sched-product"
+                maxlength="100"
+                placeholder="예: 고구마 소프트 트릿"
+              />
+            </div>
+            <div class="dash-sched-field">
+              <label for="dash-sched-qty">수량 (선택)</label>
+              <div class="dash-sched-pair">
+                <input
+                  type="number"
+                  id="dash-sched-qty"
+                  min="0"
+                  max="999999999"
+                  step="any"
+                  inputmode="decimal"
+                  placeholder="예: 1200"
+                />
+                <select id="dash-sched-unit" aria-label="수량 단위">
+                  <option value="kg">kg</option>
+                  <option value="g">g</option>
+                  <option value="개">개</option>
+                  <option value="박스">박스</option>
+                  <option value="포">포</option>
+                  <option value="L">L</option>
+                  <option value="mL">mL</option>
+                </select>
+              </div>
+            </div>
+            <div class="dash-sched-field dash-sched-full">
+              <label for="dash-sched-owner">담당자 (선택)</label>
+              <input type="text" id="dash-sched-owner" maxlength="30" />
+            </div>
+            <div class="dash-sched-field dash-sched-full">
+              <label for="dash-sched-memo">메모 (선택)</label>
+              <textarea id="dash-sched-memo" rows="3" maxlength="500"></textarea>
+            </div>
           </div>
           <div
             id="dash-sched-err"
@@ -5415,13 +5416,14 @@
           ></div>
         </div>
         <div class="modal-footer">
+          <span class="dash-sched-foot-note"><b class="dash-sched-req">*</b> 필수 항목</span>
           <button
             class="btn-cancel"
             onclick="closeModal('dash-sched-form-modal')"
           >
             취소
           </button>
-          <button class="btn-save" onclick="saveDashScheduleForm()">저장</button>
+          <button class="btn-save" onclick="saveDashScheduleForm()">일정 등록</button>
         </div>
       </div>
     </div>
