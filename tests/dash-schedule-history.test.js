@@ -27,7 +27,7 @@ test('스냅샷: 하루짜리/기간/수량·단위 정규화(수량 없으면 �
   ctx.__a = { title: 't', date: '2026-10-12' };                                       // 기존 일정(필드 없음)
   ctx.__b = { title: 't', date: '2026-10-12', endDate: '2026-10-15', qty: 0, unit: '개', product: 'p' };
   ctx.__c = { title: 't', date: '2026-10-12', endDate: '2026-10-01', qty: null, unit: 'kg' };   // 잘못된 종료일 → 하루
-  assert.deepEqual(run(ctx, `dashScheduleSnapshot(__a)`), { title: 't', date: '2026-10-12', endDate: '2026-10-12', start: '', end: '', owner: '', memo: '', product: '', qty: null, unit: '' });
+  assert.deepEqual(run(ctx, `dashScheduleSnapshot(__a)`), { title: 't', date: '2026-10-12', endDate: '2026-10-12', start: '', end: '', owner: '', memo: '', product: '', workTypes: [], qty: null, unit: '' });
   assert.deepEqual(run(ctx, `(() => { const s = dashScheduleSnapshot(__b); return [s.endDate, s.qty, s.unit, s.product]; })()`), ['2026-10-15', 0, '개', 'p']);
   assert.deepEqual(run(ctx, `(() => { const s = dashScheduleSnapshot(__c); return [s.endDate, s.unit]; })()`), ['2026-10-12', '']);
 });

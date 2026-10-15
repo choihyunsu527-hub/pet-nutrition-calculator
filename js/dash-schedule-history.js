@@ -9,7 +9,7 @@ const DASH_HISTORY_LIMIT = 200;
 const DASH_HISTORY_ACTIONS = { create: '등록', update: '수정', delete: '삭제', restore: '복원' };
 const DASH_HISTORY_FIELDS = [   // [표시명, 스냅샷 키]
   ['일정명', 'title'], ['시작일', 'date'], ['종료일', 'endDate'], ['시작 시간', 'start'], ['종료 시간', 'end'],
-  ['제품명', 'product'], ['생산 수량', 'qty'], ['담당자', 'owner'], ['메모', 'memo'],
+  ['작업 유형', 'workTypes'], ['제품명', 'product'], ['생산 수량', 'qty'], ['담당자', 'owner'], ['메모', 'memo'],
 ];
 
 let dashHistoryList = [];          // 마지막으로 불러온 이력(최신순)
@@ -24,12 +24,14 @@ function dashScheduleSnapshot(ev) {
     title: ev.title || '', date, endDate: ev.endDate && ev.endDate > date ? ev.endDate : date,
     start: ev.start || '', end: ev.end || '', owner: ev.owner || '', memo: ev.memo || '',
     product: ev.product || '',
+    workTypes: dashScheduleNormWorkTypes(ev.workTypes),
     qty: ev.qty === null || ev.qty === undefined || Number.isNaN(ev.qty) ? null : Number(ev.qty),
     unit: ev.qty === null || ev.qty === undefined ? '' : (ev.unit || ''),
   };
 }
 
 function dashHistoryValue(snap, key) {
+  if (key === 'workTypes') return formatDashScheduleWorkTypes(snap);
   if (key === 'qty') return snap.qty === null ? '' : formatDashScheduleQty({ qty: snap.qty, unit: snap.unit });
   const v = snap[key] || '';
   return key === 'memo' && v.length > 40 ? v.slice(0, 40) + '…' : v;
@@ -75,6 +77,8 @@ function dashScheduleRowFromSnapshot(snap) {
     row.production_qty = snap.qty;
     row.production_unit = snap.qty === null ? null : (snap.unit || null);
   }
+  const wt = dashScheduleNormWorkTypes(snap.workTypes);
+  if (dashScheduleHasWorkTypes && wt.length) row.work_types = wt;   // 새 행 insert라 미선택은 생략(NULL)
   if (dashScheduleHasEndDate) row.end_date = snap.endDate > snap.date ? snap.endDate : null;
   return row;
 }

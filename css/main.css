@@ -1731,6 +1731,9 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 /* 일정 추가/상세 모달 — 공용 .modal 세트 재사용, 좁은 모달에 맞게 라벨 폭과 textarea만 보정 */
 .dash-sched-modal .modal-row label { width: 90px; }
 .dash-sched-modal .modal-row input { min-width: 0; }
+.dash-sched-modal .modal-row .dash-sched-work-opts { display: flex; gap: 14px; flex: 1; }
+.dash-sched-modal .modal-row .dash-sched-work-opts label { width: auto; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.dash-sched-modal .modal-row .dash-sched-work-opts input { width: auto; margin: 0; }
 .dash-sched-modal .modal-row select { flex: 0 0 auto; margin-left: 6px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px;
   font-size: 12px; font-family: inherit; color: var(--text); background: var(--side2); outline: none; }
 .dash-sched-modal .modal-row select:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }

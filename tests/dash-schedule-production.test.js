@@ -55,3 +55,14 @@ test('단위 목록과 수량 상한은 폼/DB 제약과 같은 값', () => {
   const opts = [...html.matchAll(/<option value="([^"]+)">[^<]*<\/option>/g)].map(m => m[1]);
   for (const u of run(`DASH_SCHEDULE_UNITS`)) assert.ok(opts.includes(u), `폼 select 에 단위 ${u} 없음`);
 });
+
+test('작업 유형(생산/포장/출고): 행 변환·정규화·표시, 미선택/기존 일정 호환', () => {
+  ctx.__r = BASE;
+  assert.deepEqual(run(`dashScheduleFromRow(__r).workTypes`), []);
+  ctx.__r = { ...BASE, work_types: ['shipping', 'production', 'bogus'] };
+  assert.deepEqual(run(`dashScheduleFromRow(__r).workTypes`), ['production', 'shipping']);   // 고정 순서, 알 수 없는 값 제거
+  const f = o => { ctx.__e = o; return run(`[formatDashScheduleWorkTypes(__e), formatDashScheduleProduction(__e)]`); };
+  assert.deepEqual(f({ workTypes: ['production', 'packing', 'shipping'], product: '', qty: null, unit: '' }), ['생산·포장·출고', '[생산·포장·출고]']);
+  assert.deepEqual(f({ workTypes: ['packing'], product: '북어 껌', qty: 3, unit: '박스' }), ['포장', '[포장] · 북어 껌 · 3 박스']);
+  assert.deepEqual(f({ product: '', qty: null, unit: '' }), ['', '']);
+});

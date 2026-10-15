@@ -5341,6 +5341,14 @@
             />
           </div>
           <div class="modal-row">
+            <label>작업 유형 (선택)</label>
+            <span class="dash-sched-work-opts">
+              <label><input type="checkbox" name="dash-sched-work" value="production" /> 생산</label>
+              <label><input type="checkbox" name="dash-sched-work" value="packing" /> 포장</label>
+              <label><input type="checkbox" name="dash-sched-work" value="shipping" /> 출고</label>
+            </span>
+          </div>
+          <div class="modal-row">
             <label for="dash-sched-product">제품명 (선택)</label>
             <input
               type="text"
@@ -5437,6 +5445,9 @@
           </div>
           <div class="modal-row">
             <label>시간</label><span id="dash-sched-detail-time"></span>
+          </div>
+          <div class="modal-row">
+            <label>작업 유형</label><span id="dash-sched-detail-work"></span>
           </div>
           <div class="modal-row">
             <label>제품명</label><span id="dash-sched-detail-product"></span>
