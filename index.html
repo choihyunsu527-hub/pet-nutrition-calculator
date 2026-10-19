@@ -5346,17 +5346,42 @@
                 hidden
               />
             </div>
-            <div class="dash-sched-title-wrap">
-              <label class="dash-sched-cap" for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
-              <input
-                type="text"
-                id="dash-sched-title"
-                class="dash-sched-title-input"
-                maxlength="60"
-                placeholder="일정 제목을 입력하세요 (제품 선택 시 자동 입력)"
-                oninput="onDashScheduleTitleInput()"
-                onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
-              />
+            <div class="dash-sched-title-row">
+              <div class="dash-sched-title-wrap">
+                <label class="dash-sched-cap" for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
+                <input
+                  type="text"
+                  id="dash-sched-title"
+                  class="dash-sched-title-input"
+                  maxlength="60"
+                  placeholder="일정 제목을 입력하세요 (제품 선택 시 자동 입력)"
+                  oninput="onDashScheduleTitleInput()"
+                  onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
+                />
+            </div>
+              <div class="dash-sched-col">
+                <label class="dash-sched-cap" for="dash-sched-qty">수량 · 단위</label>
+                <div class="dash-sched-pair">
+                  <input
+                    type="number"
+                    id="dash-sched-qty"
+                    min="0"
+                    max="999999999"
+                    step="any"
+                    inputmode="decimal"
+                    placeholder="예: 1200"
+                  />
+                  <select id="dash-sched-unit" aria-label="수량 단위">
+                    <option value="kg">kg</option>
+                    <option value="g">g</option>
+                    <option value="개">개</option>
+                    <option value="박스">박스</option>
+                    <option value="포">포</option>
+                    <option value="L">L</option>
+                    <option value="mL">mL</option>
+                  </select>
+                  </div>
+                </div>
             </div>
           </section>
 
@@ -5386,35 +5411,6 @@
                 <input type="date" id="dash-sched-end-date" />
                 <label for="dash-sched-end">시간</label>
                 <input type="time" id="dash-sched-end" />
-              </div>
-            </div>
-          </section>
-
-          <section class="dash-sched-sec">
-            <h4 class="dash-sched-sec-h">수량 · 단위 <small>선택 입력</small></h4>
-            <div class="dash-sched-card dash-sched-prod">
-              <div class="dash-sched-col">
-                <label for="dash-sched-qty">수량</label>
-                <div class="dash-sched-pair">
-                  <input
-                    type="number"
-                    id="dash-sched-qty"
-                    min="0"
-                    max="999999999"
-                    step="any"
-                    inputmode="decimal"
-                    placeholder="예: 1200"
-                  />
-                  <select id="dash-sched-unit" aria-label="수량 단위">
-                    <option value="kg">kg</option>
-                    <option value="g">g</option>
-                    <option value="개">개</option>
-                    <option value="박스">박스</option>
-                    <option value="포">포</option>
-                    <option value="L">L</option>
-                    <option value="mL">mL</option>
-                  </select>
-                </div>
               </div>
             </div>
           </section>

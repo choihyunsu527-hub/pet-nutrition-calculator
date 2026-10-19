@@ -1759,6 +1759,11 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-sched-prodpick select:focus, .dash-sched-prodpick input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
 .dash-sched-prodpick input[hidden] { display: none; }
 .dash-sched-first .dash-sched-title-wrap { padding-top: 12px; }
+.dash-sched-title-row { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; align-items: end; }
+.dash-sched-title-row > * { min-width: 0; }
+.dash-sched-title-row .dash-sched-title-wrap { padding-bottom: 0; }
+.dash-sched-title-row .dash-sched-col input, .dash-sched-title-row .dash-sched-col select { height: 44px; }
+@media (max-width: 520px) { .dash-sched-title-row { grid-template-columns: 1fr; } }
 .dash-sched-more > summary { cursor: pointer; margin-bottom: 0; }
 .dash-sched-more[open] > summary { margin-bottom: 8px; }
 .dash-sched-pair { display: flex; gap: 6px; }
