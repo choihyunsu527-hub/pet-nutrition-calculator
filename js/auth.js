@@ -123,6 +123,7 @@ async function trySetNewPassword() {
 }
 
 async function logout() {
+  if (typeof stopDashScheduleRealtime === 'function') stopDashScheduleRealtime();
   if (supabaseClient) await supabaseClient.auth.signOut();
   location.reload(); // 계산기 상태(배합행·리스너 등)를 안전하게 초기화하기 위해 새로고침
 }

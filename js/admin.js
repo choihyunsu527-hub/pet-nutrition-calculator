@@ -421,6 +421,7 @@ async function enterApp(session) {
   await fetchCurrentUserRole();
   applyRoleUI();
   if (!appStarted) { appStarted = true; init(); }
+  if (currentUser && typeof startDashScheduleRealtime === 'function') startDashScheduleRealtime();   // 공동 일정 실시간 동기화(중복 생성 안 함)
 }
 
 // 우측 상단 프로필 원형 아이콘 — 드롭다운(이메일/설정/로그아웃) 토글

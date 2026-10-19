@@ -198,6 +198,37 @@ function refreshDashSchedules() {
   return dashScheduleLoading;
 }
 
+// ── 실시간 동기화: 다른 사용자의 dash_schedules 변경(INSERT/UPDATE/DELETE)을 받으면 refreshDashSchedules()로 다시 불러온다.
+//  · 테이블이 supabase_realtime publication에 포함돼 있어야 한다(supabase/sql/013_dash_schedules_realtime.sql). 없으면 이벤트가 오지 않을 뿐 기존 동작은 그대로다.
+//  · 채널은 1개만 만들고(중복 방지), 로그아웃 시 stopDashScheduleRealtime()으로 정리한다.
+//  · 조회 중 이벤트가 오면 진행 중 조회가 끝난 뒤 다시 조회해 최신 상태가 누락되지 않게 한다. 연속 이벤트는 300ms로 묶는다.
+let dashScheduleChannel = null;
+let dashScheduleSyncTimer = null;
+function requestDashScheduleSync() {
+  clearTimeout(dashScheduleSyncTimer);
+  dashScheduleSyncTimer = setTimeout(async () => {
+    if (!currentUser) return;
+    try { if (dashScheduleLoading) await dashScheduleLoading; } catch (e) {}
+    refreshDashSchedules();
+  }, 300);
+}
+function startDashScheduleRealtime() {
+  if (dashScheduleChannel || !supabaseClient || !currentUser) return;
+  dashScheduleChannel = supabaseClient
+    .channel('dash-schedules-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: DASH_SCHEDULE_TABLE }, requestDashScheduleSync)
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') requestDashScheduleSync();   // 최초/재연결 시 끊긴 동안의 변경 보충
+    });
+}
+function stopDashScheduleRealtime() {
+  clearTimeout(dashScheduleSyncTimer);
+  if (dashScheduleChannel && supabaseClient) { try { supabaseClient.removeChannel(dashScheduleChannel); } catch (e) {} }
+  dashScheduleChannel = null;
+}
+// 탭/창으로 다시 돌아오면 최신 일정을 한 번 더 확인(백그라운드에서 연결이 끊겼을 수 있음)
+if (typeof document !== 'undefined' && document.addEventListener) document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && dashScheduleChannel) requestDashScheduleSync(); });
+
 // 날짜별 일정 목록 — 기간 일정은 포함된 모든 날짜에 들어간다. 시작 시간 있는 일정을 시간순으로 먼저, 시간 없는 일정은 등록순으로 뒤에.
 function getDashSchedulesByDate() {
   const map = {};
