@@ -1754,6 +1754,13 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-sched-extra textarea { height: auto; padding: 9px 11px; resize: vertical; }
 .dash-sched-extra input + label { margin-top: 10px; }
 .dash-sched-title-input:focus, .dash-sched-col input:focus, .dash-sched-col select:focus, .dash-sched-extra input:focus, .dash-sched-extra textarea:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-prodpick { display: flex; flex-direction: column; gap: 8px; }
+.dash-sched-prodpick select, .dash-sched-prodpick input { display: block; width: 100%; height: 36px; box-sizing: border-box; padding: 0 11px; font-size: 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--side2); color: var(--text); font-family: inherit; outline: none; }
+.dash-sched-prodpick select:focus, .dash-sched-prodpick input:focus { border-color: var(--acc); box-shadow: 0 0 0 3px var(--calc); }
+.dash-sched-prodpick input[hidden] { display: none; }
+.dash-sched-first .dash-sched-title-wrap { padding-top: 12px; }
+.dash-sched-more > summary { cursor: pointer; margin-bottom: 0; }
+.dash-sched-more[open] > summary { margin-bottom: 8px; }
 .dash-sched-pair { display: flex; gap: 6px; }
 .dash-sched-pair select { flex: 0 0 76px; width: 76px; }
 .dash-sched-work-opts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }

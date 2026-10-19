@@ -5333,17 +5333,32 @@
           </button>
         </div>
         <div class="modal-body">
-          <div class="dash-sched-title-wrap">
-            <label class="dash-sched-cap" for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
-            <input
-              type="text"
-              id="dash-sched-title"
-              class="dash-sched-title-input"
-              maxlength="60"
-              placeholder="일정 제목을 입력하세요"
-              onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
-            />
-          </div>
+          <section class="dash-sched-sec dash-sched-first">
+            <h4 class="dash-sched-sec-h">제품명 <small>목록에서 선택하거나 직접 입력</small></h4>
+            <div class="dash-sched-prodpick">
+              <select id="dash-sched-product-sel" aria-label="제품명 선택" onchange="onDashScheduleProductSelect()"></select>
+              <input
+                type="text"
+                id="dash-sched-product"
+                maxlength="100"
+                placeholder="예: 고구마 소프트 트릿"
+                oninput="autofillDashScheduleTitle()"
+                hidden
+              />
+            </div>
+            <div class="dash-sched-title-wrap">
+              <label class="dash-sched-cap" for="dash-sched-title">일정 제목 <b class="dash-sched-req">*</b></label>
+              <input
+                type="text"
+                id="dash-sched-title"
+                class="dash-sched-title-input"
+                maxlength="60"
+                placeholder="일정 제목을 입력하세요 (제품 선택 시 자동 입력)"
+                oninput="onDashScheduleTitleInput()"
+                onkeydown="if (event.key === 'Enter') saveDashScheduleForm()"
+              />
+            </div>
+          </section>
 
           <section class="dash-sched-sec">
             <h4 class="dash-sched-sec-h">작업 유형 <small>복수 선택 · 선택 안 해도 됩니다</small></h4>
@@ -5376,17 +5391,8 @@
           </section>
 
           <section class="dash-sched-sec">
-            <h4 class="dash-sched-sec-h">제품 정보 <small>선택 입력</small></h4>
+            <h4 class="dash-sched-sec-h">수량 · 단위 <small>선택 입력</small></h4>
             <div class="dash-sched-card dash-sched-prod">
-              <div class="dash-sched-col">
-                <label for="dash-sched-product">제품명</label>
-                <input
-                  type="text"
-                  id="dash-sched-product"
-                  maxlength="100"
-                  placeholder="예: 고구마 소프트 트릿"
-                />
-              </div>
               <div class="dash-sched-col">
                 <label for="dash-sched-qty">수량</label>
                 <div class="dash-sched-pair">
@@ -5413,15 +5419,15 @@
             </div>
           </section>
 
-          <section class="dash-sched-sec">
-            <h4 class="dash-sched-sec-h">추가 정보 <small>선택 입력</small></h4>
+          <details class="dash-sched-sec dash-sched-more">
+            <summary class="dash-sched-sec-h">추가 정보 <small>선택 입력 · 담당자, 메모</small></summary>
             <div class="dash-sched-extra">
               <label for="dash-sched-owner">담당자</label>
               <input type="text" id="dash-sched-owner" maxlength="30" />
               <label for="dash-sched-memo">메모</label>
               <textarea id="dash-sched-memo" rows="3" maxlength="500"></textarea>
             </div>
-          </section>
+          </details>
           <div
             id="dash-sched-err"
             style="font-size: 10px; color: #b03a2e; min-height: 14px"

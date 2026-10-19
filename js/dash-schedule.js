@@ -302,6 +302,10 @@ function openDashScheduleForm(id, date) {
   const wt = ev ? dashScheduleNormWorkTypes(ev.workTypes) : [];
   document.querySelectorAll('input[name="dash-sched-work"]').forEach(cb => { cb.checked = wt.includes(cb.value); });
   document.getElementById('dash-sched-product').value = ev ? (ev.product || '') : '';
+  dashScheduleTitleTouched = !!ev;   // 수정: 기존 제목 보존 / 등록: 제품 선택 시 자동 입력
+  initDashScheduleProductPicker();
+  const more = document.querySelector('#dash-sched-form-modal .dash-sched-more');
+  if (more) more.open = !!(ev && (ev.owner || ev.memo));
   document.getElementById('dash-sched-qty').value = ev && ev.qty !== null && ev.qty !== undefined ? String(ev.qty) : '';
   document.getElementById('dash-sched-unit').value = ev && ev.unit && DASH_SCHEDULE_UNITS.includes(ev.unit) ? ev.unit : DASH_SCHEDULE_UNITS[0];
   document.getElementById('dash-sched-start').value = ev ? (ev.start || '') : '';
@@ -311,6 +315,43 @@ function openDashScheduleForm(id, date) {
   document.getElementById('dash-sched-err').textContent = '';
   document.getElementById('dash-sched-form-modal').classList.add('open');
   setTimeout(() => document.getElementById('dash-sched-title').focus(), 0);
+}
+
+// 제품명 드롭다운 — 기존 일정의 product_name에서 중복 없는 목록을 만든다(별도 DB 없음). 목록에 없으면 '직접 입력'.
+let dashScheduleTitleTouched = false;
+const DASH_SCHEDULE_PRODUCT_NEW = '__new__';
+function dashScheduleProductNames() {
+  const set = new Set();
+  loadDashSchedules().forEach(ev => { const n = (ev.product || '').trim(); if (n) set.add(n); });
+  return [...set].sort((a, b) => a.localeCompare(b, 'ko'));
+}
+function initDashScheduleProductPicker() {
+  const sel = document.getElementById('dash-sched-product-sel');
+  const input = document.getElementById('dash-sched-product');
+  const cur = input.value.trim();
+  const names = dashScheduleProductNames();
+  sel.innerHTML = '';
+  const add = (v, t) => { const o = document.createElement('option'); o.value = v; o.textContent = t; sel.appendChild(o); };
+  add('', '제품 선택 안 함');
+  names.forEach(n => add(n, n));
+  add(DASH_SCHEDULE_PRODUCT_NEW, '+ 직접 입력');
+  if (cur && !names.includes(cur)) { sel.value = DASH_SCHEDULE_PRODUCT_NEW; input.hidden = false; }
+  else { sel.value = cur; input.hidden = true; }
+}
+function onDashScheduleProductSelect() {
+  const sel = document.getElementById('dash-sched-product-sel');
+  const input = document.getElementById('dash-sched-product');
+  if (sel.value === DASH_SCHEDULE_PRODUCT_NEW) { input.value = ''; input.hidden = false; input.focus(); }
+  else { input.value = sel.value; input.hidden = true; }
+  autofillDashScheduleTitle();
+}
+function onDashScheduleTitleInput() {
+  dashScheduleTitleTouched = document.getElementById('dash-sched-title').value !== '';   // 비우면 다시 자동 입력 대상
+}
+// 사용자가 직접 입력/수정한 제목은 덮어쓰지 않는다.
+function autofillDashScheduleTitle() {
+  if (dashScheduleTitleTouched) return;
+  document.getElementById('dash-sched-title').value = document.getElementById('dash-sched-product').value.trim().slice(0, 60);
 }
 
 // 시작일을 바꾸면 종료일이 비어 있거나 시작일보다 빠를 때 시작일로 맞춘다(기간 일정 입력 편의).
