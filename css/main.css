@@ -1840,6 +1840,21 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 }
 
 /* 변경 이력 탭 > 캘린더 변경이력 섹션 — 기존 레시피 이력 표 아래 독립 섹션(각 섹션이 자기 영역에서 스크롤) */
+/* 대시보드 캘린더 확장 — 좌우 여백(패널 좌우 패딩 24→16px, 최대폭 1320→1760px)을 줄여 늘어난 폭을 전부
+   좌측(캘린더) 열이 쓴다. 우측 분석 열 폭은 기존(최대폭 1320px·패딩 24px 기준 (폭-66px)/4)과 동일하게 고정하고,
+   레시피 관리/반려동물 정보 아코디언은 좌측 열 폭(= 100% - gap - 우측 열)에 맞춘다. 1100px 이하 1열은 그대로. */
+@media (min-width: 1101px) {
+  #tab-dash .hdr-bar { padding-left: 16px; padding-right: 16px; }
+  #tab-dash .dash-panel { max-width: 1760px; padding-left: 16px; padding-right: 16px;
+                          --dash-main-right: calc((min(100% + 32px, 1320px) - 66px) / 4); }
+  #tab-dash .dash-main-grid { grid-template-columns: minmax(0, 1fr) var(--dash-main-right); }
+  #tab-dash .dash-main-grid ~ .dash-settings-acc { width: calc(100% - var(--dash-main-gap) - var(--dash-main-right)); }
+}
+/* 키가 큰 화면(900px 초과)에서는 남는 세로 공간만큼 날짜 행을 키운다 — 최소 88px(기존) 유지, 한 화면 안에서만 */
+@media (min-width: 1101px) and (min-height: 901px) {
+  #tab-dash .dash-cal-cell { height: clamp(88px, calc(88px + (100vh - 890px) / 6.6), 140px); }
+}
+
 .cal-history-wrap { border-top: 1px solid var(--border); }
 .cal-history-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .cal-history-title { font-size: 14px; font-weight: 600; color: var(--hdr); }
