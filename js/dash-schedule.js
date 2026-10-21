@@ -108,6 +108,18 @@ function dashScheduleCellLabel(ev) {
   const work = formatDashScheduleWorkTypes(ev);
   return work ? `${work} | ${ev.title}` : ev.title;
 }
+// 달력 바 색상 클래스: 첫 번째(생산→포장→출고→기타 순) 작업 유형 색을 바 전체에 쓴다. 미선택이면 빈 문자열(기존 디자인).
+function dashScheduleBarClass(ev) {
+  const arr = dashScheduleNormWorkTypes(ev.workTypes);
+  return arr.length ? ` wt-${arr[0]}` : '';
+}
+// 달력 바 안쪽 HTML: 유형이 2개 이상이면 각 유형을 자기 색의 작은 태그로 앞에 붙여 구분한다(1개/0개는 기존 텍스트 그대로).
+function dashScheduleBarInnerHtml(ev) {
+  const arr = dashScheduleNormWorkTypes(ev.workTypes);
+  if (arr.length < 2) return escHtml(dashScheduleCellLabel(ev));
+  const tags = DASH_SCHEDULE_WORK_TYPES.filter(([k]) => arr.includes(k)).map(([k, label]) => `<span class="wt-tag wt-${k}">${label}</span>`).join('');
+  return `${tags}${escHtml(ev.title)}`;
+}
 // 목록 항목 제목 아래 한 줄(제품명 · 수량) — 없으면 빈 문자열
 function dashScheduleSubHtml(ev, cls) {
   const prod = formatDashScheduleProduction(ev);
@@ -290,8 +302,8 @@ function layoutDashCalendarBars(cells, maxLanes) {
 // 막대 버튼 HTML — cls: 'dash-cal-evt dash-cal-bar'(대시보드) / 'cal-tab-bar'(캘린더 탭)
 function dashCalBarsHtml(bars, cls) {
   return bars.map(b =>
-    `<button type="button" class="${cls}${b.isStart ? ' is-start' : ''}${b.isEnd ? ' is-end' : ''}" data-sched-id="${escHtml(b.ev.id)}"` +
-    ` title="${escHtml(dashScheduleTip(b.ev))}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${escHtml(dashScheduleCellLabel(b.ev))}</button>`
+    `<button type="button" class="${cls}${b.isStart ? ' is-start' : ''}${b.isEnd ? ' is-end' : ''}${dashScheduleBarClass(b.ev)}" data-sched-id="${escHtml(b.ev.id)}"` +
+    ` title="${escHtml(dashScheduleTip(b.ev))}" style="grid-row:${b.row};grid-column:${b.c1 + 1} / ${b.c2 + 2};--lane:${b.lane}">${dashScheduleBarInnerHtml(b.ev)}</button>`
   ).join('');
 }
 
@@ -605,7 +617,7 @@ function renderCalendarTab() {
     if (dayEvts.length) cls.push('has-evt');
     const pad = info.lanes ? `<div class="cal-tab-lane-pad" style="--lanes:${info.lanes}"></div>` : '';
     const pills = shown.map(ev =>
-      `<button type="button" class="cal-tab-evt" data-sched-id="${escHtml(ev.id)}" title="${escHtml(dashScheduleTip(ev))}">${escHtml(dashScheduleCellLabel(ev))}</button>`).join('');
+      `<button type="button" class="cal-tab-evt${dashScheduleBarClass(ev)}" data-sched-id="${escHtml(ev.id)}" title="${escHtml(dashScheduleTip(ev))}">${dashScheduleBarInnerHtml(ev)}</button>`).join('');
     const more = hidden > 0 ? `<button type="button" class="cal-tab-more" data-date="${c.date}">+ ${hidden}건</button>` : '';
     return `<div class="${cls.join(' ')}" data-date="${c.date}" style="grid-row:${Math.floor(i / 7) + 1};grid-column:${(i % 7) + 1}">` +
       `<span class="cal-tab-day"${typeof krHolidayTitleAttr === 'function' ? krHolidayTitleAttr(c.date) : ''}><span class="cal-day-num">${c.day}</span></span><div class="cal-tab-evts">${pad}${pills}${more}</div></div>`;

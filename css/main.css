@@ -1807,6 +1807,19 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .cal-tab-bar { font-size: 12px; }
 .dash-cal-bar:hover, .cal-tab-bar:hover { background: var(--sel); color: #fff; }
 /* 모바일(≤480px): 칸이 auto 높이 + 작은 글자라 막대 위치 변수/글자만 맞춘다(위 데스크톱 값보다 뒤에 둬야 적용됨) */
+/* 작업 유형별 일정 바 색(생산·포장·출고·기타) — 하루 pill(.dash-cal-evt/.cal-tab-evt)과 기간 막대(.*-bar) 공통.
+   오늘 칸의 흰 pill 규칙보다 뒤에 두고 선택자 특이도를 높여 오늘 칸에서도 유형 색이 유지된다. 여러 유형이면 .wt-tag로 각 유형을 따로 표시. */
+.wt-production { --wt-bg: #DCE8F8; --wt-fg: #244F91; }
+.wt-packing    { --wt-bg: #DDF2E5; --wt-fg: #236B48; }
+.wt-shipping   { --wt-bg: #FBE8D7; --wt-fg: #98521C; }
+.wt-other      { --wt-bg: #E6E8EC; --wt-fg: #4A5360; }
+.dash-cal-cell .dash-cal-evt[class*="wt-"], .cal-tab-cell .cal-tab-evt[class*="wt-"],
+.dash-cal-bar[class*="wt-"], .cal-tab-bar[class*="wt-"] { background: var(--wt-bg); border-color: var(--wt-bg); color: var(--wt-fg); }
+.dash-cal-bar[class*="wt-"]:not(.is-start), .cal-tab-bar[class*="wt-"]:not(.is-start) { border-left-color: transparent; }
+.dash-cal-bar[class*="wt-"]:not(.is-end), .cal-tab-bar[class*="wt-"]:not(.is-end) { border-right-color: transparent; }
+.dash-cal-cell .dash-cal-evt[class*="wt-"]:hover, .cal-tab-cell .cal-tab-evt[class*="wt-"]:hover,
+.dash-cal-bar[class*="wt-"]:hover, .cal-tab-bar[class*="wt-"]:hover { background: var(--wt-bg); color: var(--wt-fg); filter: brightness(.94); }
+.wt-tag { display: inline-block; padding: 0 5px; margin-right: 4px; border-radius: 3px; font-size: .86em; font-weight: 700; line-height: 1.25; background: var(--wt-bg); color: var(--wt-fg); box-shadow: 0 0 0 1px var(--wt-fg); }
 @media (max-width: 480px) {
   #dash-cal-grid { --cal-bar-top: 22px; --cal-evt-h: 16px; --cal-evt-gap: 3px; }
   .dash-cal-bar { font-size: 10px; padding: 0 3px; }
@@ -2577,3 +2590,5 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
     display: table-header-group; /* 표가 페이지를 넘기면 헤더 행이 다음 페이지 상단에 자동으로 반복됨 */
   }
 }
+.wt-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; font-size: 12px; }
+.wt-legend .wt-tag { margin-right: 0; }
