@@ -1692,7 +1692,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
   display: inline-block; background: var(--cal-chip-bg); color: var(--cal-holiday-on-chip); border-radius: 4px; padding: 2px 5px; margin: -2px 0 -2px -5px; }
 .dash-cal-evts { display: flex; flex-direction: column; gap: 3px; min-height: 0; min-width: 0; }
 .dash-cal-evt { display: block; width: 100%; min-width: 0; height: 21px; flex-shrink: 0; box-sizing: border-box;
-                 padding: 0 7px; text-align: left; font-family: inherit; font-size: 14px; font-weight: 500; line-height: 19px;
+                 padding: 0 7px; text-align: left; font-family: inherit; font-size: 12px; font-weight: 500; line-height: 19px;
                  border: 1px solid var(--border); border-radius: 4px; background: var(--side2); color: var(--text);
                  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                  transition: border-color .15s ease, color .15s ease; }
@@ -1803,7 +1803,7 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
 .dash-cal-bar.is-end, .cal-tab-bar.is-end { margin-right: 4px; border-top-right-radius: 4px; border-bottom-right-radius: 4px; }
 .dash-cal-bar:not(.is-start), .cal-tab-bar:not(.is-start) { border-left-color: transparent; }   /* 주 경계를 넘어 이어지는 막대는 왼쪽 테두리 없이 이어 보이게 */
 .dash-cal-bar:not(.is-end), .cal-tab-bar:not(.is-end) { border-right-color: transparent; }
-.dash-cal-bar { font-size: 14px; }
+.dash-cal-bar { font-size: 12px; }
 .cal-tab-bar { font-size: 12px; }
 .dash-cal-bar:hover, .cal-tab-bar:hover { background: var(--sel); color: #fff; }
 /* 모바일(≤480px): 칸이 auto 높이 + 작은 글자라 막대 위치 변수/글자만 맞춘다(위 데스크톱 값보다 뒤에 둬야 적용됨) */
