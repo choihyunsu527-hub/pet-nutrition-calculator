@@ -1116,65 +1116,6 @@
                       </div>
                       <div class="dash-cal-grid" id="dash-cal-grid"></div>
                     </div>
-
-                    <details class="dash-settings-acc dash-recent-acc">
-                      <summary>
-                        레시피 관리
-                        <span class="dash-acc-hint"
-                          >— 최근 · 즐겨찾기, 펼쳐서 보기</span
-                        >
-                      </summary>
-                      <div class="dash-settings-body dash-recent-body">
-                        <div class="seg-control dash-recent-tabs">
-                          <button
-                            type="button"
-                            class="seg-btn active"
-                            data-view="recent"
-                            onclick="setDashRecipeView('recent')"
-                          >
-                            최근
-                          </button>
-                          <button
-                            type="button"
-                            class="seg-btn"
-                            data-view="favorite"
-                            onclick="setDashRecipeView('favorite')"
-                          >
-                            즐겨찾기
-                          </button>
-                        </div>
-                        <div class="dash-recent-search">
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                          >
-                            <circle cx="11" cy="11" r="8" />
-                            <path d="m21 21-4.34-4.34" />
-                          </svg>
-                          <input
-                            type="text"
-                            id="dash-recipe-search"
-                            placeholder="레시피 이름 검색…"
-                            autocomplete="off"
-                            oninput="applyDashRecipeFilter()"
-                            aria-label="레시피 이름 검색"
-                          />
-                        </div>
-                        <div
-                          class="dash-recent-list"
-                          id="dash-recent-recipe-list"
-                        >
-                          <div class="dash-recent-empty">
-                            저장된 레시피가 없습니다.
-                          </div>
-                        </div>
-                      </div>
-                    </details>
                   </div>
                   <div class="dash-main-secondary">
                     <div class="dash-side-stats" aria-label="핵심 지표">
@@ -1254,6 +1195,65 @@
                   </div>
                 </div>
 
+                <div class="dash-acc-row">
+                    <details class="dash-settings-acc dash-recent-acc">
+                      <summary>
+                        레시피 관리
+                        <span class="dash-acc-hint"
+                          >— 최근 · 즐겨찾기, 펼쳐서 보기</span
+                        >
+                      </summary>
+                      <div class="dash-settings-body dash-recent-body">
+                        <div class="seg-control dash-recent-tabs">
+                          <button
+                            type="button"
+                            class="seg-btn active"
+                            data-view="recent"
+                            onclick="setDashRecipeView('recent')"
+                          >
+                            최근
+                          </button>
+                          <button
+                            type="button"
+                            class="seg-btn"
+                            data-view="favorite"
+                            onclick="setDashRecipeView('favorite')"
+                          >
+                            즐겨찾기
+                          </button>
+                        </div>
+                        <div class="dash-recent-search">
+                          <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                          >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.34-4.34" />
+                          </svg>
+                          <input
+                            type="text"
+                            id="dash-recipe-search"
+                            placeholder="레시피 이름 검색…"
+                            autocomplete="off"
+                            oninput="applyDashRecipeFilter()"
+                            aria-label="레시피 이름 검색"
+                          />
+                        </div>
+                        <div
+                          class="dash-recent-list"
+                          id="dash-recent-recipe-list"
+                        >
+                          <div class="dash-recent-empty">
+                            저장된 레시피가 없습니다.
+                          </div>
+                        </div>
+                      </div>
+                    </details>
                 <details class="dash-settings-acc">
                   <summary>
                     반려동물 정보 · 계산 설정
@@ -1654,6 +1654,7 @@
                     </div>
                   </div>
                 </details>
+                </div>
               </div>
             </div>
           </div>

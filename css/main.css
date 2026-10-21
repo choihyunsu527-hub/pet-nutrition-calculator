@@ -1874,10 +1874,14 @@ tr:not(.cat-row):not(.sec-row):hover td { background: rgba(59,130,246,0.14) !imp
                           --dash-main-right: calc((min(100% + 32px, 1320px) - 66px) / 4); }
   #tab-dash .dash-main-grid { grid-template-columns: minmax(0, 1fr) var(--dash-main-right); }
   #tab-dash .dash-main-grid ~ .dash-settings-acc { width: calc(100% - var(--dash-main-gap) - var(--dash-main-right)); }
+  /* 캘린더·제품 유형 분석 카드 하단 정렬: 두 열을 같은 높이로 늘리고 각 열의 마지막 카드가 남는 높이를 채운다 */
+  #tab-dash .dash-main-grid { align-items: stretch; }
+  #tab-dash .dash-calendar-card, #tab-dash .dash-main-secondary .ptype-card { flex: 1 0 auto; }
+  #tab-dash .dash-cal-cell { height: 96px; }
 }
 /* 키가 큰 화면(900px 초과)에서는 남는 세로 공간만큼 날짜 행을 키운다 — 최소 88px(기존) 유지, 한 화면 안에서만 */
 @media (min-width: 1101px) and (min-height: 901px) {
-  #tab-dash .dash-cal-cell { height: clamp(88px, calc(88px + (100vh - 890px) / 6.6), 140px); }
+  #tab-dash .dash-cal-cell { height: clamp(96px, calc(96px + (100vh - 890px) / 6.6), 148px); }
 }
 
 .cal-history-wrap { border-top: 1px solid var(--border); }
@@ -2592,3 +2596,8 @@ input.lbl-ro { background: var(--gray-l); color: var(--sub); cursor: not-allowed
 }
 .wt-legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; font-size: 12px; }
 .wt-legend .wt-tag { margin-right: 0; }
+
+/* 레시피 관리 · 반려동물 정보 아코디언 — 캘린더 아래 가로 2열(≤768px는 세로) */
+.dash-acc-row { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: var(--dash-main-gap, 18px); margin-top: 14px; }
+.dash-acc-row > .dash-settings-acc, #tab-dash .dash-acc-row > .dash-settings-acc { margin-top: 0; min-width: 0; }
+@media (max-width: 768px) { .dash-acc-row { grid-template-columns: 1fr; gap: 10px; } }
